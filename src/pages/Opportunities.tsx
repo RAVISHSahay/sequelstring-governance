@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Search, Filter, Plus, MoreHorizontal, GripVertical } from "lucide-react";
+import { Search, Filter, Plus, MoreHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
@@ -12,6 +12,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { AddOpportunityDialog } from "@/components/dialogs/AddOpportunityDialog";
 
 interface Deal {
   id: number;
@@ -291,6 +292,13 @@ function DealCard({ deal }: { deal: Deal }) {
 
 export default function Opportunities() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [addToStage, setAddToStage] = useState("Lead");
+
+  const handleAddDeal = (stage: string) => {
+    setAddToStage(stage);
+    setIsAddDialogOpen(true);
+  };
 
   return (
     <AppLayout title="Opportunities">
@@ -310,7 +318,7 @@ export default function Opportunities() {
             <Filter className="h-4 w-4" />
             Filters
           </Button>
-          <Button className="gap-2">
+          <Button className="gap-2" onClick={() => handleAddDeal("Lead")}>
             <Plus className="h-4 w-4" />
             Add Opportunity
           </Button>
@@ -347,6 +355,7 @@ export default function Opportunities() {
               <Button
                 variant="ghost"
                 className="w-full mt-3 border-2 border-dashed border-border/50 text-muted-foreground hover:text-foreground hover:border-border"
+                onClick={() => handleAddDeal(stage.name)}
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Add Deal
@@ -379,6 +388,12 @@ export default function Opportunities() {
           <p className="text-2xl font-bold text-success">92%</p>
         </div>
       </div>
+
+      <AddOpportunityDialog 
+        open={isAddDialogOpen} 
+        onOpenChange={setIsAddDialogOpen} 
+        initialStage={addToStage}
+      />
     </AppLayout>
   );
 }

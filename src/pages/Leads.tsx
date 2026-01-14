@@ -29,6 +29,7 @@ import {
   Mail,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { AddLeadDialog } from "@/components/dialogs/AddLeadDialog";
 
 const leads = [
   {
@@ -169,6 +170,7 @@ const getScoreColor = (score: number) => {
 
 export default function Leads() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 
   const filteredLeads = leads.filter(
     (lead) =>
@@ -218,7 +220,7 @@ export default function Leads() {
             <Filter className="h-4 w-4" />
             Filters
           </Button>
-          <Button className="gap-2">
+          <Button className="gap-2" onClick={() => setIsAddDialogOpen(true)}>
             <Plus className="h-4 w-4" />
             Add Lead
           </Button>
@@ -329,6 +331,8 @@ export default function Leads() {
       <div className="flex items-center justify-between mt-4 text-sm text-muted-foreground">
         <p>Showing {filteredLeads.length} of {leads.length} leads</p>
       </div>
+
+      <AddLeadDialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen} />
     </AppLayout>
   );
 }
