@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Search, Filter, Plus, MoreHorizontal, FileCheck, Download, AlertTriangle, CheckCircle, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { AddContractDialog } from "@/components/dialogs/AddContractDialog";
 
 const contracts = [
   {
@@ -108,6 +109,7 @@ const getTypeColor = (type: string) => {
 
 export default function Contracts() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 
   const filteredContracts = contracts.filter(
     (contract) =>
@@ -151,7 +153,7 @@ export default function Contracts() {
             <Filter className="h-4 w-4" />
             Filters
           </Button>
-          <Button className="gap-2">
+          <Button className="gap-2" onClick={() => setIsAddDialogOpen(true)}>
             <Plus className="h-4 w-4" />
             New Contract
           </Button>
@@ -238,6 +240,8 @@ export default function Contracts() {
           </TableBody>
         </Table>
       </div>
+
+      <AddContractDialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen} />
     </AppLayout>
   );
 }
