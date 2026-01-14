@@ -161,7 +161,7 @@ export default function Payouts() {
     .reduce((sum, p) => sum + p.netAmount, 0);
 
   return (
-    <AppLayout>
+    <AppLayout title="Payouts & Settlements">
       <div className="space-y-6 animate-fade-in">
         {/* Header */}
         <div className="flex items-center justify-between">

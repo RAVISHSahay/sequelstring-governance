@@ -187,7 +187,7 @@ export default function Targets() {
   };
 
   return (
-    <AppLayout>
+    <AppLayout title="Sales Targets">
       <div className="space-y-6 animate-fade-in">
         {/* Header */}
         <div className="flex items-center justify-between">
