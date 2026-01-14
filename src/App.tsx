@@ -9,6 +9,7 @@ import Contacts from "./pages/Contacts";
 import Opportunities from "./pages/Opportunities";
 import Leads from "./pages/Leads";
 import Quotes from "./pages/Quotes";
+import QuoteBuilder from "./pages/QuoteBuilder";
 import Contracts from "./pages/Contracts";
 import Orders from "./pages/Orders";
 import Activities from "./pages/Activities";
@@ -32,6 +33,7 @@ const App = () => (
           <Route path="/leads" element={<Leads />} />
           <Route path="/opportunities" element={<Opportunities />} />
           <Route path="/quotes" element={<Quotes />} />
+          <Route path="/quotes/new" element={<QuoteBuilder />} />
           <Route path="/contracts" element={<Contracts />} />
           <Route path="/orders" element={<Orders />} />
           <Route path="/activities" element={<Activities />} />

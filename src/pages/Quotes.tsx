@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -182,6 +183,7 @@ const getStatusConfig = (status: string) => {
 };
 
 export default function Quotes() {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
 
   const filteredQuotes = quotes.filter(
@@ -233,7 +235,7 @@ export default function Quotes() {
             <Filter className="h-4 w-4" />
             Filters
           </Button>
-          <Button className="gap-2">
+          <Button className="gap-2" onClick={() => navigate("/quotes/new")}>
             <Plus className="h-4 w-4" />
             Create Quote
           </Button>
