@@ -28,9 +28,12 @@ import {
   Phone,
   Mail,
   Pencil,
+  Trash2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AddLeadDialog, LeadData } from "@/components/dialogs/AddLeadDialog";
+import { DeleteConfirmDialog } from "@/components/dialogs/DeleteConfirmDialog";
+import { toast } from "sonner";
 
 interface Lead {
   id: number;
@@ -193,6 +196,8 @@ export default function Leads() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingLead, setEditingLead] = useState<LeadData | null>(null);
   const [leads, setLeads] = useState<Lead[]>(initialLeads);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [leadToDelete, setLeadToDelete] = useState<Lead | null>(null);
 
   const filteredLeads = leads.filter(
     (lead) =>
@@ -203,6 +208,22 @@ export default function Leads() {
   const handleAddNew = () => {
     setEditingLead(null);
     setIsDialogOpen(true);
+  };
+
+  const handleDelete = (lead: Lead) => {
+    setLeadToDelete(lead);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (leadToDelete) {
+      setLeads(leads.filter(l => l.id !== leadToDelete.id));
+      toast.success("Lead deleted", {
+        description: `${leadToDelete.name} has been removed`,
+      });
+      setLeadToDelete(null);
+    }
+    setDeleteDialogOpen(false);
   };
 
   const handleEdit = (lead: Lead) => {
@@ -389,6 +410,13 @@ export default function Leads() {
                         </DropdownMenuItem>
                         <DropdownMenuItem>Convert to Opportunity</DropdownMenuItem>
                         <DropdownMenuItem>Log Activity</DropdownMenuItem>
+                        <DropdownMenuItem 
+                          onClick={() => handleDelete(lead)}
+                          className="text-destructive focus:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Delete Lead
+                        </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>
@@ -409,6 +437,15 @@ export default function Leads() {
         onOpenChange={setIsDialogOpen}
         editData={editingLead}
         onSave={handleSave}
+      />
+
+      <DeleteConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={confirmDelete}
+        title="Delete Lead"
+        description="Are you sure you want to delete this lead? This action cannot be undone."
+        itemName={leadToDelete?.name}
       />
     </AppLayout>
   );
