@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,9 +19,22 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 
+export interface LeadData {
+  id?: number;
+  name: string;
+  email: string;
+  phone: string;
+  company: string;
+  title: string;
+  source: string;
+  owner: string;
+}
+
 interface AddLeadDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  editData?: LeadData | null;
+  onSave?: (data: LeadData) => void;
 }
 
 const sources = ["Website", "Referral", "LinkedIn", "Event", "Partner", "Cold Call"];
@@ -32,16 +45,27 @@ const owners = [
   { name: "Vikram Desai", initials: "VD" },
 ];
 
-export function AddLeadDialog({ open, onOpenChange }: AddLeadDialogProps) {
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    company: "",
-    title: "",
-    source: "",
-    owner: "",
-  });
+const emptyFormData: LeadData = {
+  name: "",
+  email: "",
+  phone: "",
+  company: "",
+  title: "",
+  source: "",
+  owner: "",
+};
+
+export function AddLeadDialog({ open, onOpenChange, editData, onSave }: AddLeadDialogProps) {
+  const [formData, setFormData] = useState<LeadData>(emptyFormData);
+  const isEditing = !!editData;
+
+  useEffect(() => {
+    if (editData) {
+      setFormData(editData);
+    } else {
+      setFormData(emptyFormData);
+    }
+  }, [editData, open]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,19 +75,15 @@ export function AddLeadDialog({ open, onOpenChange }: AddLeadDialogProps) {
       return;
     }
 
-    toast.success("Lead created successfully", {
-      description: `${formData.name} from ${formData.company} has been added`,
+    if (onSave) {
+      onSave(formData);
+    }
+
+    toast.success(isEditing ? "Lead updated successfully" : "Lead created successfully", {
+      description: `${formData.name} from ${formData.company} has been ${isEditing ? "updated" : "added"}`,
     });
     
-    setFormData({
-      name: "",
-      email: "",
-      phone: "",
-      company: "",
-      title: "",
-      source: "",
-      owner: "",
-    });
+    setFormData(emptyFormData);
     onOpenChange(false);
   };
 
@@ -71,9 +91,11 @@ export function AddLeadDialog({ open, onOpenChange }: AddLeadDialogProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Add New Lead</DialogTitle>
+          <DialogTitle>{isEditing ? "Edit Lead" : "Add New Lead"}</DialogTitle>
           <DialogDescription>
-            Enter the lead details below. Required fields are marked with *.
+            {isEditing 
+              ? "Update the lead details below." 
+              : "Enter the lead details below. Required fields are marked with *."}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
@@ -171,7 +193,7 @@ export function AddLeadDialog({ open, onOpenChange }: AddLeadDialogProps) {
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit">Create Lead</Button>
+            <Button type="submit">{isEditing ? "Save Changes" : "Create Lead"}</Button>
           </DialogFooter>
         </form>
       </DialogContent>

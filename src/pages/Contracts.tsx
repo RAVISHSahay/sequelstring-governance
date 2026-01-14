@@ -17,11 +17,23 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Search, Filter, Plus, MoreHorizontal, FileCheck, Download, AlertTriangle, CheckCircle, Clock } from "lucide-react";
+import { Search, Filter, Plus, MoreHorizontal, FileCheck, Download, AlertTriangle, CheckCircle, Clock, Pencil } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { AddContractDialog } from "@/components/dialogs/AddContractDialog";
+import { AddContractDialog, ContractData } from "@/components/dialogs/AddContractDialog";
 
-const contracts = [
+interface Contract {
+  id: string;
+  name: string;
+  account: string;
+  type: string;
+  value: string;
+  status: string;
+  startDate: string;
+  endDate: string;
+  renewalAlert: boolean;
+}
+
+const initialContracts: Contract[] = [
   {
     id: "CNT-2025-001",
     name: "Master Service Agreement",
@@ -109,7 +121,9 @@ const getTypeColor = (type: string) => {
 
 export default function Contracts() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingContract, setEditingContract] = useState<ContractData | null>(null);
+  const [contracts, setContracts] = useState<Contract[]>(initialContracts);
 
   const filteredContracts = contracts.filter(
     (contract) =>
@@ -117,20 +131,76 @@ export default function Contracts() {
       contract.account.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const handleAddNew = () => {
+    setEditingContract(null);
+    setIsDialogOpen(true);
+  };
+
+  const handleEdit = (contract: Contract) => {
+    setEditingContract({
+      id: contract.id,
+      name: contract.name,
+      account: contract.account,
+      type: contract.type,
+      value: contract.value === "-" ? "" : contract.value.replace(/[₹,]/g, ""),
+      startDate: contract.startDate !== "-" ? new Date(contract.startDate) : undefined,
+      endDate: contract.endDate !== "-" ? new Date(contract.endDate) : undefined,
+    });
+    setIsDialogOpen(true);
+  };
+
+  const handleSave = (data: ContractData) => {
+    if (data.id) {
+      // Update existing
+      setContracts(contracts.map(contract => 
+        contract.id === data.id 
+          ? { 
+              ...contract, 
+              name: data.name,
+              account: data.account,
+              type: data.type,
+              value: data.value ? `₹${parseInt(data.value).toLocaleString("en-IN")}` : "-",
+              startDate: data.startDate ? data.startDate.toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" }) : "-",
+              endDate: data.endDate ? data.endDate.toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" }) : "-",
+            }
+          : contract
+      ));
+    } else {
+      // Add new
+      const year = new Date().getFullYear();
+      const newId = data.type === "NDA" 
+        ? `NDA-${year}-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`
+        : `CNT-${year}-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`;
+      
+      const newContract: Contract = {
+        id: newId,
+        name: data.name,
+        account: data.account,
+        type: data.type,
+        value: data.value ? `₹${parseInt(data.value).toLocaleString("en-IN")}` : "-",
+        status: "Pending Signature",
+        startDate: data.startDate ? data.startDate.toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" }) : "-",
+        endDate: data.endDate ? data.endDate.toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" }) : "-",
+        renewalAlert: false,
+      };
+      setContracts([newContract, ...contracts]);
+    }
+  };
+
   return (
     <AppLayout title="Contracts">
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6">
         <div className="stat-card animate-slide-up">
           <p className="text-sm text-muted-foreground mb-1">Active Contracts</p>
-          <p className="text-2xl font-bold">34</p>
+          <p className="text-2xl font-bold">{contracts.filter(c => c.status === "Active").length}</p>
         </div>
         <div className="stat-card animate-slide-up" style={{ animationDelay: "0.05s" }}>
           <p className="text-sm text-muted-foreground mb-1">Pending Signature</p>
-          <p className="text-2xl font-bold text-accent">8</p>
+          <p className="text-2xl font-bold text-accent">{contracts.filter(c => c.status === "Pending Signature").length}</p>
         </div>
         <div className="stat-card animate-slide-up" style={{ animationDelay: "0.1s" }}>
           <p className="text-sm text-muted-foreground mb-1">Renewal Due (30d)</p>
-          <p className="text-2xl font-bold text-destructive">5</p>
+          <p className="text-2xl font-bold text-destructive">{contracts.filter(c => c.renewalAlert).length}</p>
         </div>
         <div className="stat-card animate-slide-up" style={{ animationDelay: "0.15s" }}>
           <p className="text-sm text-muted-foreground mb-1">Total Value</p>
@@ -153,7 +223,7 @@ export default function Contracts() {
             <Filter className="h-4 w-4" />
             Filters
           </Button>
-          <Button className="gap-2" onClick={() => setIsAddDialogOpen(true)}>
+          <Button className="gap-2" onClick={handleAddNew}>
             <Plus className="h-4 w-4" />
             New Contract
           </Button>
@@ -227,7 +297,10 @@ export default function Contracts() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem>View Details</DropdownMenuItem>
-                          <DropdownMenuItem>Edit Contract</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleEdit(contract)}>
+                            <Pencil className="h-4 w-4 mr-2" />
+                            Edit Contract
+                          </DropdownMenuItem>
                           <DropdownMenuItem>Initiate Renewal</DropdownMenuItem>
                           <DropdownMenuItem>Download PDF</DropdownMenuItem>
                         </DropdownMenuContent>
@@ -241,7 +314,12 @@ export default function Contracts() {
         </Table>
       </div>
 
-      <AddContractDialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen} />
+      <AddContractDialog 
+        open={isDialogOpen} 
+        onOpenChange={setIsDialogOpen}
+        editData={editingContract}
+        onSave={handleSave}
+      />
     </AppLayout>
   );
 }

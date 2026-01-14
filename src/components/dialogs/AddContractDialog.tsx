@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -28,9 +28,21 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
+export interface ContractData {
+  id?: string;
+  name: string;
+  account: string;
+  type: string;
+  value: string;
+  startDate?: Date;
+  endDate?: Date;
+}
+
 interface AddContractDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  editData?: ContractData | null;
+  onSave?: (data: ContractData) => void;
 }
 
 const accounts = [
@@ -52,15 +64,26 @@ const contractTypes = [
   { value: "SLA", label: "Service Level Agreement" },
 ];
 
-export function AddContractDialog({ open, onOpenChange }: AddContractDialogProps) {
-  const [formData, setFormData] = useState({
-    name: "",
-    account: "",
-    type: "",
-    value: "",
-    startDate: undefined as Date | undefined,
-    endDate: undefined as Date | undefined,
-  });
+const emptyFormData: ContractData = {
+  name: "",
+  account: "",
+  type: "",
+  value: "",
+  startDate: undefined,
+  endDate: undefined,
+};
+
+export function AddContractDialog({ open, onOpenChange, editData, onSave }: AddContractDialogProps) {
+  const [formData, setFormData] = useState<ContractData>(emptyFormData);
+  const isEditing = !!editData;
+
+  useEffect(() => {
+    if (editData) {
+      setFormData(editData);
+    } else {
+      setFormData(emptyFormData);
+    }
+  }, [editData, open]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,23 +93,22 @@ export function AddContractDialog({ open, onOpenChange }: AddContractDialogProps
       return;
     }
 
-    const year = new Date().getFullYear();
-    const contractId = formData.type === "NDA" 
-      ? `NDA-${year}-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`
-      : `CNT-${year}-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`;
+    if (onSave) {
+      onSave(formData);
+    }
 
-    toast.success("Contract created successfully", {
-      description: `${contractId} has been created for ${formData.account}`,
+    const year = new Date().getFullYear();
+    const contractId = formData.id || (formData.type === "NDA" 
+      ? `NDA-${year}-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`
+      : `CNT-${year}-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`);
+
+    toast.success(isEditing ? "Contract updated successfully" : "Contract created successfully", {
+      description: isEditing 
+        ? `${formData.name} has been updated`
+        : `${contractId} has been created for ${formData.account}`,
     });
     
-    setFormData({
-      name: "",
-      account: "",
-      type: "",
-      value: "",
-      startDate: undefined,
-      endDate: undefined,
-    });
+    setFormData(emptyFormData);
     onOpenChange(false);
   };
 
@@ -94,9 +116,11 @@ export function AddContractDialog({ open, onOpenChange }: AddContractDialogProps
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>New Contract</DialogTitle>
+          <DialogTitle>{isEditing ? "Edit Contract" : "New Contract"}</DialogTitle>
           <DialogDescription>
-            Create a new contract or agreement. Required fields are marked with *.
+            {isEditing 
+              ? "Update the contract details below." 
+              : "Create a new contract or agreement. Required fields are marked with *."}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
@@ -152,8 +176,8 @@ export function AddContractDialog({ open, onOpenChange }: AddContractDialogProps
               <Label htmlFor="value">Contract Value (₹)</Label>
               <Input
                 id="value"
-                type="number"
-                placeholder="e.g., 4500000"
+                type="text"
+                placeholder="e.g., 45,00,000"
                 value={formData.value}
                 onChange={(e) => setFormData({ ...formData, value: e.target.value })}
               />
@@ -216,7 +240,7 @@ export function AddContractDialog({ open, onOpenChange }: AddContractDialogProps
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit">Create Contract</Button>
+            <Button type="submit">{isEditing ? "Save Changes" : "Create Contract"}</Button>
           </DialogFooter>
         </form>
       </DialogContent>
