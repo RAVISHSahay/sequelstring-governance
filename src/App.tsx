@@ -16,6 +16,10 @@ import Activities from "./pages/Activities";
 import Reports from "./pages/Reports";
 import Pricing from "./pages/Pricing";
 import Settings from "./pages/Settings";
+import Targets from "./pages/Targets";
+import Incentives from "./pages/Incentives";
+import Payouts from "./pages/Payouts";
+import Performance from "./pages/Performance";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -40,6 +44,11 @@ const App = () => (
           <Route path="/reports" element={<Reports />} />
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/settings" element={<Settings />} />
+          {/* Incentive Engine Routes */}
+          <Route path="/targets" element={<Targets />} />
+          <Route path="/incentives" element={<Incentives />} />
+          <Route path="/payouts" element={<Payouts />} />
+          <Route path="/performance" element={<Performance />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

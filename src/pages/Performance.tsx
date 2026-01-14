@@ -100,7 +100,7 @@ export default function Performance() {
   };
 
   return (
-    <AppLayout>
+    <AppLayout title="Performance Dashboard">
       <div className="space-y-6 animate-fade-in">
         {/* Header */}
         <div className="flex items-center justify-between">
