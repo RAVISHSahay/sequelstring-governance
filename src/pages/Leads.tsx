@@ -27,11 +27,27 @@ import {
   Star,
   Phone,
   Mail,
+  Pencil,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { AddLeadDialog } from "@/components/dialogs/AddLeadDialog";
+import { AddLeadDialog, LeadData } from "@/components/dialogs/AddLeadDialog";
 
-const leads = [
+interface Lead {
+  id: number;
+  name: string;
+  company: string;
+  title: string;
+  email: string;
+  phone: string;
+  source: string;
+  status: string;
+  score: number;
+  owner: string;
+  initials: string;
+  createdAt: string;
+}
+
+const initialLeads: Lead[] = [
   {
     id: 1,
     name: "Arun Patel",
@@ -42,7 +58,7 @@ const leads = [
     source: "Website",
     status: "New",
     score: 85,
-    owner: "Priya S",
+    owner: "Priya Sharma",
     initials: "PS",
     createdAt: "2 hours ago",
   },
@@ -56,7 +72,7 @@ const leads = [
     source: "Referral",
     status: "Contacted",
     score: 92,
-    owner: "Rahul M",
+    owner: "Rahul Mehta",
     initials: "RM",
     createdAt: "5 hours ago",
   },
@@ -70,7 +86,7 @@ const leads = [
     source: "Event",
     status: "Qualified",
     score: 78,
-    owner: "Anjali K",
+    owner: "Anjali Kumar",
     initials: "AK",
     createdAt: "1 day ago",
   },
@@ -84,7 +100,7 @@ const leads = [
     source: "LinkedIn",
     status: "New",
     score: 88,
-    owner: "Vikram D",
+    owner: "Vikram Desai",
     initials: "VD",
     createdAt: "1 day ago",
   },
@@ -98,7 +114,7 @@ const leads = [
     source: "Website",
     status: "Contacted",
     score: 65,
-    owner: "Priya S",
+    owner: "Priya Sharma",
     initials: "PS",
     createdAt: "2 days ago",
   },
@@ -112,7 +128,7 @@ const leads = [
     source: "Referral",
     status: "Qualified",
     score: 95,
-    owner: "Sanjay G",
+    owner: "Sanjay Gupta",
     initials: "SG",
     createdAt: "3 days ago",
   },
@@ -126,7 +142,7 @@ const leads = [
     source: "Partner",
     status: "New",
     score: 72,
-    owner: "Rahul M",
+    owner: "Rahul Mehta",
     initials: "RM",
     createdAt: "3 days ago",
   },
@@ -140,7 +156,7 @@ const leads = [
     source: "Website",
     status: "Unqualified",
     score: 35,
-    owner: "Anjali K",
+    owner: "Anjali Kumar",
     initials: "AK",
     createdAt: "5 days ago",
   },
@@ -168,9 +184,15 @@ const getScoreColor = (score: number) => {
   return "text-destructive";
 };
 
+const getInitials = (name: string) => {
+  return name.split(" ").map(n => n[0]).join("").toUpperCase();
+};
+
 export default function Leads() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingLead, setEditingLead] = useState<LeadData | null>(null);
+  const [leads, setLeads] = useState<Lead[]>(initialLeads);
 
   const filteredLeads = leads.filter(
     (lead) =>
@@ -178,18 +200,65 @@ export default function Leads() {
       lead.company.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const handleAddNew = () => {
+    setEditingLead(null);
+    setIsDialogOpen(true);
+  };
+
+  const handleEdit = (lead: Lead) => {
+    setEditingLead({
+      id: lead.id,
+      name: lead.name,
+      email: lead.email,
+      phone: lead.phone,
+      company: lead.company,
+      title: lead.title,
+      source: lead.source,
+      owner: lead.owner,
+    });
+    setIsDialogOpen(true);
+  };
+
+  const handleSave = (data: LeadData) => {
+    if (data.id) {
+      // Update existing
+      setLeads(leads.map(lead => 
+        lead.id === data.id 
+          ? { ...lead, ...data, initials: getInitials(data.owner || lead.owner) }
+          : lead
+      ));
+    } else {
+      // Add new
+      const newLead: Lead = {
+        id: Date.now(),
+        name: data.name,
+        company: data.company,
+        title: data.title,
+        email: data.email,
+        phone: data.phone,
+        source: data.source,
+        status: "New",
+        score: Math.floor(Math.random() * 40) + 60,
+        owner: data.owner || "Priya Sharma",
+        initials: getInitials(data.owner || "Priya Sharma"),
+        createdAt: "Just now",
+      };
+      setLeads([newLead, ...leads]);
+    }
+  };
+
   return (
     <AppLayout title="Leads">
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <div className="stat-card animate-slide-up">
           <p className="text-sm text-muted-foreground mb-1">Total Leads</p>
-          <p className="text-2xl font-bold">156</p>
+          <p className="text-2xl font-bold">{leads.length}</p>
           <p className="text-xs text-success mt-1">+23 this week</p>
         </div>
         <div className="stat-card animate-slide-up" style={{ animationDelay: "0.05s" }}>
           <p className="text-sm text-muted-foreground mb-1">New Today</p>
-          <p className="text-2xl font-bold">12</p>
+          <p className="text-2xl font-bold">{leads.filter(l => l.status === "New").length}</p>
           <p className="text-xs text-muted-foreground mt-1">Avg score: 78</p>
         </div>
         <div className="stat-card animate-slide-up" style={{ animationDelay: "0.1s" }}>
@@ -220,7 +289,7 @@ export default function Leads() {
             <Filter className="h-4 w-4" />
             Filters
           </Button>
-          <Button className="gap-2" onClick={() => setIsAddDialogOpen(true)}>
+          <Button className="gap-2" onClick={handleAddNew}>
             <Plus className="h-4 w-4" />
             Add Lead
           </Button>
@@ -314,7 +383,10 @@ export default function Leads() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem>View Details</DropdownMenuItem>
-                        <DropdownMenuItem>Edit Lead</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleEdit(lead)}>
+                          <Pencil className="h-4 w-4 mr-2" />
+                          Edit Lead
+                        </DropdownMenuItem>
                         <DropdownMenuItem>Convert to Opportunity</DropdownMenuItem>
                         <DropdownMenuItem>Log Activity</DropdownMenuItem>
                       </DropdownMenuContent>
@@ -332,7 +404,12 @@ export default function Leads() {
         <p>Showing {filteredLeads.length} of {leads.length} leads</p>
       </div>
 
-      <AddLeadDialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen} />
+      <AddLeadDialog 
+        open={isDialogOpen} 
+        onOpenChange={setIsDialogOpen}
+        editData={editingLead}
+        onSave={handleSave}
+      />
     </AppLayout>
   );
 }

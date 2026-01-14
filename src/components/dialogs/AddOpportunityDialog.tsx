@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -28,10 +28,23 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
+export interface OpportunityData {
+  id?: number;
+  name: string;
+  account: string;
+  value: string;
+  stage: string;
+  probability: string;
+  closeDate?: Date;
+  owner: string;
+}
+
 interface AddOpportunityDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   initialStage?: string;
+  editData?: OpportunityData | null;
+  onSave?: (data: OpportunityData) => void;
 }
 
 const accounts = [
@@ -43,6 +56,12 @@ const accounts = [
   "Tech Mahindra",
   "L&T Infotech",
   "Bajaj Auto",
+  "Kotak Bank",
+  "Axis Bank",
+  "ICICI Bank",
+  "SBI Life",
+  "Godrej Industries",
+  "Wipro",
 ];
 
 const stages = ["Lead", "Qualified", "Proposal", "Negotiation", "Closed Won"];
@@ -52,18 +71,36 @@ const owners = [
   { name: "Rahul Mehta", initials: "RM" },
   { name: "Anjali Kumar", initials: "AK" },
   { name: "Vikram Desai", initials: "VD" },
+  { name: "Sanjay Gupta", initials: "SG" },
 ];
 
-export function AddOpportunityDialog({ open, onOpenChange, initialStage = "Lead" }: AddOpportunityDialogProps) {
-  const [formData, setFormData] = useState({
-    name: "",
-    account: "",
-    value: "",
-    stage: initialStage,
-    probability: "20",
-    closeDate: undefined as Date | undefined,
-    owner: "",
-  });
+const emptyFormData: OpportunityData = {
+  name: "",
+  account: "",
+  value: "",
+  stage: "Lead",
+  probability: "20",
+  closeDate: undefined,
+  owner: "",
+};
+
+export function AddOpportunityDialog({ 
+  open, 
+  onOpenChange, 
+  initialStage = "Lead",
+  editData,
+  onSave,
+}: AddOpportunityDialogProps) {
+  const [formData, setFormData] = useState<OpportunityData>({ ...emptyFormData, stage: initialStage });
+  const isEditing = !!editData;
+
+  useEffect(() => {
+    if (editData) {
+      setFormData(editData);
+    } else {
+      setFormData({ ...emptyFormData, stage: initialStage });
+    }
+  }, [editData, initialStage, open]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,19 +110,15 @@ export function AddOpportunityDialog({ open, onOpenChange, initialStage = "Lead"
       return;
     }
 
-    toast.success("Opportunity created successfully", {
-      description: `${formData.name} has been added to ${formData.stage} stage`,
+    if (onSave) {
+      onSave(formData);
+    }
+
+    toast.success(isEditing ? "Opportunity updated successfully" : "Opportunity created successfully", {
+      description: `${formData.name} has been ${isEditing ? "updated" : "added to " + formData.stage + " stage"}`,
     });
     
-    setFormData({
-      name: "",
-      account: "",
-      value: "",
-      stage: "Lead",
-      probability: "20",
-      closeDate: undefined,
-      owner: "",
-    });
+    setFormData({ ...emptyFormData, stage: initialStage });
     onOpenChange(false);
   };
 
@@ -93,9 +126,11 @@ export function AddOpportunityDialog({ open, onOpenChange, initialStage = "Lead"
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Add New Opportunity</DialogTitle>
+          <DialogTitle>{isEditing ? "Edit Opportunity" : "Add New Opportunity"}</DialogTitle>
           <DialogDescription>
-            Create a new opportunity in your pipeline. Required fields are marked with *.
+            {isEditing 
+              ? "Update the opportunity details below." 
+              : "Create a new opportunity in your pipeline. Required fields are marked with *."}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
@@ -132,8 +167,8 @@ export function AddOpportunityDialog({ open, onOpenChange, initialStage = "Lead"
                 <Label htmlFor="value">Deal Value (₹) *</Label>
                 <Input
                   id="value"
-                  type="number"
-                  placeholder="e.g., 4500000"
+                  type="text"
+                  placeholder="e.g., 45,00,000"
                   value={formData.value}
                   onChange={(e) => setFormData({ ...formData, value: e.target.value })}
                 />
@@ -218,7 +253,7 @@ export function AddOpportunityDialog({ open, onOpenChange, initialStage = "Lead"
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit">Create Opportunity</Button>
+            <Button type="submit">{isEditing ? "Save Changes" : "Create Opportunity"}</Button>
           </DialogFooter>
         </form>
       </DialogContent>

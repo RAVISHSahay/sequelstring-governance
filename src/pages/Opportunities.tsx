@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Search, Filter, Plus, MoreHorizontal } from "lucide-react";
+import { Search, Filter, Plus, MoreHorizontal, Pencil } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
@@ -12,7 +12,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { AddOpportunityDialog } from "@/components/dialogs/AddOpportunityDialog";
+import { AddOpportunityDialog, OpportunityData } from "@/components/dialogs/AddOpportunityDialog";
 
 interface Deal {
   id: number;
@@ -34,7 +34,7 @@ interface Stage {
   totalValue: string;
 }
 
-const stages: Stage[] = [
+const initialStages: Stage[] = [
   {
     id: "lead",
     name: "Lead",
@@ -47,7 +47,7 @@ const stages: Stage[] = [
         account: "Tech Mahindra",
         value: "₹15,00,000",
         probability: 20,
-        owner: "Priya S",
+        owner: "Priya Sharma",
         initials: "PS",
         daysInStage: 5,
         closeDate: "Mar 2025",
@@ -58,7 +58,7 @@ const stages: Stage[] = [
         account: "L&T Infotech",
         value: "₹30,00,000",
         probability: 15,
-        owner: "Rahul M",
+        owner: "Rahul Mehta",
         initials: "RM",
         daysInStage: 3,
         closeDate: "Apr 2025",
@@ -77,7 +77,7 @@ const stages: Stage[] = [
         account: "Bajaj Auto",
         value: "₹42,00,000",
         probability: 40,
-        owner: "Anjali K",
+        owner: "Anjali Kumar",
         initials: "AK",
         daysInStage: 8,
         closeDate: "Feb 2025",
@@ -88,7 +88,7 @@ const stages: Stage[] = [
         account: "Kotak Bank",
         value: "₹18,00,000",
         probability: 35,
-        owner: "Vikram D",
+        owner: "Vikram Desai",
         initials: "VD",
         daysInStage: 12,
         closeDate: "Mar 2025",
@@ -99,7 +99,7 @@ const stages: Stage[] = [
         account: "Axis Bank",
         value: "₹18,00,000",
         probability: 45,
-        owner: "Priya S",
+        owner: "Priya Sharma",
         initials: "PS",
         daysInStage: 6,
         closeDate: "Feb 2025",
@@ -115,10 +115,10 @@ const stages: Stage[] = [
       {
         id: 6,
         name: "Enterprise Platform License",
-        account: "Tata Steel",
+        account: "Tata Steel Ltd",
         value: "₹45,00,000",
         probability: 60,
-        owner: "Priya S",
+        owner: "Priya Sharma",
         initials: "PS",
         daysInStage: 4,
         closeDate: "Jan 2025",
@@ -129,7 +129,7 @@ const stages: Stage[] = [
         account: "Reliance Industries",
         value: "₹28,50,000",
         probability: 55,
-        owner: "Rahul M",
+        owner: "Rahul Mehta",
         initials: "RM",
         daysInStage: 7,
         closeDate: "Feb 2025",
@@ -140,7 +140,7 @@ const stages: Stage[] = [
         account: "Mahindra Group",
         value: "₹32,00,000",
         probability: 50,
-        owner: "Priya S",
+        owner: "Priya Sharma",
         initials: "PS",
         daysInStage: 10,
         closeDate: "Feb 2025",
@@ -151,7 +151,7 @@ const stages: Stage[] = [
         account: "Godrej Industries",
         value: "₹22,00,000",
         probability: 65,
-        owner: "Sanjay G",
+        owner: "Sanjay Gupta",
         initials: "SG",
         daysInStage: 2,
         closeDate: "Jan 2025",
@@ -170,7 +170,7 @@ const stages: Stage[] = [
         account: "ICICI Bank",
         value: "₹25,00,000",
         probability: 80,
-        owner: "Vikram D",
+        owner: "Vikram Desai",
         initials: "VD",
         daysInStage: 15,
         closeDate: "Jan 2025",
@@ -181,7 +181,7 @@ const stages: Stage[] = [
         account: "SBI Life",
         value: "₹38,00,000",
         probability: 75,
-        owner: "Anjali K",
+        owner: "Anjali Kumar",
         initials: "AK",
         daysInStage: 9,
         closeDate: "Jan 2025",
@@ -200,7 +200,7 @@ const stages: Stage[] = [
         account: "HDFC Bank",
         value: "₹18,75,000",
         probability: 100,
-        owner: "Vikram D",
+        owner: "Vikram Desai",
         initials: "VD",
         daysInStage: 0,
         closeDate: "Closed",
@@ -211,7 +211,7 @@ const stages: Stage[] = [
         account: "Infosys Ltd",
         value: "₹12,00,000",
         probability: 100,
-        owner: "Anjali K",
+        owner: "Anjali Kumar",
         initials: "AK",
         daysInStage: 0,
         closeDate: "Closed",
@@ -222,7 +222,7 @@ const stages: Stage[] = [
         account: "Wipro",
         value: "₹27,25,000",
         probability: 100,
-        owner: "Priya S",
+        owner: "Priya Sharma",
         initials: "PS",
         daysInStage: 0,
         closeDate: "Closed",
@@ -231,7 +231,13 @@ const stages: Stage[] = [
   },
 ];
 
-function DealCard({ deal }: { deal: Deal }) {
+interface DealCardProps {
+  deal: Deal;
+  stageName: string;
+  onEdit: (deal: Deal, stageName: string) => void;
+}
+
+function DealCard({ deal, stageName, onEdit }: DealCardProps) {
   return (
     <div className="deal-card group">
       <div className="flex items-start justify-between mb-3">
@@ -253,7 +259,10 @@ function DealCard({ deal }: { deal: Deal }) {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem>View Details</DropdownMenuItem>
-            <DropdownMenuItem>Edit Opportunity</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onEdit(deal, stageName)}>
+              <Pencil className="h-4 w-4 mr-2" />
+              Edit Opportunity
+            </DropdownMenuItem>
             <DropdownMenuItem>Create Quote</DropdownMenuItem>
             <DropdownMenuItem>Log Activity</DropdownMenuItem>
           </DropdownMenuContent>
@@ -290,14 +299,85 @@ function DealCard({ deal }: { deal: Deal }) {
   );
 }
 
+const stageToId: Record<string, string> = {
+  "Lead": "lead",
+  "Qualified": "qualified",
+  "Proposal": "proposal",
+  "Negotiation": "negotiation",
+  "Closed Won": "closed-won",
+};
+
 export default function Opportunities() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [addToStage, setAddToStage] = useState("Lead");
+  const [editingOpportunity, setEditingOpportunity] = useState<OpportunityData | null>(null);
+  const [stages, setStages] = useState<Stage[]>(initialStages);
 
   const handleAddDeal = (stage: string) => {
     setAddToStage(stage);
-    setIsAddDialogOpen(true);
+    setEditingOpportunity(null);
+    setIsDialogOpen(true);
+  };
+
+  const handleEditDeal = (deal: Deal, stageName: string) => {
+    setEditingOpportunity({
+      id: deal.id,
+      name: deal.name,
+      account: deal.account,
+      value: deal.value,
+      stage: stageName,
+      probability: deal.probability.toString(),
+      owner: deal.owner,
+    });
+    setAddToStage(stageName);
+    setIsDialogOpen(true);
+  };
+
+  const getInitials = (name: string) => {
+    return name.split(" ").map(n => n[0]).join("").toUpperCase();
+  };
+
+  const handleSave = (data: OpportunityData) => {
+    if (data.id) {
+      // Update existing
+      setStages(stages.map(stage => ({
+        ...stage,
+        deals: stage.deals.map(deal => 
+          deal.id === data.id 
+            ? { 
+                ...deal, 
+                name: data.name,
+                account: data.account,
+                value: data.value,
+                probability: parseInt(data.probability) || 20,
+                owner: data.owner || deal.owner,
+                initials: getInitials(data.owner || deal.owner),
+              }
+            : deal
+        )
+      })));
+    } else {
+      // Add new deal
+      const newDeal: Deal = {
+        id: Date.now(),
+        name: data.name,
+        account: data.account,
+        value: data.value.startsWith("₹") ? data.value : `₹${parseInt(data.value).toLocaleString("en-IN")}`,
+        probability: parseInt(data.probability) || 20,
+        owner: data.owner || "Priya Sharma",
+        initials: getInitials(data.owner || "Priya Sharma"),
+        daysInStage: 0,
+        closeDate: data.closeDate ? data.closeDate.toLocaleDateString("en-IN", { month: "short", year: "numeric" }) : "TBD",
+      };
+
+      const stageId = stageToId[data.stage] || "lead";
+      setStages(stages.map(stage => 
+        stage.id === stageId 
+          ? { ...stage, deals: [...stage.deals, newDeal] }
+          : stage
+      ));
+    }
   };
 
   return (
@@ -347,7 +427,12 @@ export default function Opportunities() {
               {/* Deals */}
               <div className="space-y-3">
                 {stage.deals.map((deal) => (
-                  <DealCard key={deal.id} deal={deal} />
+                  <DealCard 
+                    key={deal.id} 
+                    deal={deal} 
+                    stageName={stage.name}
+                    onEdit={handleEditDeal}
+                  />
                 ))}
               </div>
 
@@ -390,9 +475,11 @@ export default function Opportunities() {
       </div>
 
       <AddOpportunityDialog 
-        open={isAddDialogOpen} 
-        onOpenChange={setIsAddDialogOpen} 
+        open={isDialogOpen} 
+        onOpenChange={setIsDialogOpen} 
         initialStage={addToStage}
+        editData={editingOpportunity}
+        onSave={handleSave}
       />
     </AppLayout>
   );
