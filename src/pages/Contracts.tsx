@@ -17,9 +17,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Search, Filter, Plus, MoreHorizontal, FileCheck, Download, AlertTriangle, CheckCircle, Clock, Pencil } from "lucide-react";
+import { Search, Filter, Plus, MoreHorizontal, FileCheck, Download, AlertTriangle, CheckCircle, Clock, Pencil, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AddContractDialog, ContractData } from "@/components/dialogs/AddContractDialog";
+import { DeleteConfirmDialog } from "@/components/dialogs/DeleteConfirmDialog";
+import { toast } from "sonner";
 
 interface Contract {
   id: string;
@@ -124,6 +126,8 @@ export default function Contracts() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingContract, setEditingContract] = useState<ContractData | null>(null);
   const [contracts, setContracts] = useState<Contract[]>(initialContracts);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [contractToDelete, setContractToDelete] = useState<Contract | null>(null);
 
   const filteredContracts = contracts.filter(
     (contract) =>
@@ -147,6 +151,22 @@ export default function Contracts() {
       endDate: contract.endDate !== "-" ? new Date(contract.endDate) : undefined,
     });
     setIsDialogOpen(true);
+  };
+
+  const handleDelete = (contract: Contract) => {
+    setContractToDelete(contract);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (contractToDelete) {
+      setContracts(contracts.filter(c => c.id !== contractToDelete.id));
+      toast.success("Contract deleted", {
+        description: `${contractToDelete.name} has been removed`,
+      });
+      setContractToDelete(null);
+    }
+    setDeleteDialogOpen(false);
   };
 
   const handleSave = (data: ContractData) => {
@@ -303,6 +323,13 @@ export default function Contracts() {
                           </DropdownMenuItem>
                           <DropdownMenuItem>Initiate Renewal</DropdownMenuItem>
                           <DropdownMenuItem>Download PDF</DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={() => handleDelete(contract)}
+                            className="text-destructive focus:text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Delete Contract
+                          </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>
@@ -319,6 +346,15 @@ export default function Contracts() {
         onOpenChange={setIsDialogOpen}
         editData={editingContract}
         onSave={handleSave}
+      />
+
+      <DeleteConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={confirmDelete}
+        title="Delete Contract"
+        description="Are you sure you want to delete this contract? This action cannot be undone."
+        itemName={contractToDelete?.name}
       />
     </AppLayout>
   );

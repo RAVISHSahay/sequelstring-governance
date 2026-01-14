@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Search, Filter, Plus, MoreHorizontal, Pencil } from "lucide-react";
+import { Search, Filter, Plus, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
@@ -13,6 +13,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { AddOpportunityDialog, OpportunityData } from "@/components/dialogs/AddOpportunityDialog";
+import { DeleteConfirmDialog } from "@/components/dialogs/DeleteConfirmDialog";
+import { toast } from "sonner";
 
 interface Deal {
   id: number;
@@ -235,9 +237,10 @@ interface DealCardProps {
   deal: Deal;
   stageName: string;
   onEdit: (deal: Deal, stageName: string) => void;
+  onDelete: (deal: Deal) => void;
 }
 
-function DealCard({ deal, stageName, onEdit }: DealCardProps) {
+function DealCard({ deal, stageName, onEdit, onDelete }: DealCardProps) {
   return (
     <div className="deal-card group">
       <div className="flex items-start justify-between mb-3">
@@ -265,6 +268,13 @@ function DealCard({ deal, stageName, onEdit }: DealCardProps) {
             </DropdownMenuItem>
             <DropdownMenuItem>Create Quote</DropdownMenuItem>
             <DropdownMenuItem>Log Activity</DropdownMenuItem>
+            <DropdownMenuItem 
+              onClick={() => onDelete(deal)}
+              className="text-destructive focus:text-destructive"
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Delete Opportunity
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
@@ -313,6 +323,8 @@ export default function Opportunities() {
   const [addToStage, setAddToStage] = useState("Lead");
   const [editingOpportunity, setEditingOpportunity] = useState<OpportunityData | null>(null);
   const [stages, setStages] = useState<Stage[]>(initialStages);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [dealToDelete, setDealToDelete] = useState<Deal | null>(null);
 
   const handleAddDeal = (stage: string) => {
     setAddToStage(stage);
@@ -332,6 +344,25 @@ export default function Opportunities() {
     });
     setAddToStage(stageName);
     setIsDialogOpen(true);
+  };
+
+  const handleDeleteDeal = (deal: Deal) => {
+    setDealToDelete(deal);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (dealToDelete) {
+      setStages(stages.map(stage => ({
+        ...stage,
+        deals: stage.deals.filter(deal => deal.id !== dealToDelete.id)
+      })));
+      toast.success("Opportunity deleted", {
+        description: `${dealToDelete.name} has been removed`,
+      });
+      setDealToDelete(null);
+    }
+    setDeleteDialogOpen(false);
   };
 
   const getInitials = (name: string) => {
@@ -432,6 +463,7 @@ export default function Opportunities() {
                     deal={deal} 
                     stageName={stage.name}
                     onEdit={handleEditDeal}
+                    onDelete={handleDeleteDeal}
                   />
                 ))}
               </div>
@@ -480,6 +512,15 @@ export default function Opportunities() {
         initialStage={addToStage}
         editData={editingOpportunity}
         onSave={handleSave}
+      />
+
+      <DeleteConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={confirmDelete}
+        title="Delete Opportunity"
+        description="Are you sure you want to delete this opportunity? This action cannot be undone."
+        itemName={dealToDelete?.name}
       />
     </AppLayout>
   );
