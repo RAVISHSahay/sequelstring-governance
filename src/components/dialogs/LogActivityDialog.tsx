@@ -41,6 +41,7 @@ interface LogActivityDialogProps {
   onOpenChange: (open: boolean) => void;
   onSave: (activity: Activity) => void;
   defaultAccount?: string;
+  accountContacts?: string[];
 }
 
 const activityTypes = [
@@ -62,7 +63,7 @@ const accounts = [
   'ONGC',
 ];
 
-const contacts = [
+const defaultContacts = [
   'Rajesh Sharma',
   'Priya Menon',
   'Amit Patel',
@@ -72,7 +73,8 @@ const contacts = [
 
 const outcomes = ['Positive', 'Negative', 'Neutral', 'Completed', 'Sent', 'Pending'];
 
-export function LogActivityDialog({ open, onOpenChange, onSave, defaultAccount = '' }: LogActivityDialogProps) {
+export function LogActivityDialog({ open, onOpenChange, onSave, defaultAccount = '', accountContacts }: LogActivityDialogProps) {
+  const contacts = accountContacts && accountContacts.length > 0 ? accountContacts : defaultContacts;
   const [formData, setFormData] = useState({
     type: 'call',
     title: '',

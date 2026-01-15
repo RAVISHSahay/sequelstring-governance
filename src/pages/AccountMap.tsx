@@ -938,6 +938,7 @@ export default function AccountMap() {
         onOpenChange={setActivityDialogOpen}
         onSave={handleSaveActivity}
         defaultAccount={selectedAccount.name}
+        accountContacts={accountStakeholders.map(s => s.name)}
       />
     </AppLayout>
   );
