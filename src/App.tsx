@@ -28,6 +28,7 @@ import UserManagement from "./pages/UserManagement";
 import SalesStageConfig from "./pages/SalesStageConfig";
 import Forecasting from "./pages/Forecasting";
 import WinLossAnalysis from "./pages/WinLossAnalysis";
+import POCTracking from "./pages/POCTracking";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -57,6 +58,7 @@ const App = () => (
             {/* Intelligence Routes */}
             <Route path="/forecasting" element={<Forecasting />} />
             <Route path="/win-loss" element={<WinLossAnalysis />} />
+            <Route path="/poc-tracking" element={<POCTracking />} />
             <Route
               path="/sales-stages"
               element={

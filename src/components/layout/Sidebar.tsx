@@ -22,6 +22,7 @@ import {
   GitBranch,
   TrendingUp,
   Trophy,
+  FlaskConical,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
@@ -50,6 +51,7 @@ const navigation: NavItem[] = [
 const intelligenceNav: NavItem[] = [
   { name: "Forecasting", href: "/forecasting", icon: TrendingUp, permission: "view_dashboard" },
   { name: "Win/Loss", href: "/win-loss", icon: Trophy, permission: "view_dashboard" },
+  { name: "POC Tracking", href: "/poc-tracking", icon: FlaskConical, permission: "view_dashboard" },
   { name: "Sales Stages", href: "/sales-stages", icon: GitBranch, permission: "view_admin" },
 ];
 
