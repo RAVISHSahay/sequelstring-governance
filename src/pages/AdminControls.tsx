@@ -9,7 +9,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from 'sonner';
@@ -22,7 +21,6 @@ import {
   FileText,
   Search,
   Filter,
-  Plus,
   Calendar,
   User,
   Building2,
@@ -31,16 +29,21 @@ import {
   AlertTriangle,
   CheckCircle2,
   XCircle,
-  Edit,
-  Trash2,
   Eye,
+  ShieldCheck,
 } from 'lucide-react';
 import { mockIncentivePlans, mockAuditLogs } from '@/data/mockIncentiveData';
 import { IncentivePlan, AuditLog } from '@/types/incentives';
 import { PayoutSimulator } from '@/components/admin/PayoutSimulator';
 import { ClonePlanDialog } from '@/components/admin/ClonePlanDialog';
+import { useAuth } from '@/contexts/AuthContext';
+import { AccessDenied } from '@/components/auth/AccessDenied';
 
 export default function AdminControls() {
+  const { hasPermission, user } = useAuth();
+  const canManageAdmin = hasPermission('manage_admin');
+  const canViewAuditLogs = hasPermission('view_audit_logs');
+  
   const [plans, setPlans] = useState<IncentivePlan[]>(mockIncentivePlans);
   const [auditLogs] = useState<AuditLog[]>(mockAuditLogs);
   const [searchTerm, setSearchTerm] = useState('');
@@ -153,22 +156,43 @@ export default function AdminControls() {
     draftPlans: plans.filter((p) => p.status === 'draft').length,
   };
 
+  // Check if user has view_admin permission - if not, show access denied
+  if (!hasPermission('view_admin')) {
+    return (
+      <AppLayout title="Admin Controls">
+        <AccessDenied
+          title="Admin Access Required"
+          description="You don't have permission to access Admin Controls. This area is restricted to administrators and finance users."
+          requiredRole="Administrator or Finance"
+        />
+      </AppLayout>
+    );
+  }
+
   return (
     <AppLayout title="Admin Controls">
       <div className="space-y-6">
         {/* Header */}
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Admin Controls</h1>
+            <div className="flex items-center gap-2 mb-1">
+              <h1 className="text-2xl font-bold text-foreground">Admin Controls</h1>
+              <Badge className="bg-primary/10 text-primary">
+                <ShieldCheck className="h-3 w-3 mr-1" />
+                Authorized
+              </Badge>
+            </div>
             <p className="text-muted-foreground">
               Manage incentive plans, simulate payouts, and view audit logs
             </p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setSimulatorOpen(true)}>
-              <Play className="mr-2 h-4 w-4" />
-              Simulate Payout
-            </Button>
+            {canManageAdmin && (
+              <Button variant="outline" onClick={() => setSimulatorOpen(true)}>
+                <Play className="mr-2 h-4 w-4" />
+                Simulate Payout
+              </Button>
+            )}
           </div>
         </div>
 

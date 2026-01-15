@@ -3,6 +3,8 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import Index from "./pages/Index";
 import Accounts from "./pages/Accounts";
 import Contacts from "./pages/Contacts";
@@ -28,32 +30,41 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/accounts" element={<Accounts />} />
-          <Route path="/contacts" element={<Contacts />} />
-          <Route path="/leads" element={<Leads />} />
-          <Route path="/opportunities" element={<Opportunities />} />
-          <Route path="/quotes" element={<Quotes />} />
-          <Route path="/quotes/new" element={<QuoteBuilder />} />
-          <Route path="/contracts" element={<Contracts />} />
-          <Route path="/orders" element={<Orders />} />
-          <Route path="/activities" element={<Activities />} />
-          <Route path="/reports" element={<Reports />} />
-          <Route path="/pricing" element={<Pricing />} />
-          <Route path="/settings" element={<Settings />} />
-          {/* Incentive Engine Routes */}
-          <Route path="/targets" element={<Targets />} />
-          <Route path="/incentives" element={<Incentives />} />
-          <Route path="/payouts" element={<Payouts />} />
-          <Route path="/performance" element={<Performance />} />
-          <Route path="/admin" element={<AdminControls />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
+      <AuthProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/accounts" element={<Accounts />} />
+            <Route path="/contacts" element={<Contacts />} />
+            <Route path="/leads" element={<Leads />} />
+            <Route path="/opportunities" element={<Opportunities />} />
+            <Route path="/quotes" element={<Quotes />} />
+            <Route path="/quotes/new" element={<QuoteBuilder />} />
+            <Route path="/contracts" element={<Contracts />} />
+            <Route path="/orders" element={<Orders />} />
+            <Route path="/activities" element={<Activities />} />
+            <Route path="/reports" element={<Reports />} />
+            <Route path="/pricing" element={<Pricing />} />
+            <Route path="/settings" element={<Settings />} />
+            {/* Incentive Engine Routes */}
+            <Route path="/targets" element={<Targets />} />
+            <Route path="/incentives" element={<Incentives />} />
+            <Route path="/payouts" element={<Payouts />} />
+            <Route path="/performance" element={<Performance />} />
+            <Route
+              path="/admin"
+              element={
+                <ProtectedRoute requiredPermissions={['view_admin']}>
+                  <AdminControls />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );

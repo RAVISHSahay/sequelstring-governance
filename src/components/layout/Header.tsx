@@ -1,19 +1,35 @@
-import { Bell, Search, Plus, ChevronDown } from "lucide-react";
+import { Bell, Search, Plus, ChevronDown, LogOut, User, Settings } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/contexts/AuthContext";
+import { roleInfo } from "@/types/rbac";
+import { RoleSwitcher } from "@/components/auth/RoleSwitcher";
 
 interface HeaderProps {
   title: string;
 }
 
 export function Header({ title }: HeaderProps) {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const userInitials = user
+    ? `${user.firstName.charAt(0)}${user.lastName.charAt(0)}`
+    : 'U';
+
+  const userName = user ? `${user.firstName} ${user.lastName}` : 'User';
+
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-card/80 backdrop-blur-sm px-6">
       <div className="flex items-center gap-4">
@@ -48,6 +64,9 @@ export function Header({ title }: HeaderProps) {
           </DropdownMenuContent>
         </DropdownMenu>
 
+        {/* Role Switcher (Demo) */}
+        <RoleSwitcher />
+
         {/* Notifications */}
         <Button variant="ghost" size="icon" className="relative">
           <Bell className="h-5 w-5" />
@@ -61,21 +80,43 @@ export function Header({ title }: HeaderProps) {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="gap-2 pl-2 pr-3">
               <Avatar className="h-8 w-8">
-                <AvatarImage src="" />
+                <AvatarImage src={user?.avatarUrl} />
                 <AvatarFallback className="bg-primary text-primary-foreground text-xs">
-                  JD
+                  {userInitials}
                 </AvatarFallback>
               </Avatar>
-              <span className="hidden sm:inline text-sm font-medium">
-                John Doe
-              </span>
+              <div className="hidden sm:flex flex-col items-start">
+                <span className="text-sm font-medium leading-none">{userName}</span>
+                {user && (
+                  <span className="text-xs text-muted-foreground">
+                    {roleInfo[user.role].label}
+                  </span>
+                )}
+              </div>
               <ChevronDown className="h-3 w-3 text-muted-foreground" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48">
-            <DropdownMenuItem>Profile</DropdownMenuItem>
-            <DropdownMenuItem>Preferences</DropdownMenuItem>
-            <DropdownMenuItem>Sign out</DropdownMenuItem>
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuLabel>
+              <div className="flex flex-col space-y-1">
+                <p className="text-sm font-medium">{userName}</p>
+                <p className="text-xs text-muted-foreground">{user?.email}</p>
+              </div>
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => navigate('/settings')}>
+              <User className="mr-2 h-4 w-4" />
+              Profile
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate('/settings')}>
+              <Settings className="mr-2 h-4 w-4" />
+              Settings
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={logout} className="text-destructive focus:text-destructive">
+              <LogOut className="mr-2 h-4 w-4" />
+              Sign out
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
