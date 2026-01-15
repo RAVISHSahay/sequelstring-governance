@@ -25,6 +25,12 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
   Building2,
   Users,
   Target,
@@ -50,6 +56,9 @@ import {
   Crown,
   UserCheck,
   Gauge,
+  Plus,
+  UserPlus,
+  ClipboardList,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { 
@@ -59,6 +68,10 @@ import {
   sampleActivities,
   defaultSalesStages 
 } from '@/data/mockAccountData';
+import { AddOpportunityDialog, OpportunityData } from '@/components/dialogs/AddOpportunityDialog';
+import { AddContactDialog } from '@/components/dialogs/AddContactDialog';
+import { LogActivityDialog } from '@/components/dialogs/LogActivityDialog';
+import { toast } from 'sonner';
 
 const getHealthColor = (score: number) => {
   if (score >= 80) return 'text-emerald-500';
@@ -121,6 +134,11 @@ export default function AccountMap() {
   
   const [selectedAccountId, setSelectedAccountId] = useState(initialAccount?.id || '');
   
+  // Dialog states
+  const [opportunityDialogOpen, setOpportunityDialogOpen] = useState(false);
+  const [contactDialogOpen, setContactDialogOpen] = useState(false);
+  const [activityDialogOpen, setActivityDialogOpen] = useState(false);
+  
   // Update selection when URL param changes
   useEffect(() => {
     if (accountParam) {
@@ -135,6 +153,22 @@ export default function AccountMap() {
   const accountStakeholders = sampleStakeholders.filter(s => s.accountId === selectedAccountId);
   const accountOpportunities = sampleOpportunities.filter(o => o.accountId === selectedAccountId);
   const accountActivities = sampleActivities.filter(a => a.accountId === selectedAccountId);
+
+  // Handlers for dialogs
+  const handleSaveOpportunity = (data: OpportunityData) => {
+    toast.success(`Opportunity "${data.name}" created for ${selectedAccount.name}`);
+    setOpportunityDialogOpen(false);
+  };
+
+  const handleSaveContact = (contact: any) => {
+    toast.success(`Contact "${contact.name}" added to ${selectedAccount.name}`);
+    setContactDialogOpen(false);
+  };
+
+  const handleSaveActivity = (activity: any) => {
+    toast.success(`Activity logged for ${selectedAccount.name}`);
+    setActivityDialogOpen(false);
+  };
 
   return (
     <AppLayout title="Account Map">
@@ -169,13 +203,31 @@ export default function AccountMap() {
           </Badge>
         </div>
         <div className="flex gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button size="sm" className="gap-2">
+                <Plus className="h-4 w-4" />
+                Quick Actions
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem onClick={() => setOpportunityDialogOpen(true)}>
+                <Target className="h-4 w-4 mr-2" />
+                New Opportunity
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setContactDialogOpen(true)}>
+                <UserPlus className="h-4 w-4 mr-2" />
+                Add Contact
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setActivityDialogOpen(true)}>
+                <ClipboardList className="h-4 w-4 mr-2" />
+                Log Activity
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Button variant="outline" size="sm">
             <FileText className="h-4 w-4 mr-2" />
             View History
-          </Button>
-          <Button size="sm">
-            <Target className="h-4 w-4 mr-2" />
-            New Opportunity
           </Button>
         </div>
       </div>
@@ -857,6 +909,34 @@ export default function AccountMap() {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Dialogs */}
+      <AddOpportunityDialog
+        open={opportunityDialogOpen}
+        onOpenChange={setOpportunityDialogOpen}
+        onSave={handleSaveOpportunity}
+        editData={{ 
+          name: '', 
+          account: selectedAccount.name, 
+          value: '', 
+          stage: 'Prospecting', 
+          probability: '20%', 
+          owner: selectedAccount.ownerName 
+        }}
+      />
+      
+      <AddContactDialog
+        open={contactDialogOpen}
+        onOpenChange={setContactDialogOpen}
+        onSave={handleSaveContact}
+        mode="create"
+      />
+      
+      <LogActivityDialog
+        open={activityDialogOpen}
+        onOpenChange={setActivityDialogOpen}
+        onSave={handleSaveActivity}
+      />
     </AppLayout>
   );
 }
