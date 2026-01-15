@@ -30,11 +30,13 @@ import {
   Pencil,
   Trash2,
   Upload,
+  Download,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AddLeadDialog, LeadData } from "@/components/dialogs/AddLeadDialog";
 import { DeleteConfirmDialog } from "@/components/dialogs/DeleteConfirmDialog";
 import { CSVImportDialog } from "@/components/dialogs/CSVImportDialog";
+import { exportToCSV } from "@/lib/csvExport";
 import { toast } from "sonner";
 
 interface Lead {
@@ -397,6 +399,32 @@ export default function Leads() {
           <Button variant="outline" className="gap-2">
             <Filter className="h-4 w-4" />
             Filters
+          </Button>
+          <Button 
+            variant="outline" 
+            className="gap-2" 
+            onClick={() => {
+              exportToCSV({
+                data: filteredLeads,
+                columns: [
+                  { key: 'name', header: 'Name' },
+                  { key: 'company', header: 'Company' },
+                  { key: 'title', header: 'Title' },
+                  { key: 'email', header: 'Email' },
+                  { key: 'phone', header: 'Phone' },
+                  { key: 'source', header: 'Source' },
+                  { key: 'status', header: 'Status' },
+                  { key: 'score', header: 'Score' },
+                  { key: 'owner', header: 'Owner' },
+                  { key: 'createdAt', header: 'Created' },
+                ],
+                filename: 'leads-export',
+              });
+              toast.success(`Exported ${filteredLeads.length} leads to CSV`);
+            }}
+          >
+            <Download className="h-4 w-4" />
+            Export
           </Button>
           <Button variant="outline" className="gap-2" onClick={() => setImportDialogOpen(true)}>
             <Upload className="h-4 w-4" />
