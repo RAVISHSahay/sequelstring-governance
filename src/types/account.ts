@@ -438,7 +438,177 @@ export interface ForecastEntry {
 }
 
 // ==========================================
-// MODULE 6: Configuration
+// MODULE 6: POC (Proof of Concept) Governance
+// ==========================================
+
+export type POCStatus = 'initiated' | 'in_progress' | 'completed' | 'accepted' | 'rejected' | 'waived';
+
+export interface POCKPI {
+  id: string;
+  name: string;
+  category: 'accuracy' | 'performance' | 'cost_saving' | 'sla_improvement' | 'compliance' | 'custom';
+  baselineValue: number;
+  targetValue: number;
+  actualValue?: number;
+  unit: string;
+  weight: number; // 0-100, for weighted scoring
+  achieved: boolean;
+}
+
+export interface POC {
+  id: string;
+  opportunityId: string;
+  name: string;
+  status: POCStatus;
+  
+  // Timeline
+  startDate: Date;
+  expectedEndDate: Date;
+  actualEndDate?: Date;
+  daysElapsed: number;
+  
+  // Objectives & KPIs
+  objectives: string[];
+  kpis: POCKPI[];
+  overallScore?: number; // 0-100
+  
+  // Stakeholders
+  pocOwnerId: string;
+  pocOwnerName: string;
+  customerPocContact: string;
+  technicalLead: string;
+  
+  // Resources
+  estimatedCost: number;
+  actualCost?: number;
+  resourcesAllocated: string[];
+  
+  // Outcome
+  qualitativeFeedback?: string;
+  recommendation?: 'proceed' | 'modify' | 'reject';
+  lessonsLearned?: string;
+  
+  // Impact on Deal
+  probabilityAdjustment: number; // -50 to +50
+  
+  // Audit
+  statusHistory: { status: POCStatus; date: Date; changedBy: string; notes?: string }[];
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// ==========================================
+// MODULE 7: Budget & Approval Tracking
+// ==========================================
+
+export type BudgetIdentified = 'yes' | 'no' | 'partial';
+export type ApprovalStatus = 'not_started' | 'in_review' | 'approved' | 'rejected' | 'conditional';
+export type FundingSource = 'opex' | 'capex' | 'project_fund' | 'contingency' | 'external' | 'unknown';
+
+export interface BudgetApproval {
+  id: string;
+  opportunityId: string;
+  
+  // Budget Info
+  budgetIdentified: BudgetIdentified;
+  budgetAmount?: number;
+  budgetOwner?: string;
+  budgetOwnerTitle?: string;
+  budgetCycle?: string; // e.g., "FY 2024-25"
+  fundingSource?: FundingSource;
+  
+  // Approval Chain
+  approvalAuthorityIdentified: boolean;
+  approvalAuthority?: string;
+  approvalAuthorityTitle?: string;
+  approvalStatus: ApprovalStatus;
+  approvalDate?: Date;
+  approvalNotes?: string;
+  
+  // Conditions
+  conditions?: string[];
+  
+  // Audit
+  history: { field: string; oldValue: string; newValue: string; date: Date; changedBy: string }[];
+  updatedAt: Date;
+}
+
+// ==========================================
+// MODULE 8: Enhanced Stakeholder Influence (Deal Politics)
+// ==========================================
+
+export type StakeholderStance = 'supporter' | 'champion' | 'influencer' | 'decision_maker' | 'against_us' | 'neutral';
+
+export interface DealStakeholder {
+  id: string;
+  opportunityId: string;
+  contactId: string;
+  name: string;
+  title: string;
+  department: string;
+  organization: string;
+  
+  // Influence Mapping
+  stance: StakeholderStance;
+  influenceScore: number; // 1-5
+  engagementLevel: 'high' | 'medium' | 'low' | 'none';
+  relationshipStrength: 'strong' | 'moderate' | 'weak' | 'none';
+  
+  // Risk Assessment
+  isRisk: boolean;
+  riskLevel?: 'critical' | 'high' | 'medium' | 'low';
+  riskNotes?: string;
+  
+  // Engagement
+  lastEngagementDate?: Date;
+  engagementFrequency: 'weekly' | 'biweekly' | 'monthly' | 'quarterly' | 'rarely';
+  preferredChannel: 'email' | 'phone' | 'in_person' | 'video';
+  
+  // Actions
+  actionRequired?: string;
+  actionDueDate?: Date;
+  assignedTo?: string;
+  
+  // Audit
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// ==========================================
+// MODULE 9: Stage Governance Rules
+// ==========================================
+
+export interface StageGovernanceRule {
+  id: string;
+  stageId: string;
+  ruleType: 'entry' | 'exit';
+  
+  // Conditions
+  condition: {
+    type: 'field_required' | 'stakeholder_required' | 'document_required' | 'approval_required' | 'poc_status' | 'budget_status';
+    field?: string;
+    value?: any;
+    stakeholderRole?: StakeholderStance;
+    documentType?: string;
+    pocStatus?: POCStatus;
+    budgetStatus?: BudgetIdentified;
+  };
+  
+  // Configuration
+  isMandatory: boolean;
+  canBeWaived: boolean;
+  waiverApprovalRole?: string;
+  
+  // Messaging
+  errorMessage: string;
+  warningMessage?: string;
+  
+  // Active
+  isActive: boolean;
+}
+
+// ==========================================
+// MODULE 10: Configuration
 // ==========================================
 
 export interface SalesProcess {
