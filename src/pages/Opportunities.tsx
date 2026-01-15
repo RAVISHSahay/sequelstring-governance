@@ -4,16 +4,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Search, Filter, Plus, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { Search, Filter, Plus, MoreHorizontal, Pencil, Trash2, Eye, FlaskConical } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { AddOpportunityDialog, OpportunityData } from "@/components/dialogs/AddOpportunityDialog";
 import { DeleteConfirmDialog } from "@/components/dialogs/DeleteConfirmDialog";
+import { OpportunityDetailDialog } from "@/components/dialogs/OpportunityDetailDialog";
 import { toast } from "sonner";
 
 interface Deal {
@@ -238,11 +240,12 @@ interface DealCardProps {
   stageName: string;
   onEdit: (deal: Deal, stageName: string) => void;
   onDelete: (deal: Deal) => void;
+  onViewDetails: (deal: Deal, stageName: string) => void;
 }
 
-function DealCard({ deal, stageName, onEdit, onDelete }: DealCardProps) {
+function DealCard({ deal, stageName, onEdit, onDelete, onViewDetails }: DealCardProps) {
   return (
-    <div className="deal-card group">
+    <div className="deal-card group cursor-pointer" onClick={() => onViewDetails(deal, stageName)}>
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1 min-w-0">
           <p className="font-medium text-foreground text-sm truncate group-hover:text-primary transition-colors">
@@ -251,7 +254,7 @@ function DealCard({ deal, stageName, onEdit, onDelete }: DealCardProps) {
           <p className="text-xs text-muted-foreground truncate">{deal.account}</p>
         </div>
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
+          <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
             <Button
               variant="ghost"
               size="icon"
@@ -261,15 +264,24 @@ function DealCard({ deal, stageName, onEdit, onDelete }: DealCardProps) {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem>View Details</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onEdit(deal, stageName)}>
+            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onViewDetails(deal, stageName); }}>
+              <Eye className="h-4 w-4 mr-2" />
+              View Details
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onEdit(deal, stageName); }}>
               <Pencil className="h-4 w-4 mr-2" />
               Edit Opportunity
             </DropdownMenuItem>
-            <DropdownMenuItem>Create Quote</DropdownMenuItem>
-            <DropdownMenuItem>Log Activity</DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={(e) => e.stopPropagation()}>
+              <FlaskConical className="h-4 w-4 mr-2" />
+              Manage POCs
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={(e) => e.stopPropagation()}>Create Quote</DropdownMenuItem>
+            <DropdownMenuItem onClick={(e) => e.stopPropagation()}>Log Activity</DropdownMenuItem>
+            <DropdownMenuSeparator />
             <DropdownMenuItem 
-              onClick={() => onDelete(deal)}
+              onClick={(e) => { e.stopPropagation(); onDelete(deal); }}
               className="text-destructive focus:text-destructive"
             >
               <Trash2 className="h-4 w-4 mr-2" />
@@ -325,6 +337,13 @@ export default function Opportunities() {
   const [stages, setStages] = useState<Stage[]>(initialStages);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [dealToDelete, setDealToDelete] = useState<Deal | null>(null);
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [selectedDeal, setSelectedDeal] = useState<(Deal & { stage?: string }) | null>(null);
+
+  const handleViewDetails = (deal: Deal, stageName: string) => {
+    setSelectedDeal({ ...deal, stage: stageName });
+    setDetailDialogOpen(true);
+  };
 
   const handleAddDeal = (stage: string) => {
     setAddToStage(stage);
@@ -464,6 +483,7 @@ export default function Opportunities() {
                     stageName={stage.name}
                     onEdit={handleEditDeal}
                     onDelete={handleDeleteDeal}
+                    onViewDetails={handleViewDetails}
                   />
                 ))}
               </div>
@@ -521,6 +541,12 @@ export default function Opportunities() {
         title="Delete Opportunity"
         description="Are you sure you want to delete this opportunity? This action cannot be undone."
         itemName={dealToDelete?.name}
+      />
+
+      <OpportunityDetailDialog
+        open={detailDialogOpen}
+        onOpenChange={setDetailDialogOpen}
+        opportunity={selectedDeal}
       />
     </AppLayout>
   );
