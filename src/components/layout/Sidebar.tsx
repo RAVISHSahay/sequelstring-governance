@@ -18,6 +18,10 @@ import {
   Shield,
   UserCog,
   LucideIcon,
+  Map,
+  GitBranch,
+  TrendingUp,
+  Trophy,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
@@ -33,6 +37,7 @@ interface NavItem {
 const navigation: NavItem[] = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard, permission: "view_dashboard" },
   { name: "Accounts", href: "/accounts", icon: Building2, permission: "view_accounts" },
+  { name: "Account Map", href: "/account-map", icon: Map, permission: "view_accounts" },
   { name: "Contacts", href: "/contacts", icon: Users, permission: "view_contacts" },
   { name: "Leads", href: "/leads", icon: Target, permission: "view_leads" },
   { name: "Opportunities", href: "/opportunities", icon: Briefcase, permission: "view_opportunities" },
@@ -40,6 +45,12 @@ const navigation: NavItem[] = [
   { name: "Contracts", href: "/contracts", icon: FileCheck, permission: "view_contracts" },
   { name: "Orders", href: "/orders", icon: Receipt, permission: "view_orders" },
   { name: "Activities", href: "/activities", icon: Clock, permission: "view_dashboard" },
+];
+
+const intelligenceNav: NavItem[] = [
+  { name: "Forecasting", href: "/forecasting", icon: TrendingUp, permission: "view_dashboard" },
+  { name: "Win/Loss", href: "/win-loss", icon: Trophy, permission: "view_dashboard" },
+  { name: "Sales Stages", href: "/sales-stages", icon: GitBranch, permission: "view_admin" },
 ];
 
 const incentiveNav: NavItem[] = [
@@ -67,6 +78,7 @@ export function Sidebar() {
   };
 
   const visibleNavigation = filterByPermission(navigation);
+  const visibleIntelligenceNav = filterByPermission(intelligenceNav);
   const visibleIncentiveNav = filterByPermission(incentiveNav);
   const visibleSecondaryNav = filterByPermission(secondaryNav);
 
@@ -116,6 +128,35 @@ export function Sidebar() {
             );
           })}
         </div>
+
+        {/* Intelligence Section */}
+        {visibleIntelligenceNav.length > 0 && (
+          <div className="mt-6 pt-4 border-t border-sidebar-border">
+            {!collapsed && (
+              <p className="px-3 mb-2 text-xs font-semibold text-sidebar-foreground/60 uppercase tracking-wider">
+                Intelligence
+              </p>
+            )}
+            <div className="space-y-1">
+              {visibleIntelligenceNav.map((item) => {
+                const isActive = location.pathname === item.href;
+                return (
+                  <Link
+                    key={item.name}
+                    to={item.href}
+                    className={cn(
+                      "nav-item",
+                      isActive ? "nav-item-active" : "nav-item-inactive"
+                    )}
+                  >
+                    <item.icon className="h-5 w-5 flex-shrink-0" />
+                    {!collapsed && <span>{item.name}</span>}
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Incentive Engine Section */}
         {visibleIncentiveNav.length > 0 && (

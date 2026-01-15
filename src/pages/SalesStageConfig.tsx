@@ -28,7 +28,7 @@ import {
   Lock,
   Unlock
 } from "lucide-react";
-import { salesStages } from "@/data/mockAccountData";
+import { defaultSalesStages } from "@/data/mockAccountData";
 import { SalesStage, StageRule } from "@/types/account";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
@@ -51,7 +51,7 @@ const forecastCategories = [
 ];
 
 export default function SalesStageConfig() {
-  const [stages, setStages] = useState<SalesStage[]>(salesStages);
+  const [stages, setStages] = useState<SalesStage[]>(defaultSalesStages);
   const [selectedStage, setSelectedStage] = useState<SalesStage | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
@@ -90,7 +90,7 @@ export default function SalesStageConfig() {
     <div className="flex h-screen bg-background">
       <Sidebar />
       <div className="flex-1 flex flex-col overflow-hidden ml-64">
-        <Header />
+        <Header title="Sales Stage Configuration" />
         <main className="flex-1 overflow-y-auto p-6">
           <div className="max-w-7xl mx-auto space-y-6">
             {/* Header */}
