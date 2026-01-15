@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -110,7 +111,26 @@ const formatCurrency = (value: number) => {
 };
 
 export default function AccountMap() {
-  const [selectedAccountId, setSelectedAccountId] = useState(sampleAccounts[0]?.id || '');
+  const [searchParams] = useSearchParams();
+  const accountParam = searchParams.get('account');
+  
+  // Find account by name from URL param, or use first account
+  const initialAccount = accountParam 
+    ? sampleAccounts.find(a => a.name.toLowerCase() === accountParam.toLowerCase()) || sampleAccounts[0]
+    : sampleAccounts[0];
+  
+  const [selectedAccountId, setSelectedAccountId] = useState(initialAccount?.id || '');
+  
+  // Update selection when URL param changes
+  useEffect(() => {
+    if (accountParam) {
+      const found = sampleAccounts.find(a => a.name.toLowerCase() === accountParam.toLowerCase());
+      if (found) {
+        setSelectedAccountId(found.id);
+      }
+    }
+  }, [accountParam]);
+  
   const selectedAccount = sampleAccounts.find(a => a.id === selectedAccountId) || sampleAccounts[0];
   const accountStakeholders = sampleStakeholders.filter(s => s.accountId === selectedAccountId);
   const accountOpportunities = sampleOpportunities.filter(o => o.accountId === selectedAccountId);

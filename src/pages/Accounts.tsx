@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +16,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { 
@@ -29,7 +31,8 @@ import {
   Trash2,
   UserPlus,
   Upload,
-  Download
+  Download,
+  Map
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AddAccountDialog } from "@/components/dialogs/AddAccountDialog";
@@ -168,6 +171,7 @@ const getTypeColor = (type: string) => {
 };
 
 export default function Accounts() {
+  const navigate = useNavigate();
   const [accounts, setAccounts] = useState<Account[]>(initialAccounts);
   const [searchQuery, setSearchQuery] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -176,6 +180,10 @@ export default function Accounts() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
+
+  const handleViewAccountMap = (accountName: string) => {
+    navigate(`/account-map?account=${encodeURIComponent(accountName)}`);
+  };
 
   // Define export fields
   const accountExportFields = [
@@ -331,7 +339,11 @@ export default function Accounts() {
           </TableHeader>
           <TableBody>
             {filteredAccounts.map((account) => (
-              <TableRow key={account.id} className="group cursor-pointer hover:bg-muted/30">
+              <TableRow 
+                key={account.id} 
+                className="group cursor-pointer hover:bg-muted/30"
+                onClick={() => handleViewAccountMap(account.name)}
+              >
                 <TableCell>
                   <div className="flex items-center gap-3">
                     <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
@@ -341,6 +353,7 @@ export default function Accounts() {
                       <p className="font-medium text-foreground group-hover:text-primary transition-colors">
                         {account.name}
                       </p>
+                      <p className="text-xs text-muted-foreground">Click to view 360° map</p>
                     </div>
                   </div>
                 </TableCell>
@@ -370,11 +383,16 @@ export default function Accounts() {
                         <MoreHorizontal className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
+                    <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                      <DropdownMenuItem onClick={() => handleViewAccountMap(account.name)}>
+                        <Map className="h-4 w-4 mr-2" />
+                        View 360° Map
+                      </DropdownMenuItem>
                       <DropdownMenuItem>
                         <ExternalLink className="h-4 w-4 mr-2" />
                         View Details
                       </DropdownMenuItem>
+                      <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={() => handleEditAccount(account)}>
                         <Edit2 className="h-4 w-4 mr-2" />
                         Edit Account
@@ -383,6 +401,7 @@ export default function Accounts() {
                         <UserPlus className="h-4 w-4 mr-2" />
                         Add Contact
                       </DropdownMenuItem>
+                      <DropdownMenuSeparator />
                       <DropdownMenuItem
                         onClick={() => handleDeleteAccount(account)}
                         className="text-destructive focus:text-destructive"
