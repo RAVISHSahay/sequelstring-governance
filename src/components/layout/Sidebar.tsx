@@ -15,6 +15,7 @@ import {
   FileCheck,
   Clock,
   DollarSign,
+  Shield,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -35,6 +36,7 @@ const incentiveNav = [
   { name: "Incentives", href: "/incentives", icon: DollarSign },
   { name: "Payouts", href: "/payouts", icon: Receipt },
   { name: "Performance", href: "/performance", icon: BarChart3 },
+  { name: "Admin", href: "/admin", icon: Shield },
 ];
 
 const secondaryNav = [
