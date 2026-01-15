@@ -16,6 +16,7 @@ import {
   Clock,
   DollarSign,
   Shield,
+  UserCog,
   LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -50,6 +51,7 @@ const incentiveNav: NavItem[] = [
 ];
 
 const secondaryNav: NavItem[] = [
+  { name: "Users", href: "/users", icon: UserCog, permission: "manage_users" },
   { name: "Reports", href: "/reports", icon: BarChart3, permission: "view_reports" },
   { name: "Pricing", href: "/pricing", icon: DollarSign, permission: "view_dashboard" },
   { name: "Settings", href: "/settings", icon: Settings, permission: "view_dashboard" },

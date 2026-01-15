@@ -23,6 +23,7 @@ import Incentives from "./pages/Incentives";
 import Payouts from "./pages/Payouts";
 import Performance from "./pages/Performance";
 import AdminControls from "./pages/AdminControls";
+import UserManagement from "./pages/UserManagement";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -58,6 +59,14 @@ const App = () => (
               element={
                 <ProtectedRoute requiredPermissions={['view_admin']}>
                   <AdminControls />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/users"
+              element={
+                <ProtectedRoute requiredPermissions={['manage_users']}>
+                  <UserManagement />
                 </ProtectedRoute>
               }
             />
