@@ -23,6 +23,7 @@ import {
   TrendingUp,
   Trophy,
   FlaskConical,
+  BookOpen,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
@@ -66,6 +67,7 @@ const incentiveNav: NavItem[] = [
 const secondaryNav: NavItem[] = [
   { name: "Users", href: "/users", icon: UserCog, permission: "manage_users" },
   { name: "Reports", href: "/reports", icon: BarChart3, permission: "view_reports" },
+  { name: "User Guide", href: "/user-guide", icon: BookOpen, permission: "view_dashboard" },
   { name: "Pricing", href: "/pricing", icon: DollarSign, permission: "view_dashboard" },
   { name: "Settings", href: "/settings", icon: Settings, permission: "view_dashboard" },
 ];
