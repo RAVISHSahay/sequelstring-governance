@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -59,6 +60,8 @@ import {
   Plus,
   UserPlus,
   ClipboardList,
+  Keyboard,
+  X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { 
@@ -138,6 +141,7 @@ export default function AccountMap() {
   const [opportunityDialogOpen, setOpportunityDialogOpen] = useState(false);
   const [contactDialogOpen, setContactDialogOpen] = useState(false);
   const [activityDialogOpen, setActivityDialogOpen] = useState(false);
+  const [shortcutsHelpOpen, setShortcutsHelpOpen] = useState(false);
   
   // Update selection when URL param changes
   useEffect(() => {
@@ -178,6 +182,19 @@ export default function AccountMap() {
       return;
     }
 
+    // Show help overlay on "?"
+    if (event.key === '?' || (event.shiftKey && event.key === '/')) {
+      event.preventDefault();
+      setShortcutsHelpOpen(true);
+      return;
+    }
+
+    // Escape to close help
+    if (event.key === 'Escape' && shortcutsHelpOpen) {
+      setShortcutsHelpOpen(false);
+      return;
+    }
+
     if (event.ctrlKey || event.metaKey) {
       switch (event.key.toLowerCase()) {
         case 'o':
@@ -194,7 +211,7 @@ export default function AccountMap() {
           break;
       }
     }
-  }, []);
+  }, [shortcutsHelpOpen]);
 
   useEffect(() => {
     document.addEventListener('keydown', handleKeyDown);
@@ -988,6 +1005,82 @@ export default function AccountMap() {
         defaultAccount={selectedAccount.name}
         accountContacts={accountStakeholders.map(s => s.name)}
       />
+
+      {/* Keyboard Shortcuts Help Overlay */}
+      <Dialog open={shortcutsHelpOpen} onOpenChange={setShortcutsHelpOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Keyboard className="h-5 w-5" />
+              Keyboard Shortcuts
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-3">
+              <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Quick Actions</h4>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-muted/50">
+                  <span className="text-sm">New Opportunity</span>
+                  <div className="flex items-center gap-1">
+                    <kbd className="inline-flex h-6 select-none items-center gap-1 rounded border bg-background px-2 font-mono text-xs font-medium">
+                      ⌘
+                    </kbd>
+                    <span className="text-muted-foreground">+</span>
+                    <kbd className="inline-flex h-6 select-none items-center gap-1 rounded border bg-background px-2 font-mono text-xs font-medium">
+                      O
+                    </kbd>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-muted/50">
+                  <span className="text-sm">Add Contact</span>
+                  <div className="flex items-center gap-1">
+                    <kbd className="inline-flex h-6 select-none items-center gap-1 rounded border bg-background px-2 font-mono text-xs font-medium">
+                      ⌘
+                    </kbd>
+                    <span className="text-muted-foreground">+</span>
+                    <kbd className="inline-flex h-6 select-none items-center gap-1 rounded border bg-background px-2 font-mono text-xs font-medium">
+                      C
+                    </kbd>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-muted/50">
+                  <span className="text-sm">Log Activity</span>
+                  <div className="flex items-center gap-1">
+                    <kbd className="inline-flex h-6 select-none items-center gap-1 rounded border bg-background px-2 font-mono text-xs font-medium">
+                      ⌘
+                    </kbd>
+                    <span className="text-muted-foreground">+</span>
+                    <kbd className="inline-flex h-6 select-none items-center gap-1 rounded border bg-background px-2 font-mono text-xs font-medium">
+                      A
+                    </kbd>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <Separator />
+            <div className="space-y-3">
+              <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">General</h4>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-muted/50">
+                  <span className="text-sm">Show this help</span>
+                  <kbd className="inline-flex h-6 select-none items-center gap-1 rounded border bg-background px-2 font-mono text-xs font-medium">
+                    ?
+                  </kbd>
+                </div>
+                <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-muted/50">
+                  <span className="text-sm">Close dialog</span>
+                  <kbd className="inline-flex h-6 select-none items-center gap-1 rounded border bg-background px-2 font-mono text-xs font-medium">
+                    Esc
+                  </kbd>
+                </div>
+              </div>
+            </div>
+          </div>
+          <p className="text-xs text-muted-foreground text-center">
+            Use <kbd className="px-1 rounded bg-muted text-[10px]">Ctrl</kbd> instead of <kbd className="px-1 rounded bg-muted text-[10px]">⌘</kbd> on Windows/Linux
+          </p>
+        </DialogContent>
+      </Dialog>
     </AppLayout>
   );
 }
