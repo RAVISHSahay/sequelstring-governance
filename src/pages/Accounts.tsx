@@ -28,12 +28,14 @@ import {
   Edit2,
   Trash2,
   UserPlus,
-  Upload
+  Upload,
+  Download
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AddAccountDialog } from "@/components/dialogs/AddAccountDialog";
 import { DeleteConfirmDialog } from "@/components/dialogs/DeleteConfirmDialog";
 import { CSVImportDialog } from "@/components/dialogs/CSVImportDialog";
+import { exportToCSV } from "@/lib/csvExport";
 import { toast } from "sonner";
 
 interface Account {
@@ -275,6 +277,30 @@ export default function Accounts() {
           <Button variant="outline" className="gap-2">
             <Filter className="h-4 w-4" />
             Filters
+          </Button>
+          <Button 
+            variant="outline" 
+            className="gap-2" 
+            onClick={() => {
+              exportToCSV({
+                data: filteredAccounts,
+                columns: [
+                  { key: 'name', header: 'Account Name' },
+                  { key: 'type', header: 'Type' },
+                  { key: 'industry', header: 'Industry' },
+                  { key: 'revenue', header: 'Revenue' },
+                  { key: 'deals', header: 'Deals' },
+                  { key: 'contacts', header: 'Contacts' },
+                  { key: 'status', header: 'Status' },
+                  { key: 'owner', header: 'Owner' },
+                ],
+                filename: 'accounts-export',
+              });
+              toast.success(`Exported ${filteredAccounts.length} accounts to CSV`);
+            }}
+          >
+            <Download className="h-4 w-4" />
+            Export
           </Button>
           <Button variant="outline" className="gap-2" onClick={() => setImportDialogOpen(true)}>
             <Upload className="h-4 w-4" />

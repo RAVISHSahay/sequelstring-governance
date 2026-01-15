@@ -18,11 +18,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Search, Filter, Plus, MoreHorizontal, Phone, Mail, Linkedin, Edit2, Trash2, Upload } from "lucide-react";
+import { Search, Filter, Plus, MoreHorizontal, Phone, Mail, Linkedin, Edit2, Trash2, Upload, Download } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AddContactDialog } from "@/components/dialogs/AddContactDialog";
 import { DeleteConfirmDialog } from "@/components/dialogs/DeleteConfirmDialog";
 import { CSVImportDialog } from "@/components/dialogs/CSVImportDialog";
+import { exportToCSV } from "@/lib/csvExport";
 import { toast } from "sonner";
 
 interface Contact {
@@ -234,6 +235,30 @@ export default function Contacts() {
           <Button variant="outline" className="gap-2">
             <Filter className="h-4 w-4" />
             Filters
+          </Button>
+          <Button 
+            variant="outline" 
+            className="gap-2" 
+            onClick={() => {
+              exportToCSV({
+                data: filteredContacts,
+                columns: [
+                  { key: 'name', header: 'Name' },
+                  { key: 'title', header: 'Title' },
+                  { key: 'account', header: 'Account' },
+                  { key: 'email', header: 'Email' },
+                  { key: 'phone', header: 'Phone' },
+                  { key: 'role', header: 'Role' },
+                  { key: 'influence', header: 'Influence' },
+                  { key: 'lastContact', header: 'Last Contact' },
+                ],
+                filename: 'contacts-export',
+              });
+              toast.success(`Exported ${filteredContacts.length} contacts to CSV`);
+            }}
+          >
+            <Download className="h-4 w-4" />
+            Export
           </Button>
           <Button variant="outline" className="gap-2" onClick={() => setImportDialogOpen(true)}>
             <Upload className="h-4 w-4" />
