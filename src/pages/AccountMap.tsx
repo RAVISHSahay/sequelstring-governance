@@ -930,12 +930,14 @@ export default function AccountMap() {
         onOpenChange={setContactDialogOpen}
         onSave={handleSaveContact}
         mode="create"
+        defaultAccount={selectedAccount.name}
       />
       
       <LogActivityDialog
         open={activityDialogOpen}
         onOpenChange={setActivityDialogOpen}
         onSave={handleSaveActivity}
+        defaultAccount={selectedAccount.name}
       />
     </AppLayout>
   );
