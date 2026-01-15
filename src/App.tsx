@@ -20,6 +20,7 @@ import Targets from "./pages/Targets";
 import Incentives from "./pages/Incentives";
 import Payouts from "./pages/Payouts";
 import Performance from "./pages/Performance";
+import AdminControls from "./pages/AdminControls";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -49,6 +50,7 @@ const App = () => (
           <Route path="/incentives" element={<Incentives />} />
           <Route path="/payouts" element={<Payouts />} />
           <Route path="/performance" element={<Performance />} />
+          <Route path="/admin" element={<AdminControls />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
