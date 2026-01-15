@@ -7,6 +7,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import Index from "./pages/Index";
 import Accounts from "./pages/Accounts";
+import AccountMap from "./pages/AccountMap";
 import Contacts from "./pages/Contacts";
 import Opportunities from "./pages/Opportunities";
 import Leads from "./pages/Leads";
@@ -24,6 +25,9 @@ import Payouts from "./pages/Payouts";
 import Performance from "./pages/Performance";
 import AdminControls from "./pages/AdminControls";
 import UserManagement from "./pages/UserManagement";
+import SalesStageConfig from "./pages/SalesStageConfig";
+import Forecasting from "./pages/Forecasting";
+import WinLossAnalysis from "./pages/WinLossAnalysis";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -38,6 +42,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/accounts" element={<Accounts />} />
+            <Route path="/account-map" element={<AccountMap />} />
             <Route path="/contacts" element={<Contacts />} />
             <Route path="/leads" element={<Leads />} />
             <Route path="/opportunities" element={<Opportunities />} />
@@ -49,6 +54,17 @@ const App = () => (
             <Route path="/reports" element={<Reports />} />
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/settings" element={<Settings />} />
+            {/* Intelligence Routes */}
+            <Route path="/forecasting" element={<Forecasting />} />
+            <Route path="/win-loss" element={<WinLossAnalysis />} />
+            <Route
+              path="/sales-stages"
+              element={
+                <ProtectedRoute requiredPermissions={['view_admin']}>
+                  <SalesStageConfig />
+                </ProtectedRoute>
+              }
+            />
             {/* Incentive Engine Routes */}
             <Route path="/targets" element={<Targets />} />
             <Route path="/incentives" element={<Incentives />} />
