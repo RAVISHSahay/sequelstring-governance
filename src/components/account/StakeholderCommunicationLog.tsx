@@ -36,8 +36,11 @@ import {
   Pencil,
   Trash2,
   Star,
+  Target,
+  TrendingUp,
+  Unlink,
 } from "lucide-react";
-import { Stakeholder } from "@/types/account";
+import { Stakeholder, Opportunity } from "@/types/account";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 import { format, formatDistanceToNow, isToday, isYesterday, isThisWeek } from "date-fns";
@@ -67,8 +70,10 @@ export interface CommunicationEntry {
 
 interface StakeholderCommunicationLogProps {
   stakeholders: Stakeholder[];
+  opportunities?: Opportunity[];
   accountName?: string;
   onSelectStakeholder?: (stakeholder: Stakeholder) => void;
+  onSelectOpportunity?: (opportunity: Opportunity) => void;
 }
 
 const communicationTypeConfig: Record<CommunicationType, { icon: any; label: string; color: string; bgColor: string }> = {
@@ -182,17 +187,20 @@ const mockCommunications: CommunicationEntry[] = [
 
 export function StakeholderCommunicationLog({ 
   stakeholders, 
+  opportunities = [],
   accountName = "Account",
-  onSelectStakeholder 
+  onSelectStakeholder,
+  onSelectOpportunity
 }: StakeholderCommunicationLogProps) {
   const [communications, setCommunications] = useState<CommunicationEntry[]>(mockCommunications);
   const [filterType, setFilterType] = useState<string>('all');
   const [filterStakeholder, setFilterStakeholder] = useState<string>('all');
+  const [filterOpportunity, setFilterOpportunity] = useState<string>('all');
   const [filterOutcome, setFilterOutcome] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [selectedEntry, setSelectedEntry] = useState<CommunicationEntry | null>(null);
-  const [viewMode, setViewMode] = useState<'timeline' | 'grouped'>('timeline');
+  const [viewMode, setViewMode] = useState<'timeline' | 'grouped' | 'by-deal'>('timeline');
 
   // New communication form state
   const [newEntry, setNewEntry] = useState<Partial<CommunicationEntry>>({
@@ -206,6 +214,7 @@ export function StakeholderCommunicationLog({
     return communications
       .filter(c => filterType === 'all' || c.type === filterType)
       .filter(c => filterStakeholder === 'all' || c.stakeholderId === filterStakeholder)
+      .filter(c => filterOpportunity === 'all' || c.linkedOpportunityId === filterOpportunity)
       .filter(c => filterOutcome === 'all' || c.outcome === filterOutcome)
       .filter(c => {
         if (!searchQuery) return true;
@@ -213,11 +222,12 @@ export function StakeholderCommunicationLog({
         return (
           c.subject.toLowerCase().includes(query) ||
           c.summary.toLowerCase().includes(query) ||
-          c.stakeholderName.toLowerCase().includes(query)
+          c.stakeholderName.toLowerCase().includes(query) ||
+          (c.linkedOpportunityName?.toLowerCase().includes(query) || false)
         );
       })
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  }, [communications, filterType, filterStakeholder, filterOutcome, searchQuery]);
+  }, [communications, filterType, filterStakeholder, filterOpportunity, filterOutcome, searchQuery]);
 
   // Group by stakeholder for grouped view
   const groupedByStakeholder = useMemo(() => {
@@ -230,6 +240,27 @@ export function StakeholderCommunicationLog({
     });
     return groups;
   }, [filteredCommunications]);
+
+  // Group by opportunity for deal view
+  const groupedByOpportunity = useMemo(() => {
+    const groups: Record<string, CommunicationEntry[]> = { unlinked: [] };
+    filteredCommunications.forEach(c => {
+      if (c.linkedOpportunityId) {
+        if (!groups[c.linkedOpportunityId]) {
+          groups[c.linkedOpportunityId] = [];
+        }
+        groups[c.linkedOpportunityId].push(c);
+      } else {
+        groups['unlinked'].push(c);
+      }
+    });
+    return groups;
+  }, [filteredCommunications]);
+
+  // Stats including deal-linked count
+  const dealLinkedCount = useMemo(() => {
+    return communications.filter(c => c.linkedOpportunityId).length;
+  }, [communications]);
 
   // Get date label
   const getDateLabel = (date: Date) => {
@@ -247,6 +278,8 @@ export function StakeholderCommunicationLog({
     }
 
     const stakeholder = stakeholders.find(s => s.id === newEntry.stakeholderId);
+    const opportunity = opportunities.find(o => o.id === newEntry.linkedOpportunityId);
+    
     const entry: CommunicationEntry = {
       id: `comm_${Date.now()}`,
       stakeholderId: newEntry.stakeholderId,
@@ -258,6 +291,8 @@ export function StakeholderCommunicationLog({
       date: newEntry.date || new Date(),
       duration: newEntry.duration,
       nextSteps: newEntry.nextSteps,
+      linkedOpportunityId: newEntry.linkedOpportunityId,
+      linkedOpportunityName: opportunity?.name,
       createdBy: 'Current User',
       createdAt: new Date(),
       isKeyMoment: newEntry.isKeyMoment,
@@ -266,7 +301,12 @@ export function StakeholderCommunicationLog({
     setCommunications(prev => [entry, ...prev]);
     setAddDialogOpen(false);
     setNewEntry({ type: 'call', outcome: 'pending', date: new Date() });
-    toast({ title: "Communication Logged", description: "The interaction has been recorded" });
+    toast({ 
+      title: "Communication Logged", 
+      description: opportunity 
+        ? `Interaction linked to "${opportunity.name}"` 
+        : "The interaction has been recorded" 
+    });
   };
 
   // Handle delete entry
@@ -345,11 +385,33 @@ export function StakeholderCommunicationLog({
                 </SelectContent>
               </Select>
 
+              {/* Opportunity Filter */}
+              {opportunities.length > 0 && (
+                <Select value={filterOpportunity} onValueChange={setFilterOpportunity}>
+                  <SelectTrigger className="w-[150px]">
+                    <Target className="h-4 w-4 mr-2" />
+                    <SelectValue placeholder="Opportunity" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Deals</SelectItem>
+                    {opportunities.map(o => (
+                      <SelectItem key={o.id} value={o.id}>
+                        <div className="flex items-center gap-2">
+                          <TrendingUp className="h-3 w-3 text-primary" />
+                          <span className="truncate max-w-[120px]">{o.name}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+
               {/* View Toggle */}
               <Tabs value={viewMode} onValueChange={(v: any) => setViewMode(v)} className="w-auto">
                 <TabsList className="h-9">
                   <TabsTrigger value="timeline" className="text-xs px-3">Timeline</TabsTrigger>
                   <TabsTrigger value="grouped" className="text-xs px-3">By Contact</TabsTrigger>
+                  <TabsTrigger value="by-deal" className="text-xs px-3">By Deal</TabsTrigger>
                 </TabsList>
               </Tabs>
 
@@ -362,7 +424,7 @@ export function StakeholderCommunicationLog({
           </div>
 
           {/* Quick Stats */}
-          <div className="flex gap-4 mt-4">
+          <div className="flex gap-4 mt-4 flex-wrap">
             <div className="flex items-center gap-2 px-3 py-1.5 bg-muted rounded-lg">
               <Calendar className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm"><strong>{stats.thisWeek}</strong> this week</span>
@@ -374,6 +436,10 @@ export function StakeholderCommunicationLog({
             <div className="flex items-center gap-2 px-3 py-1.5 bg-muted rounded-lg">
               <Star className="h-4 w-4 text-amber-500" />
               <span className="text-sm"><strong>{stats.keyMoments}</strong> key moments</span>
+            </div>
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-muted rounded-lg">
+              <Link2 className="h-4 w-4 text-primary" />
+              <span className="text-sm"><strong>{dealLinkedCount}</strong> deal-linked</span>
             </div>
           </div>
         </CardHeader>
@@ -495,7 +561,7 @@ export function StakeholderCommunicationLog({
                   })
                 )}
               </div>
-            ) : (
+            ) : viewMode === 'grouped' ? (
               <div className="space-y-6">
                 {Object.entries(groupedByStakeholder).map(([stakeholderId, entries]) => {
                   const stakeholder = stakeholders.find(s => s.id === stakeholderId);
@@ -553,7 +619,90 @@ export function StakeholderCommunicationLog({
                   );
                 })}
               </div>
-            )}
+            ) : viewMode === 'by-deal' ? (
+              <div className="space-y-6">
+                {Object.entries(groupedByOpportunity).map(([opportunityId, entries]) => {
+                  if (entries.length === 0) return null;
+                  
+                  const opportunity = opportunities.find(o => o.id === opportunityId);
+                  const isUnlinked = opportunityId === 'unlinked';
+                  const lastEntry = entries[0];
+                  
+                  return (
+                    <div key={opportunityId} className={cn(
+                      "border rounded-lg p-4",
+                      isUnlinked && "border-dashed bg-muted/30"
+                    )}>
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className={cn(
+                          "p-2 rounded-lg",
+                          isUnlinked ? "bg-muted" : "bg-primary/10"
+                        )}>
+                          {isUnlinked ? (
+                            <Unlink className="h-5 w-5 text-muted-foreground" />
+                          ) : (
+                            <Target className="h-5 w-5 text-primary" />
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-semibold">
+                            {isUnlinked ? 'Unlinked Communications' : opportunity?.name || 'Unknown Opportunity'}
+                          </h4>
+                          {opportunity && (
+                            <div className="flex items-center gap-2 mt-0.5">
+                              <Badge variant="secondary" className="text-xs">{opportunity.stageName}</Badge>
+                              <span className="text-xs text-muted-foreground">
+                                {opportunity.probability}% probability
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                        <div className="text-right">
+                          <div className="text-sm font-medium">{entries.length} interactions</div>
+                          <div className="text-xs text-muted-foreground">
+                            Last: {formatDistanceToNow(new Date(lastEntry.date), { addSuffix: true })}
+                          </div>
+                        </div>
+                      </div>
+                      <Separator className="mb-3" />
+                      <div className="space-y-2">
+                        {entries.slice(0, 4).map(entry => {
+                          const config = communicationTypeConfig[entry.type];
+                          const outcomeInfo = outcomeConfig[entry.outcome];
+                          const TypeIcon = config.icon;
+                          return (
+                            <div 
+                              key={entry.id} 
+                              className="flex items-center gap-2 p-2 rounded hover:bg-muted cursor-pointer"
+                              onClick={() => setSelectedEntry(entry)}
+                            >
+                              <div className={cn("p-1.5 rounded", config.bgColor)}>
+                                <TypeIcon className={cn("h-3.5 w-3.5", config.color)} />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <span className="text-sm truncate block">{entry.subject}</span>
+                                <span className="text-xs text-muted-foreground">{entry.stakeholderName}</span>
+                              </div>
+                              <div className={cn("flex items-center gap-1", outcomeInfo.color)}>
+                                <outcomeInfo.icon className="h-3 w-3" />
+                              </div>
+                              <span className="text-xs text-muted-foreground">
+                                {format(new Date(entry.date), 'MMM d')}
+                              </span>
+                            </div>
+                          );
+                        })}
+                        {entries.length > 4 && (
+                          <Button variant="ghost" size="sm" className="w-full text-xs">
+                            View all {entries.length} interactions
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : null}
           </ScrollArea>
         </CardContent>
       </Card>
@@ -667,6 +816,46 @@ export function StakeholderCommunicationLog({
                 />
               </div>
             </div>
+
+            {/* Link to Opportunity */}
+            {opportunities.length > 0 && (
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  <Link2 className="h-4 w-4" />
+                  Link to Opportunity
+                </Label>
+                <Select 
+                  value={newEntry.linkedOpportunityId || 'none'} 
+                  onValueChange={(v) => setNewEntry(prev => ({ 
+                    ...prev, 
+                    linkedOpportunityId: v === 'none' ? undefined : v 
+                  }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select opportunity (optional)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <Unlink className="h-4 w-4" />
+                        No linked opportunity
+                      </div>
+                    </SelectItem>
+                    {opportunities.map(o => (
+                      <SelectItem key={o.id} value={o.id}>
+                        <div className="flex items-center gap-2">
+                          <Target className="h-4 w-4 text-primary" />
+                          <span className="truncate">{o.name}</span>
+                          <Badge variant="secondary" className="text-[10px] ml-1">
+                            {o.stageName}
+                          </Badge>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             <div className="space-y-2">
               <Label>Next Steps</Label>

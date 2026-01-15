@@ -615,6 +615,7 @@ export default function AccountMap() {
           {/* Communication Log */}
           <StakeholderCommunicationLog 
             stakeholders={accountStakeholders}
+            opportunities={accountOpportunities}
             accountName={selectedAccount.name}
           />
 
