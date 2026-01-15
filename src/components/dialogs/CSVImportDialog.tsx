@@ -38,8 +38,27 @@ import {
   Download,
   ArrowRight,
   Loader2,
+  Info,
+  HelpCircle,
+  Code,
+  AtSign,
+  Phone as PhoneIcon,
+  Hash,
+  Type,
+  Ruler,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 interface FieldMapping {
   csvColumn: string;
@@ -425,6 +444,32 @@ export function CSVImportDialog({
     setValidationSummary({ valid: 0, invalid: 0, duplicates: 0 });
   };
 
+  // Helper to get validation type icon and description
+  const getValidationInfo = (rule: { type: string; pattern?: string; value?: number; message: string }) => {
+    switch (rule.type) {
+      case 'email':
+        return { icon: AtSign, label: 'Email', example: 'name@company.com' };
+      case 'phone':
+        return { icon: PhoneIcon, label: 'Phone', example: '+91 98765 43210' };
+      case 'numeric':
+        return { icon: Hash, label: 'Numeric', example: '123, 45.67' };
+      case 'alphanumeric':
+        return { icon: Type, label: 'Alphanumeric', example: 'ABC123' };
+      case 'minLength':
+        return { icon: Ruler, label: `Min ${rule.value} chars`, example: `At least ${rule.value} characters` };
+      case 'maxLength':
+        return { icon: Ruler, label: `Max ${rule.value} chars`, example: `Up to ${rule.value} characters` };
+      case 'regex':
+        return { icon: Code, label: 'Pattern', example: rule.message };
+      default:
+        return { icon: Info, label: rule.type, example: rule.message };
+    }
+  };
+
+  // Check if any field has validation rules
+  const hasValidationRules = fields.some((f) => f.validation && f.validation.length > 0);
+  const fieldsWithValidation = fields.filter((f) => f.validation && f.validation.length > 0);
+
   const handlePreview = () => {
     setStep('preview');
     // Run validation when entering preview
@@ -512,6 +557,98 @@ export function CSVImportDialog({
                   Download CSV Template
                 </Button>
               </div>
+
+              {/* Validation Rules Documentation Panel */}
+              {hasValidationRules && (
+                <Collapsible defaultOpen={false} className="border rounded-lg">
+                  <CollapsibleTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      className="w-full flex items-center justify-between p-4 hover:bg-muted/50"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Info className="h-4 w-4 text-primary" />
+                        <span className="font-medium">Field Validation Rules</span>
+                        <Badge variant="secondary" className="ml-2">
+                          {fieldsWithValidation.length} fields
+                        </Badge>
+                      </div>
+                      <HelpCircle className="h-4 w-4 text-muted-foreground" />
+                    </Button>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <div className="px-4 pb-4">
+                      <ScrollArea className="h-[200px]">
+                        <div className="space-y-3">
+                          {fieldsWithValidation.map((field) => (
+                            <div 
+                              key={field.name} 
+                              className="p-3 rounded-lg bg-muted/30 border border-border/50"
+                            >
+                              <div className="flex items-center gap-2 mb-2">
+                                <span className="font-medium text-sm">{field.label}</span>
+                                {field.required && (
+                                  <Badge variant="destructive" className="text-xs px-1.5 py-0">
+                                    Required
+                                  </Badge>
+                                )}
+                              </div>
+                              <div className="space-y-1.5">
+                                {field.validation?.map((rule, idx) => {
+                                  const info = getValidationInfo(rule);
+                                  const IconComponent = info.icon;
+                                  return (
+                                    <div 
+                                      key={idx} 
+                                      className="flex items-start gap-2 text-xs"
+                                    >
+                                      <TooltipProvider>
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-background border">
+                                              <IconComponent className="h-3 w-3 text-primary" />
+                                              <span className="text-muted-foreground">{info.label}</span>
+                                            </div>
+                                          </TooltipTrigger>
+                                          <TooltipContent side="right" className="max-w-[250px]">
+                                            <p className="text-xs">{rule.message}</p>
+                                            {rule.pattern && (
+                                              <code className="block mt-1 text-[10px] bg-muted p-1 rounded">
+                                                {rule.pattern}
+                                              </code>
+                                            )}
+                                          </TooltipContent>
+                                        </Tooltip>
+                                      </TooltipProvider>
+                                      <span className="text-muted-foreground flex-1">
+                                        Example: <code className="bg-muted px-1 rounded">{info.example}</code>
+                                      </span>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </ScrollArea>
+                      
+                      {/* Duplicate detection info */}
+                      {duplicateCheckFields.length > 0 && (
+                        <div className="mt-3 p-3 rounded-lg bg-amber-500/10 border border-amber-200">
+                          <div className="flex items-center gap-2 text-sm">
+                            <AlertTriangle className="h-4 w-4 text-amber-500" />
+                            <span className="font-medium text-amber-700">Duplicate Detection</span>
+                          </div>
+                          <p className="text-xs text-amber-600 mt-1">
+                            Duplicates will be detected based on: {' '}
+                            <strong>{duplicateCheckFields.join(', ')}</strong>
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
+              )}
             </div>
           )}
 
