@@ -35,7 +35,7 @@ import { cn } from "@/lib/utils";
 import { AddAccountDialog } from "@/components/dialogs/AddAccountDialog";
 import { DeleteConfirmDialog } from "@/components/dialogs/DeleteConfirmDialog";
 import { CSVImportDialog } from "@/components/dialogs/CSVImportDialog";
-import { exportToCSV } from "@/lib/csvExport";
+import { ExportDialog } from "@/components/dialogs/ExportDialog";
 import { toast } from "sonner";
 
 interface Account {
@@ -175,6 +175,19 @@ export default function Accounts() {
   const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [exportDialogOpen, setExportDialogOpen] = useState(false);
+
+  // Define export fields
+  const accountExportFields = [
+    { key: 'name', label: 'Account Name', defaultSelected: true },
+    { key: 'type', label: 'Type', defaultSelected: true },
+    { key: 'industry', label: 'Industry', defaultSelected: true },
+    { key: 'revenue', label: 'Revenue', defaultSelected: true },
+    { key: 'deals', label: 'Deals', defaultSelected: true },
+    { key: 'contacts', label: 'Contacts', defaultSelected: true },
+    { key: 'status', label: 'Status', defaultSelected: true },
+    { key: 'owner', label: 'Owner', defaultSelected: true },
+  ];
 
   const accountImportFields = [
     { name: 'name', label: 'Account Name', required: true },
@@ -281,23 +294,7 @@ export default function Accounts() {
           <Button 
             variant="outline" 
             className="gap-2" 
-            onClick={() => {
-              exportToCSV({
-                data: filteredAccounts,
-                columns: [
-                  { key: 'name', header: 'Account Name' },
-                  { key: 'type', header: 'Type' },
-                  { key: 'industry', header: 'Industry' },
-                  { key: 'revenue', header: 'Revenue' },
-                  { key: 'deals', header: 'Deals' },
-                  { key: 'contacts', header: 'Contacts' },
-                  { key: 'status', header: 'Status' },
-                  { key: 'owner', header: 'Owner' },
-                ],
-                filename: 'accounts-export',
-              });
-              toast.success(`Exported ${filteredAccounts.length} accounts to CSV`);
-            }}
+            onClick={() => setExportDialogOpen(true)}
           >
             <Download className="h-4 w-4" />
             Export
@@ -312,8 +309,6 @@ export default function Accounts() {
           </Button>
         </div>
       </div>
-
-      {/* Table */}
       <div className="bg-card rounded-xl border border-border/50 overflow-hidden animate-fade-in">
         <Table>
           <TableHeader>
@@ -435,6 +430,16 @@ export default function Accounts() {
         templateFileName="accounts_import_template.csv"
         duplicateCheckFields={['name']}
         existingData={existingAccountsForDuplicateCheck}
+      />
+
+      <ExportDialog
+        open={exportDialogOpen}
+        onOpenChange={setExportDialogOpen}
+        data={filteredAccounts}
+        fields={accountExportFields}
+        filename="accounts-export"
+        title="Export Accounts"
+        entityName="accounts"
       />
     </AppLayout>
   );

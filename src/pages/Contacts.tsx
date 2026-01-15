@@ -23,7 +23,7 @@ import { cn } from "@/lib/utils";
 import { AddContactDialog } from "@/components/dialogs/AddContactDialog";
 import { DeleteConfirmDialog } from "@/components/dialogs/DeleteConfirmDialog";
 import { CSVImportDialog } from "@/components/dialogs/CSVImportDialog";
-import { exportToCSV } from "@/lib/csvExport";
+import { ExportDialog } from "@/components/dialogs/ExportDialog";
 import { toast } from "sonner";
 
 interface Contact {
@@ -132,6 +132,19 @@ export default function Contacts() {
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [exportDialogOpen, setExportDialogOpen] = useState(false);
+
+  // Define export fields
+  const contactExportFields = [
+    { key: 'name', label: 'Name', defaultSelected: true },
+    { key: 'title', label: 'Title', defaultSelected: true },
+    { key: 'account', label: 'Account', defaultSelected: true },
+    { key: 'email', label: 'Email', defaultSelected: true },
+    { key: 'phone', label: 'Phone', defaultSelected: true },
+    { key: 'role', label: 'Role', defaultSelected: true },
+    { key: 'influence', label: 'Influence', defaultSelected: true },
+    { key: 'lastContact', label: 'Last Contact', defaultSelected: false },
+  ];
 
   const contactImportFields = [
     { name: 'firstName', label: 'First Name', required: true },
@@ -239,23 +252,7 @@ export default function Contacts() {
           <Button 
             variant="outline" 
             className="gap-2" 
-            onClick={() => {
-              exportToCSV({
-                data: filteredContacts,
-                columns: [
-                  { key: 'name', header: 'Name' },
-                  { key: 'title', header: 'Title' },
-                  { key: 'account', header: 'Account' },
-                  { key: 'email', header: 'Email' },
-                  { key: 'phone', header: 'Phone' },
-                  { key: 'role', header: 'Role' },
-                  { key: 'influence', header: 'Influence' },
-                  { key: 'lastContact', header: 'Last Contact' },
-                ],
-                filename: 'contacts-export',
-              });
-              toast.success(`Exported ${filteredContacts.length} contacts to CSV`);
-            }}
+            onClick={() => setExportDialogOpen(true)}
           >
             <Download className="h-4 w-4" />
             Export
@@ -377,6 +374,16 @@ export default function Contacts() {
         templateFileName="contacts_import_template.csv"
         duplicateCheckFields={['email']}
         existingData={existingContactsForDuplicateCheck}
+      />
+
+      <ExportDialog
+        open={exportDialogOpen}
+        onOpenChange={setExportDialogOpen}
+        data={filteredContacts}
+        fields={contactExportFields}
+        filename="contacts-export"
+        title="Export Contacts"
+        entityName="contacts"
       />
     </AppLayout>
   );
