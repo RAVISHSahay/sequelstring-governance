@@ -48,6 +48,7 @@ import {
   Ruler,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
 import {
   Collapsible,
   CollapsibleContent,
@@ -470,6 +471,147 @@ export function CSVImportDialog({
   const hasValidationRules = fields.some((f) => f.validation && f.validation.length > 0);
   const fieldsWithValidation = fields.filter((f) => f.validation && f.validation.length > 0);
 
+  // Generate error report for download
+  const generateErrorReport = (): string => {
+    const timestamp = format(new Date(), 'yyyy-MM-dd HH:mm:ss');
+    const mappedData = getMappedData();
+    
+    let report = `IMPORT VALIDATION ERROR REPORT\n`;
+    report += `${'='.repeat(60)}\n\n`;
+    report += `Generated: ${timestamp}\n`;
+    report += `File: ${file?.name || 'Unknown'}\n`;
+    report += `Total Rows: ${csvData.length}\n`;
+    report += `Successfully Imported: ${importResults.success}\n`;
+    report += `Failed: ${importResults.failed}\n\n`;
+    
+    report += `SUMMARY\n`;
+    report += `${'-'.repeat(40)}\n`;
+    report += `Valid rows: ${validationSummary.valid}\n`;
+    report += `Invalid rows: ${validationSummary.invalid}\n`;
+    report += `Duplicates: ${validationSummary.duplicates}\n\n`;
+    
+    if (duplicateCheckFields.length > 0) {
+      report += `DUPLICATE DETECTION\n`;
+      report += `${'-'.repeat(40)}\n`;
+      report += `Checked fields: ${duplicateCheckFields.join(', ')}\n\n`;
+    }
+    
+    report += `VALIDATION RULES APPLIED\n`;
+    report += `${'-'.repeat(40)}\n`;
+    fields.forEach((field) => {
+      report += `\n${field.label}${field.required ? ' (Required)' : ''}:\n`;
+      if (field.validation && field.validation.length > 0) {
+        field.validation.forEach((rule) => {
+          report += `  - ${rule.type}: ${rule.message}\n`;
+          if (rule.pattern) {
+            report += `    Pattern: ${rule.pattern}\n`;
+          }
+        });
+      } else {
+        report += `  - No validation rules\n`;
+      }
+    });
+    
+    report += `\n\nDETAILED ERRORS\n`;
+    report += `${'='.repeat(60)}\n\n`;
+    
+    rowValidations.forEach((validation, index) => {
+      if (validation.errors.length > 0 || validation.isDuplicate) {
+        const rowData = mappedData[index];
+        report += `ROW ${index + 2}\n`;
+        report += `${'-'.repeat(40)}\n`;
+        
+        // Show row data
+        report += `Data:\n`;
+        fields.forEach((field) => {
+          const value = rowData[field.name] || '(empty)';
+          report += `  ${field.label}: ${value}\n`;
+        });
+        
+        // Show errors
+        if (validation.errors.length > 0) {
+          report += `\nValidation Errors:\n`;
+          validation.errors.forEach((error) => {
+            report += `  ✗ ${error.message}\n`;
+          });
+        }
+        
+        // Show duplicate info
+        if (validation.isDuplicate) {
+          const dupText = validation.duplicateOf === -1 
+            ? 'Duplicate of existing record in database' 
+            : `Duplicate of row ${validation.duplicateOf}`;
+          report += `\nDuplicate Status:\n`;
+          report += `  ⚠ ${dupText}\n`;
+        }
+        
+        report += `\n`;
+      }
+    });
+    
+    if (importResults.failed === 0) {
+      report += `No errors found. All rows imported successfully.\n`;
+    }
+    
+    report += `\n${'='.repeat(60)}\n`;
+    report += `END OF REPORT\n`;
+    
+    return report;
+  };
+
+  const downloadErrorReport = () => {
+    const report = generateErrorReport();
+    const blob = new Blob([report], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `import-error-report-${format(new Date(), 'yyyy-MM-dd-HHmmss')}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const downloadErrorReportCSV = () => {
+    const mappedData = getMappedData();
+    const headers = ['Row Number', 'Status', 'Error Details', ...fields.map((f) => f.label)];
+    
+    const rows = rowValidations
+      .map((validation, index) => {
+        if (validation.errors.length === 0 && !validation.isDuplicate) return null;
+        
+        const rowData = mappedData[index];
+        const status = validation.isDuplicate 
+          ? 'Duplicate' 
+          : validation.errors.length > 0 
+            ? 'Invalid' 
+            : 'Valid';
+        
+        const errorDetails = [
+          ...validation.errors.map((e) => e.message),
+          validation.isDuplicate 
+            ? (validation.duplicateOf === -1 ? 'Duplicate of existing record' : `Duplicate of row ${validation.duplicateOf}`)
+            : ''
+        ].filter(Boolean).join('; ');
+        
+        const fieldValues = fields.map((field) => {
+          const value = rowData[field.name] || '';
+          // Escape quotes and wrap in quotes for CSV
+          return `"${value.replace(/"/g, '""')}"`;
+        });
+        
+        return [index + 2, status, `"${errorDetails}"`, ...fieldValues].join(',');
+      })
+      .filter(Boolean);
+    
+    const csvContent = [headers.join(','), ...rows].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `import-errors-${format(new Date(), 'yyyy-MM-dd-HHmmss')}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const handlePreview = () => {
     setStep('preview');
     // Run validation when entering preview
@@ -878,21 +1020,66 @@ export function CSVImportDialog({
               </div>
 
               {importResults.errors.length > 0 && (
-                <ScrollArea className="h-[150px] border rounded-lg p-3">
-                  <div className="space-y-2">
-                    {importResults.errors.slice(0, 10).map((error, i) => (
-                      <div key={i} className="flex items-start gap-2 text-sm">
-                        <XCircle className="h-4 w-4 text-destructive flex-shrink-0 mt-0.5" />
-                        <span className="text-muted-foreground">{error}</span>
-                      </div>
-                    ))}
-                    {importResults.errors.length > 10 && (
-                      <p className="text-sm text-muted-foreground">
-                        ...and {importResults.errors.length - 10} more errors
-                      </p>
-                    )}
+                <>
+                  <ScrollArea className="h-[120px] border rounded-lg p-3">
+                    <div className="space-y-2">
+                      {importResults.errors.slice(0, 10).map((error, i) => (
+                        <div key={i} className="flex items-start gap-2 text-sm">
+                          <XCircle className="h-4 w-4 text-destructive flex-shrink-0 mt-0.5" />
+                          <span className="text-muted-foreground">{error}</span>
+                        </div>
+                      ))}
+                      {importResults.errors.length > 10 && (
+                        <p className="text-sm text-muted-foreground">
+                          ...and {importResults.errors.length - 10} more errors
+                        </p>
+                      )}
+                    </div>
+                  </ScrollArea>
+
+                  {/* Download Error Report Section */}
+                  <div className="p-4 border rounded-lg bg-muted/30">
+                    <div className="flex items-center gap-2 mb-3">
+                      <FileSpreadsheet className="h-4 w-4 text-primary" />
+                      <span className="font-medium text-sm">Download Error Report</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mb-3">
+                      Download a detailed report of all validation errors to review and fix your data before re-importing.
+                    </p>
+                    <div className="flex gap-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={downloadErrorReport}
+                        className="flex-1"
+                      >
+                        <Download className="h-4 w-4 mr-2" />
+                        Text Report (.txt)
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={downloadErrorReportCSV}
+                        className="flex-1"
+                      >
+                        <Download className="h-4 w-4 mr-2" />
+                        CSV Report (.csv)
+                      </Button>
+                    </div>
                   </div>
-                </ScrollArea>
+                </>
+              )}
+
+              {importResults.failed === 0 && (
+                <div className="p-4 border rounded-lg bg-emerald-500/10 text-center">
+                  <CheckCircle2 className="h-8 w-8 mx-auto text-emerald-500 mb-2" />
+                  <p className="text-sm text-emerald-700 font-medium">
+                    All {importResults.success} rows imported successfully!
+                  </p>
+                  <p className="text-xs text-emerald-600 mt-1">
+                    No validation errors were found.
+                  </p>
+                </div>
               )}
             </div>
           )}
