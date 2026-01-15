@@ -98,8 +98,8 @@ const outcomeConfig: Record<CommunicationOutcome, { icon: any; label: string; co
   pending: { icon: Clock, label: 'Pending', color: 'text-amber-500' },
 };
 
-// Mock communication entries
-const mockCommunications: CommunicationEntry[] = [
+// Mock communication entries - exported for use in reminders
+export const mockCommunications: CommunicationEntry[] = [
   {
     id: '1',
     stakeholderId: 'STK-001',
