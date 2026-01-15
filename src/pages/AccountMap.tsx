@@ -77,7 +77,8 @@ import { AddOpportunityDialog, OpportunityData } from '@/components/dialogs/AddO
 import { AddContactDialog } from '@/components/dialogs/AddContactDialog';
 import { LogActivityDialog } from '@/components/dialogs/LogActivityDialog';
 import { StakeholderInfluenceGraph } from '@/components/account/StakeholderInfluenceGraph';
-import { StakeholderCommunicationLog } from '@/components/account/StakeholderCommunicationLog';
+import { StakeholderCommunicationLog, mockCommunications } from '@/components/account/StakeholderCommunicationLog';
+import { FollowUpReminders } from '@/components/account/FollowUpReminders';
 import { toast } from 'sonner';
 
 const getHealthColor = (score: number) => {
@@ -606,6 +607,15 @@ export default function AccountMap() {
 
         {/* Stakeholders Tab */}
         <TabsContent value="stakeholders" className="space-y-4">
+          {/* Follow-up Reminders */}
+          <FollowUpReminders
+            stakeholders={accountStakeholders}
+            communications={mockCommunications}
+            onLogActivity={(stakeholderId) => {
+              setActivityDialogOpen(true);
+            }}
+          />
+
           {/* Interactive Influence Graph */}
           <StakeholderInfluenceGraph 
             stakeholders={accountStakeholders}
