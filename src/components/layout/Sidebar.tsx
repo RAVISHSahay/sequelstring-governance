@@ -16,49 +16,57 @@ import {
   Clock,
   DollarSign,
   Shield,
+  LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
+import { Permission } from "@/types/rbac";
 
-const navigation = [
-  { name: "Dashboard", href: "/", icon: LayoutDashboard },
-  { name: "Accounts", href: "/accounts", icon: Building2 },
-  { name: "Contacts", href: "/contacts", icon: Users },
-  { name: "Leads", href: "/leads", icon: Target },
-  { name: "Opportunities", href: "/opportunities", icon: Briefcase },
-  { name: "Quotes", href: "/quotes", icon: FileText },
-  { name: "Contracts", href: "/contracts", icon: FileCheck },
-  { name: "Orders", href: "/orders", icon: Receipt },
-  { name: "Activities", href: "/activities", icon: Clock },
+interface NavItem {
+  name: string;
+  href: string;
+  icon: LucideIcon;
+  permission?: Permission;
+}
+
+const navigation: NavItem[] = [
+  { name: "Dashboard", href: "/", icon: LayoutDashboard, permission: "view_dashboard" },
+  { name: "Accounts", href: "/accounts", icon: Building2, permission: "view_accounts" },
+  { name: "Contacts", href: "/contacts", icon: Users, permission: "view_contacts" },
+  { name: "Leads", href: "/leads", icon: Target, permission: "view_leads" },
+  { name: "Opportunities", href: "/opportunities", icon: Briefcase, permission: "view_opportunities" },
+  { name: "Quotes", href: "/quotes", icon: FileText, permission: "view_quotes" },
+  { name: "Contracts", href: "/contracts", icon: FileCheck, permission: "view_contracts" },
+  { name: "Orders", href: "/orders", icon: Receipt, permission: "view_orders" },
+  { name: "Activities", href: "/activities", icon: Clock, permission: "view_dashboard" },
 ];
 
-const incentiveNav = [
-  { name: "Targets", href: "/targets", icon: Target },
-  { name: "Incentives", href: "/incentives", icon: DollarSign },
-  { name: "Payouts", href: "/payouts", icon: Receipt },
-  { name: "Performance", href: "/performance", icon: BarChart3 },
-  { name: "Admin", href: "/admin", icon: Shield },
+const incentiveNav: NavItem[] = [
+  { name: "Targets", href: "/targets", icon: Target, permission: "view_targets" },
+  { name: "Incentives", href: "/incentives", icon: DollarSign, permission: "view_incentives" },
+  { name: "Payouts", href: "/payouts", icon: Receipt, permission: "view_payouts" },
+  { name: "Performance", href: "/performance", icon: BarChart3, permission: "view_performance" },
+  { name: "Admin", href: "/admin", icon: Shield, permission: "view_admin" },
 ];
 
-const secondaryNav = [
-  { name: "Reports", href: "/reports", icon: BarChart3 },
-  { name: "Pricing", href: "/pricing", icon: DollarSign },
-  { name: "Settings", href: "/settings", icon: Settings },
+const secondaryNav: NavItem[] = [
+  { name: "Reports", href: "/reports", icon: BarChart3, permission: "view_reports" },
+  { name: "Pricing", href: "/pricing", icon: DollarSign, permission: "view_dashboard" },
+  { name: "Settings", href: "/settings", icon: Settings, permission: "view_dashboard" },
 ];
-
-const TrophyIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
-    <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
-    <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
-    <path d="M4 22h16" />
-    <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
-    <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
-    <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
-  </svg>
-);
 
 export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
+  const { hasPermission } = useAuth();
+
+  const filterByPermission = (items: NavItem[]) => {
+    return items.filter((item) => !item.permission || hasPermission(item.permission));
+  };
+
+  const visibleNavigation = filterByPermission(navigation);
+  const visibleIncentiveNav = filterByPermission(incentiveNav);
+  const visibleSecondaryNav = filterByPermission(secondaryNav);
 
   return (
     <aside
@@ -89,7 +97,7 @@ export function Sidebar() {
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto py-4 px-3">
         <div className="space-y-1">
-          {navigation.map((item) => {
+          {visibleNavigation.map((item) => {
             const isActive = location.pathname === item.href;
             return (
               <Link
@@ -108,53 +116,57 @@ export function Sidebar() {
         </div>
 
         {/* Incentive Engine Section */}
-        <div className="mt-6 pt-4 border-t border-sidebar-border">
-          {!collapsed && (
-            <p className="px-3 mb-2 text-xs font-semibold text-sidebar-foreground/60 uppercase tracking-wider">
-              Incentive Engine
-            </p>
-          )}
-          <div className="space-y-1">
-            {incentiveNav.map((item) => {
-              const isActive = location.pathname === item.href;
-              return (
-                <Link
-                  key={item.name}
-                  to={item.href}
-                  className={cn(
-                    "nav-item",
-                    isActive ? "nav-item-active" : "nav-item-inactive"
-                  )}
-                >
-                  <item.icon className="h-5 w-5 flex-shrink-0" />
-                  {!collapsed && <span>{item.name}</span>}
-                </Link>
-              );
-            })}
+        {visibleIncentiveNav.length > 0 && (
+          <div className="mt-6 pt-4 border-t border-sidebar-border">
+            {!collapsed && (
+              <p className="px-3 mb-2 text-xs font-semibold text-sidebar-foreground/60 uppercase tracking-wider">
+                Incentive Engine
+              </p>
+            )}
+            <div className="space-y-1">
+              {visibleIncentiveNav.map((item) => {
+                const isActive = location.pathname === item.href;
+                return (
+                  <Link
+                    key={item.name}
+                    to={item.href}
+                    className={cn(
+                      "nav-item",
+                      isActive ? "nav-item-active" : "nav-item-inactive"
+                    )}
+                  >
+                    <item.icon className="h-5 w-5 flex-shrink-0" />
+                    {!collapsed && <span>{item.name}</span>}
+                  </Link>
+                );
+              })}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Secondary Navigation */}
-        <div className="mt-6 pt-4 border-t border-sidebar-border">
-          <div className="space-y-1">
-            {secondaryNav.map((item) => {
-              const isActive = location.pathname === item.href;
-              return (
-                <Link
-                  key={item.name}
-                  to={item.href}
-                  className={cn(
-                    "nav-item",
-                    isActive ? "nav-item-active" : "nav-item-inactive"
-                  )}
-                >
-                  <item.icon className="h-5 w-5 flex-shrink-0" />
-                  {!collapsed && <span>{item.name}</span>}
-                </Link>
-              );
-            })}
+        {visibleSecondaryNav.length > 0 && (
+          <div className="mt-6 pt-4 border-t border-sidebar-border">
+            <div className="space-y-1">
+              {visibleSecondaryNav.map((item) => {
+                const isActive = location.pathname === item.href;
+                return (
+                  <Link
+                    key={item.name}
+                    to={item.href}
+                    className={cn(
+                      "nav-item",
+                      isActive ? "nav-item-active" : "nav-item-inactive"
+                    )}
+                  >
+                    <item.icon className="h-5 w-5 flex-shrink-0" />
+                    {!collapsed && <span>{item.name}</span>}
+                  </Link>
+                );
+              })}
+            </div>
           </div>
-        </div>
+        )}
       </nav>
 
       {/* Collapse Toggle */}
