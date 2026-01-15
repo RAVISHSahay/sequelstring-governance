@@ -40,6 +40,7 @@ interface LogActivityDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSave: (activity: Activity) => void;
+  defaultAccount?: string;
 }
 
 const activityTypes = [
@@ -71,12 +72,12 @@ const contacts = [
 
 const outcomes = ['Positive', 'Negative', 'Neutral', 'Completed', 'Sent', 'Pending'];
 
-export function LogActivityDialog({ open, onOpenChange, onSave }: LogActivityDialogProps) {
+export function LogActivityDialog({ open, onOpenChange, onSave, defaultAccount = '' }: LogActivityDialogProps) {
   const [formData, setFormData] = useState({
     type: 'call',
     title: '',
     description: '',
-    account: '',
+    account: defaultAccount,
     contact: '',
     duration: '',
     outcome: 'Positive',
@@ -88,13 +89,13 @@ export function LogActivityDialog({ open, onOpenChange, onSave }: LogActivityDia
         type: 'call',
         title: '',
         description: '',
-        account: '',
+        account: defaultAccount,
         contact: '',
         duration: '',
         outcome: 'Positive',
       });
     }
-  }, [open]);
+  }, [open, defaultAccount]);
 
   const getIcon = (type: string) => {
     const activityType = activityTypes.find((t) => t.value === type);

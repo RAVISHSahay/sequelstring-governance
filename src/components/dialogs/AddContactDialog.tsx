@@ -37,6 +37,7 @@ interface AddContactDialogProps {
   onSave: (contact: Contact) => void;
   contact?: Contact | null;
   mode?: 'create' | 'edit';
+  defaultAccount?: string;
 }
 
 const roles = ['Decision Maker', 'Executive Sponsor', 'Champion', 'Technical Buyer', 'Economic Buyer', 'Influencer'];
@@ -52,12 +53,12 @@ const accounts = [
   'ONGC',
 ];
 
-export function AddContactDialog({ open, onOpenChange, onSave, contact, mode = 'create' }: AddContactDialogProps) {
+export function AddContactDialog({ open, onOpenChange, onSave, contact, mode = 'create', defaultAccount = '' }: AddContactDialogProps) {
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
     title: '',
-    account: '',
+    account: defaultAccount,
     email: '',
     phone: '',
     role: '',
@@ -82,14 +83,14 @@ export function AddContactDialog({ open, onOpenChange, onSave, contact, mode = '
         firstName: '',
         lastName: '',
         title: '',
-        account: '',
+        account: defaultAccount,
         email: '',
         phone: '',
         role: '',
         influence: '',
       });
     }
-  }, [contact, mode, open]);
+  }, [contact, mode, open, defaultAccount]);
 
   const handleSubmit = () => {
     const newContact: Contact = {
