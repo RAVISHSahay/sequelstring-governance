@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { 
   ZoomIn, 
   ZoomOut, 
@@ -44,11 +45,17 @@ import {
   GripVertical,
   Save,
   RotateCcw,
+  Download,
+  FileImage,
+  FileText,
+  Loader2,
 } from "lucide-react";
 import { Stakeholder, ContactRelationship, RelationshipType, ContactRole } from "@/types/account";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "@/hooks/use-toast";
+import html2canvas from "html2canvas";
+import { jsPDF } from "jspdf";
 
 interface StakeholderInfluenceGraphProps {
   stakeholders: Stakeholder[];
@@ -105,6 +112,7 @@ export function StakeholderInfluenceGraph({
   onRelationshipsChange
 }: StakeholderInfluenceGraphProps) {
   const svgRef = useRef<SVGSVGElement>(null);
+  const graphContainerRef = useRef<HTMLDivElement>(null);
   
   // Core state
   const [zoom, setZoom] = useState(1);
@@ -114,6 +122,7 @@ export function StakeholderInfluenceGraph({
   const [showRelationships, setShowRelationships] = useState(true);
   const [filterRole, setFilterRole] = useState<string>('all');
   const [dragOffset] = useState({ x: 0, y: 0 });
+  const [isExporting, setIsExporting] = useState(false);
   
   // Connection editing state
   const [editMode, setEditMode] = useState<'select' | 'connect' | 'drag'>('select');
@@ -364,6 +373,118 @@ export function StakeholderInfluenceGraph({
     toast({ title: "Layout Reset", description: "Layout has been reset to default" });
   }, [layoutStorageKey]);
 
+  // Export as PNG image
+  const handleExportImage = useCallback(async () => {
+    if (!graphContainerRef.current) return;
+    
+    setIsExporting(true);
+    try {
+      const canvas = await html2canvas(graphContainerRef.current, {
+        backgroundColor: '#ffffff',
+        scale: 2,
+        useCORS: true,
+        logging: false,
+      });
+      
+      const link = document.createElement('a');
+      link.download = `${accountName.replace(/\s+/g, '-')}-stakeholder-map.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+      
+      toast({ title: "Image Exported", description: "Stakeholder map saved as PNG" });
+    } catch (error) {
+      console.error('Export failed:', error);
+      toast({ title: "Export Failed", description: "Failed to export image", variant: "destructive" });
+    } finally {
+      setIsExporting(false);
+    }
+  }, [accountName]);
+
+  // Export as PDF
+  const handleExportPDF = useCallback(async () => {
+    if (!graphContainerRef.current) return;
+    
+    setIsExporting(true);
+    try {
+      const canvas = await html2canvas(graphContainerRef.current, {
+        backgroundColor: '#ffffff',
+        scale: 2,
+        useCORS: true,
+        logging: false,
+      });
+      
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'landscape',
+        unit: 'mm',
+        format: 'a4',
+      });
+      
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      
+      // Add title
+      pdf.setFontSize(18);
+      pdf.setTextColor(30, 41, 59);
+      pdf.text(`${accountName} - Stakeholder Influence Map`, 14, 15);
+      
+      // Add metadata
+      pdf.setFontSize(10);
+      pdf.setTextColor(100, 116, 139);
+      pdf.text(`Generated: ${new Date().toLocaleDateString()} | View: ${viewMode} | Stakeholders: ${filteredStakeholders.length}`, 14, 22);
+      
+      // Calculate image dimensions to fit in PDF
+      const imgWidth = pdfWidth - 28;
+      const imgHeight = (canvas.height / canvas.width) * imgWidth;
+      const maxImgHeight = pdfHeight - 35;
+      
+      const finalHeight = Math.min(imgHeight, maxImgHeight);
+      const finalWidth = (finalHeight / imgHeight) * imgWidth;
+      
+      // Add image centered
+      const xOffset = (pdfWidth - finalWidth) / 2;
+      pdf.addImage(imgData, 'PNG', xOffset, 28, finalWidth, finalHeight);
+      
+      // Add legend on second page if needed
+      if (relationships.length > 0) {
+        pdf.addPage();
+        pdf.setFontSize(14);
+        pdf.setTextColor(30, 41, 59);
+        pdf.text('Relationship Legend', 14, 15);
+        
+        let yPos = 25;
+        pdf.setFontSize(10);
+        
+        // Relationship types
+        Object.entries(relationshipColors).forEach(([type, config]) => {
+          pdf.setTextColor(config.stroke);
+          pdf.text(`• ${config.label}`, 14, yPos);
+          yPos += 6;
+        });
+        
+        yPos += 10;
+        pdf.setTextColor(30, 41, 59);
+        pdf.text('Stakeholder Roles', 14, yPos);
+        yPos += 8;
+        
+        Object.entries(roleConfig).forEach(([role, config]) => {
+          pdf.setTextColor(100, 116, 139);
+          pdf.text(`• ${config.label}`, 14, yPos);
+          yPos += 6;
+        });
+      }
+      
+      pdf.save(`${accountName.replace(/\s+/g, '-')}-stakeholder-map.pdf`);
+      
+      toast({ title: "PDF Exported", description: "Stakeholder map saved as PDF with legend" });
+    } catch (error) {
+      console.error('PDF export failed:', error);
+      toast({ title: "Export Failed", description: "Failed to export PDF", variant: "destructive" });
+    } finally {
+      setIsExporting(false);
+    }
+  }, [accountName, viewMode, filteredStakeholders.length, relationships.length]);
+
   // Handle relationship line click
   const handleRelationshipClick = useCallback((rel: ContactRelationship, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -588,6 +709,30 @@ export function StakeholderInfluenceGraph({
                   <Maximize2 className="h-4 w-4" />
                 </Button>
               </div>
+              
+              {/* Export Dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" disabled={isExporting} className="gap-1">
+                    {isExporting ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Download className="h-4 w-4" />
+                    )}
+                    Export
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={handleExportImage} className="gap-2">
+                    <FileImage className="h-4 w-4" />
+                    Export as PNG
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleExportPDF} className="gap-2">
+                    <FileText className="h-4 w-4" />
+                    Export as PDF
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
           
@@ -643,7 +788,11 @@ export function StakeholderInfluenceGraph({
         </CardHeader>
         
         <CardContent>
-          <div className="relative overflow-hidden border rounded-lg bg-gradient-to-br from-muted/30 to-muted/10" style={{ height: 550 }}>
+          <div 
+            ref={graphContainerRef}
+            className="relative overflow-hidden border rounded-lg bg-gradient-to-br from-muted/30 to-muted/10 bg-white dark:bg-slate-900" 
+            style={{ height: 550 }}
+          >
             <TooltipProvider>
               <svg 
                 ref={svgRef}
