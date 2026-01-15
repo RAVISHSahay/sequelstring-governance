@@ -62,6 +62,8 @@ import {
   ClipboardList,
   Keyboard,
   X,
+  LayoutGrid,
+  GitGraph,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { 
@@ -74,6 +76,7 @@ import {
 import { AddOpportunityDialog, OpportunityData } from '@/components/dialogs/AddOpportunityDialog';
 import { AddContactDialog } from '@/components/dialogs/AddContactDialog';
 import { LogActivityDialog } from '@/components/dialogs/LogActivityDialog';
+import { StakeholderInfluenceGraph } from '@/components/account/StakeholderInfluenceGraph';
 import { toast } from 'sonner';
 
 const getHealthColor = (score: number) => {
@@ -602,22 +605,32 @@ export default function AccountMap() {
 
         {/* Stakeholders Tab */}
         <TabsContent value="stakeholders" className="space-y-4">
+          {/* Interactive Influence Graph */}
+          <StakeholderInfluenceGraph 
+            stakeholders={accountStakeholders}
+            accountName={selectedAccount.name}
+          />
+
+          {/* Stakeholder Cards Grid */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Network className="h-5 w-5 text-primary" />
-                Stakeholder Influence Map
-              </CardTitle>
-              <CardDescription>
-                Visualize relationships and influence across the organization
-              </CardDescription>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <LayoutGrid className="h-5 w-5 text-primary" />
+                  Stakeholder Directory
+                </CardTitle>
+                <Button variant="outline" size="sm" onClick={() => setContactDialogOpen(true)}>
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Add Contact
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {accountStakeholders.map((stakeholder) => {
                   const RoleIcon = getRoleIcon(stakeholder.primaryRole);
                   return (
-                    <Card key={stakeholder.id} className="relative overflow-hidden">
+                    <Card key={stakeholder.id} className="relative overflow-hidden hover:shadow-md transition-shadow">
                       <div 
                         className="absolute top-0 left-0 w-1 h-full" 
                         style={{ backgroundColor: stakeholder.decisionAuthority === 'final' ? '#8B5CF6' : stakeholder.decisionAuthority === 'strong_influence' ? '#3B82F6' : '#9CA3AF' }}
