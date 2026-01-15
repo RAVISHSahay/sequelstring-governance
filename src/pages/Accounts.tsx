@@ -27,11 +27,13 @@ import {
   ExternalLink,
   Edit2,
   Trash2,
-  UserPlus
+  UserPlus,
+  Upload
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AddAccountDialog } from "@/components/dialogs/AddAccountDialog";
 import { DeleteConfirmDialog } from "@/components/dialogs/DeleteConfirmDialog";
+import { CSVImportDialog } from "@/components/dialogs/CSVImportDialog";
 import { toast } from "sonner";
 
 interface Account {
@@ -170,6 +172,16 @@ export default function Accounts() {
   const [dialogMode, setDialogMode] = useState<'create' | 'edit'>('create');
   const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
+
+  const accountImportFields = [
+    { name: 'name', label: 'Account Name', required: true },
+    { name: 'type', label: 'Account Type', required: true },
+    { name: 'industry', label: 'Industry', required: true },
+    { name: 'revenue', label: 'Annual Revenue', required: false },
+    { name: 'status', label: 'Status', required: false },
+    { name: 'owner', label: 'Account Owner', required: true },
+  ];
 
   const filteredAccounts = accounts.filter((account) =>
     account.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -213,6 +225,22 @@ export default function Accounts() {
     }
   };
 
+  const handleImportAccounts = (data: Record<string, string>[]) => {
+    const newAccounts: Account[] = data.map((row, index) => ({
+      id: Date.now() + index,
+      name: row.name,
+      type: row.type || 'Enterprise',
+      industry: row.industry,
+      revenue: row.revenue ? (row.revenue.startsWith('₹') ? row.revenue : `₹${row.revenue}`) : '₹0',
+      deals: 0,
+      contacts: 0,
+      status: row.status || 'Prospect',
+      owner: row.owner,
+    }));
+    setAccounts((prev) => [...prev, ...newAccounts]);
+    toast.success(`${newAccounts.length} accounts imported successfully`);
+  };
+
   return (
     <AppLayout title="Accounts">
       {/* Toolbar */}
@@ -230,6 +258,10 @@ export default function Accounts() {
           <Button variant="outline" className="gap-2">
             <Filter className="h-4 w-4" />
             Filters
+          </Button>
+          <Button variant="outline" className="gap-2" onClick={() => setImportDialogOpen(true)}>
+            <Upload className="h-4 w-4" />
+            Import
           </Button>
           <Button className="gap-2" onClick={handleAddAccount}>
             <Plus className="h-4 w-4" />
@@ -348,6 +380,16 @@ export default function Accounts() {
         title="Delete Account"
         description={`Are you sure you want to delete ${selectedAccount?.name}? This will also remove all associated contacts and opportunities.`}
         onConfirm={handleConfirmDelete}
+      />
+
+      <CSVImportDialog
+        open={importDialogOpen}
+        onOpenChange={setImportDialogOpen}
+        title="Import Accounts"
+        description="Upload a CSV file to bulk import accounts into your CRM"
+        fields={accountImportFields}
+        onImport={handleImportAccounts}
+        templateFileName="accounts_import_template.csv"
       />
     </AppLayout>
   );

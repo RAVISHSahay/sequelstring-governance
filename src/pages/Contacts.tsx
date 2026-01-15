@@ -18,10 +18,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Search, Filter, Plus, MoreHorizontal, Phone, Mail, Linkedin, Edit2, Trash2 } from "lucide-react";
+import { Search, Filter, Plus, MoreHorizontal, Phone, Mail, Linkedin, Edit2, Trash2, Upload } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AddContactDialog } from "@/components/dialogs/AddContactDialog";
 import { DeleteConfirmDialog } from "@/components/dialogs/DeleteConfirmDialog";
+import { CSVImportDialog } from "@/components/dialogs/CSVImportDialog";
 import { toast } from "sonner";
 
 interface Contact {
@@ -129,6 +130,18 @@ export default function Contacts() {
   const [dialogMode, setDialogMode] = useState<'create' | 'edit'>('create');
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
+
+  const contactImportFields = [
+    { name: 'firstName', label: 'First Name', required: true },
+    { name: 'lastName', label: 'Last Name', required: true },
+    { name: 'title', label: 'Job Title', required: false },
+    { name: 'account', label: 'Account', required: true },
+    { name: 'email', label: 'Email', required: true },
+    { name: 'phone', label: 'Phone', required: false },
+    { name: 'role', label: 'Contact Role', required: false },
+    { name: 'influence', label: 'Influence Level', required: false },
+  ];
 
   const filteredContacts = contacts.filter(
     (contact) =>
@@ -174,6 +187,22 @@ export default function Contacts() {
     }
   };
 
+  const handleImportContacts = (data: Record<string, string>[]) => {
+    const newContacts: Contact[] = data.map((row, index) => ({
+      id: Date.now() + index,
+      name: `${row.firstName} ${row.lastName}`.trim(),
+      title: row.title || '',
+      account: row.account,
+      email: row.email,
+      phone: row.phone || '',
+      role: row.role || 'Influencer',
+      influence: row.influence || 'Medium',
+      lastContact: 'Just imported',
+    }));
+    setContacts((prev) => [...prev, ...newContacts]);
+    toast.success(`${newContacts.length} contacts imported successfully`);
+  };
+
   return (
     <AppLayout title="Contacts">
       <div className="flex flex-col sm:flex-row gap-4 mb-6">
@@ -190,6 +219,10 @@ export default function Contacts() {
           <Button variant="outline" className="gap-2">
             <Filter className="h-4 w-4" />
             Filters
+          </Button>
+          <Button variant="outline" className="gap-2" onClick={() => setImportDialogOpen(true)}>
+            <Upload className="h-4 w-4" />
+            Import
           </Button>
           <Button className="gap-2" onClick={handleAddContact}>
             <Plus className="h-4 w-4" />
@@ -292,6 +325,16 @@ export default function Contacts() {
         title="Delete Contact"
         description={`Are you sure you want to delete ${selectedContact?.name}? This action cannot be undone.`}
         onConfirm={handleConfirmDelete}
+      />
+
+      <CSVImportDialog
+        open={importDialogOpen}
+        onOpenChange={setImportDialogOpen}
+        title="Import Contacts"
+        description="Upload a CSV file to bulk import contacts into your CRM"
+        fields={contactImportFields}
+        onImport={handleImportContacts}
+        templateFileName="contacts_import_template.csv"
       />
     </AppLayout>
   );
