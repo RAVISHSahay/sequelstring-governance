@@ -29,6 +29,7 @@ import SalesStageConfig from "./pages/SalesStageConfig";
 import Forecasting from "./pages/Forecasting";
 import WinLossAnalysis from "./pages/WinLossAnalysis";
 import POCTracking from "./pages/POCTracking";
+import UserGuide from "./pages/UserGuide";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -88,6 +89,7 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
+            <Route path="/user-guide" element={<UserGuide />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
