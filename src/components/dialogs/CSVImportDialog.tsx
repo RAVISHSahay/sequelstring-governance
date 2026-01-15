@@ -46,6 +46,8 @@ import {
   Hash,
   Type,
   Ruler,
+  Wand2,
+  Sparkles,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
@@ -141,6 +143,111 @@ const validateMaxLength = (value: string, maxLength: number): boolean => {
   return value.trim().length <= maxLength;
 };
 
+// Auto-fix helper functions
+interface AutoFixResult {
+  original: string;
+  fixed: string;
+  fixType: string;
+}
+
+const autoFixValue = (value: string, fieldName: string, validation?: { type: string; pattern?: string }[]): AutoFixResult | null => {
+  const original = value;
+  let fixed = value;
+  const fixTypes: string[] = [];
+
+  // Always trim whitespace
+  if (fixed !== fixed.trim()) {
+    fixed = fixed.trim();
+    fixTypes.push('Trimmed whitespace');
+  }
+
+  // Remove extra internal spaces
+  if (/\s{2,}/.test(fixed)) {
+    fixed = fixed.replace(/\s{2,}/g, ' ');
+    fixTypes.push('Removed extra spaces');
+  }
+
+  // Check for email validation - normalize to lowercase
+  const hasEmailValidation = validation?.some((v) => v.type === 'email');
+  if (hasEmailValidation && fixed !== fixed.toLowerCase()) {
+    fixed = fixed.toLowerCase();
+    fixTypes.push('Lowercase email');
+  }
+
+  // Check for phone validation - format phone number
+  const hasPhoneValidation = validation?.some((v) => v.type === 'phone');
+  if (hasPhoneValidation && fixed) {
+    // Remove common invalid characters but keep digits, +, -, (, ), and spaces
+    const cleanedPhone = fixed.replace(/[^\d\+\-\(\)\s]/g, '');
+    if (cleanedPhone !== fixed) {
+      fixed = cleanedPhone;
+      fixTypes.push('Cleaned phone characters');
+    }
+    
+    // Format Indian phone numbers if it looks like one
+    const digitsOnly = fixed.replace(/\D/g, '');
+    if (digitsOnly.length === 10 && !fixed.startsWith('+')) {
+      fixed = `+91 ${digitsOnly.slice(0, 5)} ${digitsOnly.slice(5)}`;
+      fixTypes.push('Formatted as Indian phone');
+    } else if (digitsOnly.length === 12 && digitsOnly.startsWith('91')) {
+      fixed = `+${digitsOnly.slice(0, 2)} ${digitsOnly.slice(2, 7)} ${digitsOnly.slice(7)}`;
+      fixTypes.push('Formatted phone number');
+    }
+  }
+
+  // Fix common typos in email domains
+  if (hasEmailValidation && fixed.includes('@')) {
+    const emailFixes: Record<string, string> = {
+      '@gmial.com': '@gmail.com',
+      '@gmal.com': '@gmail.com',
+      '@gamil.com': '@gmail.com',
+      '@gmail.con': '@gmail.com',
+      '@gmail.co': '@gmail.com',
+      '@yahooo.com': '@yahoo.com',
+      '@yaho.com': '@yahoo.com',
+      '@yahoo.con': '@yahoo.com',
+      '@outlok.com': '@outlook.com',
+      '@outloo.com': '@outlook.com',
+      '@hotmal.com': '@hotmail.com',
+      '@hotmai.com': '@hotmail.com',
+    };
+    
+    for (const [typo, correction] of Object.entries(emailFixes)) {
+      if (fixed.endsWith(typo)) {
+        fixed = fixed.replace(typo, correction);
+        fixTypes.push('Fixed email domain typo');
+        break;
+      }
+    }
+  }
+
+  // Remove leading/trailing special characters from names
+  if (fieldName.toLowerCase().includes('name') || fieldName.toLowerCase().includes('first') || fieldName.toLowerCase().includes('last')) {
+    const cleanedName = fixed.replace(/^[^a-zA-Z]+|[^a-zA-Z]+$/g, '');
+    if (cleanedName !== fixed && cleanedName.length > 0) {
+      fixed = cleanedName;
+      fixTypes.push('Cleaned name characters');
+    }
+    
+    // Capitalize first letter of each word in names
+    const capitalized = fixed.replace(/\b\w/g, (c) => c.toUpperCase());
+    if (capitalized !== fixed) {
+      fixed = capitalized;
+      fixTypes.push('Capitalized name');
+    }
+  }
+
+  if (fixed !== original) {
+    return {
+      original,
+      fixed,
+      fixType: fixTypes.join(', '),
+    };
+  }
+
+  return null;
+};
+
 export function CSVImportDialog({
   open,
   onOpenChange,
@@ -162,6 +269,8 @@ export function CSVImportDialog({
   const [dragActive, setDragActive] = useState(false);
   const [rowValidations, setRowValidations] = useState<RowValidation[]>([]);
   const [validationSummary, setValidationSummary] = useState({ valid: 0, invalid: 0, duplicates: 0 });
+  const [autoFixApplied, setAutoFixApplied] = useState(false);
+  const [autoFixSummary, setAutoFixSummary] = useState<{ field: string; count: number; fixes: string[] }[]>([]);
 
   const parseCSV = (text: string): { headers: string[]; data: string[][] } => {
     const lines = text.split('\n').filter((line) => line.trim() !== '');
@@ -443,7 +552,56 @@ export function CSVImportDialog({
     setImportResults({ success: 0, failed: 0, errors: [] });
     setRowValidations([]);
     setValidationSummary({ valid: 0, invalid: 0, duplicates: 0 });
+    setAutoFixApplied(false);
+    setAutoFixSummary([]);
   };
+
+  // Auto-fix all data
+  const applyAutoFix = useCallback(() => {
+    const fixSummary: Map<string, { count: number; fixes: Set<string> }> = new Map();
+    
+    const newCsvData = csvData.map((row) => {
+      const newRow = [...row];
+      
+      fields.forEach((field) => {
+        const csvColumn = fieldMappings[field.name];
+        if (csvColumn) {
+          const columnIndex = csvHeaders.indexOf(csvColumn);
+          if (columnIndex >= 0) {
+            const originalValue = row[columnIndex] || '';
+            const fixResult = autoFixValue(originalValue, field.name, field.validation);
+            
+            if (fixResult) {
+              newRow[columnIndex] = fixResult.fixed;
+              
+              // Track fix summary
+              if (!fixSummary.has(field.name)) {
+                fixSummary.set(field.name, { count: 0, fixes: new Set() });
+              }
+              const summary = fixSummary.get(field.name)!;
+              summary.count++;
+              fixResult.fixType.split(', ').forEach((f) => summary.fixes.add(f));
+            }
+          }
+        }
+      });
+      
+      return newRow;
+    });
+    
+    setCsvData(newCsvData);
+    setAutoFixApplied(true);
+    setAutoFixSummary(
+      Array.from(fixSummary.entries()).map(([field, data]) => ({
+        field,
+        count: data.count,
+        fixes: Array.from(data.fixes),
+      }))
+    );
+    
+    // Re-validate after fix
+    setTimeout(() => validateAllRows(), 0);
+  }, [csvData, csvHeaders, fieldMappings, fields, validateAllRows]);
 
   // Helper to get validation type icon and description
   const getValidationInfo = (rule: { type: string; pattern?: string; value?: number; message: string }) => {
@@ -857,6 +1015,63 @@ export function CSVImportDialog({
           {/* Preview Step */}
           {step === 'preview' && (
             <div className="space-y-4">
+              {/* Auto-fix Panel */}
+              {!autoFixApplied && validationSummary.invalid > 0 && (
+                <div className="p-4 border rounded-lg bg-gradient-to-r from-primary/5 to-accent/5 border-primary/20">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex items-start gap-3">
+                      <div className="p-2 rounded-lg bg-primary/10">
+                        <Wand2 className="h-5 w-5 text-primary" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-sm">Auto-Fix Available</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          Automatically fix common issues like whitespace, phone formatting, email typos, and name capitalization.
+                        </p>
+                      </div>
+                    </div>
+                    <Button 
+                      size="sm" 
+                      onClick={applyAutoFix}
+                      className="shrink-0"
+                    >
+                      <Sparkles className="h-4 w-4 mr-2" />
+                      Auto-Fix All
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* Auto-fix Applied Summary */}
+              {autoFixApplied && autoFixSummary.length > 0 && (
+                <div className="p-4 border rounded-lg bg-emerald-500/5 border-emerald-200">
+                  <div className="flex items-center gap-2 mb-2">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                    <span className="font-medium text-sm text-emerald-700">Auto-Fix Applied</span>
+                  </div>
+                  <div className="space-y-1">
+                    {autoFixSummary.map((item) => (
+                      <div key={item.field} className="flex items-center gap-2 text-xs">
+                        <Badge variant="secondary" className="text-xs">
+                          {fields.find((f) => f.name === item.field)?.label || item.field}
+                        </Badge>
+                        <span className="text-muted-foreground">
+                          {item.count} values fixed: {item.fixes.join(', ')}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {autoFixApplied && autoFixSummary.length === 0 && (
+                <div className="p-3 border rounded-lg bg-muted/50 text-center">
+                  <p className="text-sm text-muted-foreground">
+                    No auto-fixable issues found in your data.
+                  </p>
+                </div>
+              )}
+
               {/* Validation Summary */}
               <div className="grid grid-cols-3 gap-3">
                 <div className="p-3 bg-emerald-500/10 rounded-lg text-center">
@@ -889,7 +1104,7 @@ export function CSVImportDialog({
                 <Badge variant="outline">{csvData.length} total rows</Badge>
               </div>
 
-              <ScrollArea className="h-[250px] border rounded-lg">
+              <ScrollArea className="h-[200px] border rounded-lg">
                 <Table>
                   <TableHeader>
                     <TableRow>
