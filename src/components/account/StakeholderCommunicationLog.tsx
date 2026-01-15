@@ -39,6 +39,9 @@ import {
   Target,
   TrendingUp,
   Unlink,
+  RefreshCw,
+  ArrowRightLeft,
+  Zap,
 } from "lucide-react";
 import { Stakeholder, Opportunity } from "@/types/account";
 import { cn } from "@/lib/utils";
@@ -66,6 +69,8 @@ export interface CommunicationEntry {
   createdAt: Date;
   isKeyMoment?: boolean;
   attachments?: { name: string; url: string }[];
+  source?: 'manual' | 'gmail' | 'outlook' | 'calendar';
+  syncedAt?: Date;
 }
 
 interface StakeholderCommunicationLogProps {
@@ -109,6 +114,8 @@ const mockCommunications: CommunicationEntry[] = [
     createdBy: 'Priya Sharma',
     createdAt: new Date(Date.now() - 1 * 60 * 60 * 1000),
     isKeyMoment: true,
+    source: 'calendar',
+    syncedAt: new Date(Date.now() - 1.5 * 60 * 60 * 1000),
   },
   {
     id: '2',
@@ -123,6 +130,8 @@ const mockCommunications: CommunicationEntry[] = [
     createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000),
     linkedOpportunityId: 'OPP-001',
     linkedOpportunityName: 'ERP Integration Project',
+    source: 'gmail',
+    syncedAt: new Date(Date.now() - 23 * 60 * 60 * 1000),
   },
   {
     id: '3',
@@ -495,6 +504,12 @@ export function StakeholderCommunicationLog({
                               <div>
                                 <div className="flex items-center gap-2 flex-wrap">
                                   <span className="font-medium text-sm">{entry.subject}</span>
+                                  {entry.source && entry.source !== 'manual' && (
+                                    <Badge variant="outline" className="text-[10px] py-0 px-1.5 gap-1 bg-primary/5 text-primary border-primary/20">
+                                      <RefreshCw className="h-2.5 w-2.5" />
+                                      {entry.source === 'gmail' ? 'Gmail' : entry.source === 'outlook' ? 'Outlook' : 'Calendar'}
+                                    </Badge>
+                                  )}
                                   {entry.isKeyMoment && (
                                     <Badge variant="outline" className="bg-amber-100 text-amber-700 border-amber-300 gap-1">
                                       <Star className="h-3 w-3" />

@@ -5,9 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, Filter, Plus, Phone, Mail, Calendar, FileText, CheckCircle, MessageSquare, Video } from "lucide-react";
+import { Search, Filter, Plus, Phone, Mail, Calendar, FileText, CheckCircle, MessageSquare, Video, RefreshCw, ArrowRightLeft, Settings2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LogActivityDialog } from "@/components/dialogs/LogActivityDialog";
+import { IntegrationSettings } from "@/components/account/IntegrationSettings";
 import { toast } from "sonner";
 
 interface Activity {
@@ -23,6 +24,8 @@ interface Activity {
   time: string;
   duration: string;
   outcome: string;
+  source?: 'manual' | 'gmail' | 'outlook' | 'calendar';
+  syncedAt?: Date;
 }
 
 const initialActivities: Activity[] = [
@@ -39,6 +42,8 @@ const initialActivities: Activity[] = [
     time: "2 hours ago",
     duration: "45 min",
     outcome: "Positive",
+    source: 'calendar',
+    syncedAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
   },
   {
     id: 2,
@@ -53,6 +58,8 @@ const initialActivities: Activity[] = [
     time: "4 hours ago",
     duration: "-",
     outcome: "Sent",
+    source: 'gmail',
+    syncedAt: new Date(Date.now() - 4 * 60 * 60 * 1000),
   },
   {
     id: 3,
@@ -67,6 +74,8 @@ const initialActivities: Activity[] = [
     time: "Yesterday",
     duration: "1h 30min",
     outcome: "Positive",
+    source: 'calendar',
+    syncedAt: new Date(Date.now() - 24 * 60 * 60 * 1000),
   },
   {
     id: 4,
@@ -157,6 +166,9 @@ export default function Activities() {
   const [searchQuery, setSearchQuery] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("all");
+  const [showIntegrations, setShowIntegrations] = useState(false);
+
+  const syncedCount = activities.filter(a => a.source && a.source !== 'manual').length;
 
   const filteredActivities = activities.filter((activity) => {
     const matchesSearch =
@@ -173,9 +185,30 @@ export default function Activities() {
   const handleSaveActivity = (activity: Activity) => {
     // Set the correct icon based on type
     const Icon = getIconForType(activity.type);
-    const activityWithIcon = { ...activity, icon: Icon };
+    const activityWithIcon = { ...activity, icon: Icon, source: 'manual' as const };
     setActivities((prev) => [activityWithIcon, ...prev]);
     toast.success('Activity logged successfully');
+  };
+
+  const handleSyncComplete = (count: number) => {
+    // Simulate adding synced activities
+    const newSyncedActivities: Activity[] = Array.from({ length: Math.min(count, 3) }, (_, i) => ({
+      id: Date.now() + i,
+      type: ['email', 'meeting', 'call'][i % 3],
+      icon: [Mail, Video, Phone][i % 3],
+      title: [`Re: Pricing Discussion`, `Weekly Sync Call`, `Follow-up on Proposal`][i % 3],
+      description: `Auto-synced from ${['Gmail', 'Calendar', 'Calendar'][i % 3]}`,
+      account: ['Tata Steel Ltd', 'Reliance Industries', 'HDFC Bank'][i % 3],
+      contact: ['Rajesh Sharma', 'Priya Menon', 'Amit Patel'][i % 3],
+      user: 'Priya Sharma',
+      initials: 'PS',
+      time: 'Just now',
+      duration: i === 1 ? '30 min' : '-',
+      outcome: 'Synced',
+      source: ['gmail', 'calendar', 'calendar'][i % 3] as 'gmail' | 'calendar',
+      syncedAt: new Date(),
+    }));
+    setActivities(prev => [...newSyncedActivities, ...prev]);
   };
 
   return (
@@ -198,12 +231,28 @@ export default function Activities() {
                 <Filter className="h-4 w-4" />
                 Filters
               </Button>
+              <Button 
+                variant="outline" 
+                className={cn("gap-2", showIntegrations && "bg-primary/10")}
+                onClick={() => setShowIntegrations(!showIntegrations)}
+              >
+                <ArrowRightLeft className="h-4 w-4" />
+                Integrations
+                {syncedCount > 0 && (
+                  <Badge variant="secondary" className="ml-1 px-1.5 py-0 text-xs">{syncedCount}</Badge>
+                )}
+              </Button>
               <Button className="gap-2" onClick={handleLogActivity}>
                 <Plus className="h-4 w-4" />
                 Log Activity
               </Button>
             </div>
           </div>
+
+          {/* Integration Settings Panel */}
+          {showIntegrations && (
+            <IntegrationSettings onSyncComplete={handleSyncComplete} />
+          )}
 
           <Tabs defaultValue="all" className="w-full" onValueChange={setActiveTab}>
             <TabsList>
@@ -228,7 +277,15 @@ export default function Activities() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-4">
                           <div>
-                            <p className="font-semibold text-foreground">{activity.title}</p>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <p className="font-semibold text-foreground">{activity.title}</p>
+                              {activity.source && activity.source !== 'manual' && (
+                                <Badge variant="outline" className="text-[10px] py-0 px-1.5 gap-1 bg-primary/5 text-primary border-primary/20">
+                                  <RefreshCw className="h-2.5 w-2.5" />
+                                  {activity.source === 'gmail' ? 'Gmail' : activity.source === 'outlook' ? 'Outlook' : 'Calendar'}
+                                </Badge>
+                              )}
+                            </div>
                             <p className="text-sm text-muted-foreground mt-1">{activity.description}</p>
                           </div>
                           <Badge variant="outline" className={cn("flex-shrink-0", getOutcomeColor(activity.outcome))}>
