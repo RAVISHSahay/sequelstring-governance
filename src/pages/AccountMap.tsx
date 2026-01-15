@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -170,6 +170,39 @@ export default function AccountMap() {
     setActivityDialogOpen(false);
   };
 
+  // Keyboard shortcuts
+  const handleKeyDown = useCallback((event: KeyboardEvent) => {
+    // Don't trigger if user is typing in an input
+    const target = event.target as HTMLElement;
+    if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+      return;
+    }
+
+    if (event.ctrlKey || event.metaKey) {
+      switch (event.key.toLowerCase()) {
+        case 'o':
+          event.preventDefault();
+          setOpportunityDialogOpen(true);
+          break;
+        case 'c':
+          event.preventDefault();
+          setContactDialogOpen(true);
+          break;
+        case 'a':
+          event.preventDefault();
+          setActivityDialogOpen(true);
+          break;
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [handleKeyDown]);
+
   return (
     <AppLayout title="Account Map">
       {/* Account Selector */}
@@ -210,18 +243,33 @@ export default function AccountMap() {
                 Quick Actions
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem onClick={() => setOpportunityDialogOpen(true)}>
-                <Target className="h-4 w-4 mr-2" />
-                New Opportunity
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuItem onClick={() => setOpportunityDialogOpen(true)} className="justify-between">
+                <span className="flex items-center">
+                  <Target className="h-4 w-4 mr-2" />
+                  New Opportunity
+                </span>
+                <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground">
+                  <span className="text-xs">⌘</span>O
+                </kbd>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setContactDialogOpen(true)}>
-                <UserPlus className="h-4 w-4 mr-2" />
-                Add Contact
+              <DropdownMenuItem onClick={() => setContactDialogOpen(true)} className="justify-between">
+                <span className="flex items-center">
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Add Contact
+                </span>
+                <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground">
+                  <span className="text-xs">⌘</span>C
+                </kbd>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setActivityDialogOpen(true)}>
-                <ClipboardList className="h-4 w-4 mr-2" />
-                Log Activity
+              <DropdownMenuItem onClick={() => setActivityDialogOpen(true)} className="justify-between">
+                <span className="flex items-center">
+                  <ClipboardList className="h-4 w-4 mr-2" />
+                  Log Activity
+                </span>
+                <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground">
+                  <span className="text-xs">⌘</span>A
+                </kbd>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
