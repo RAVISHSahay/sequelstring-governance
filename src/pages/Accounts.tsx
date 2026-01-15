@@ -24,11 +24,29 @@ import {
   MoreHorizontal,
   Building2,
   ArrowUpDown,
-  ExternalLink
+  ExternalLink,
+  Edit2,
+  Trash2,
+  UserPlus
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { AddAccountDialog } from "@/components/dialogs/AddAccountDialog";
+import { DeleteConfirmDialog } from "@/components/dialogs/DeleteConfirmDialog";
+import { toast } from "sonner";
 
-const accounts = [
+interface Account {
+  id: number;
+  name: string;
+  type: string;
+  industry: string;
+  revenue: string;
+  deals: number;
+  contacts: number;
+  status: string;
+  owner: string;
+}
+
+const initialAccounts: Account[] = [
   {
     id: 1,
     name: "Tata Steel Ltd",
@@ -146,11 +164,54 @@ const getTypeColor = (type: string) => {
 };
 
 export default function Accounts() {
+  const [accounts, setAccounts] = useState<Account[]>(initialAccounts);
   const [searchQuery, setSearchQuery] = useState("");
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogMode, setDialogMode] = useState<'create' | 'edit'>('create');
+  const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   const filteredAccounts = accounts.filter((account) =>
     account.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const handleAddAccount = () => {
+    setSelectedAccount(null);
+    setDialogMode('create');
+    setDialogOpen(true);
+  };
+
+  const handleEditAccount = (account: Account) => {
+    setSelectedAccount(account);
+    setDialogMode('edit');
+    setDialogOpen(true);
+  };
+
+  const handleDeleteAccount = (account: Account) => {
+    setSelectedAccount(account);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleSaveAccount = (account: Account) => {
+    if (dialogMode === 'create') {
+      setAccounts((prev) => [...prev, account]);
+      toast.success(`Account ${account.name} added successfully`);
+    } else {
+      setAccounts((prev) =>
+        prev.map((a) => (a.id === account.id ? account : a))
+      );
+      toast.success(`Account ${account.name} updated successfully`);
+    }
+  };
+
+  const handleConfirmDelete = () => {
+    if (selectedAccount) {
+      setAccounts((prev) => prev.filter((a) => a.id !== selectedAccount.id));
+      toast.success(`Account ${selectedAccount.name} deleted`);
+      setDeleteDialogOpen(false);
+      setSelectedAccount(null);
+    }
+  };
 
   return (
     <AppLayout title="Accounts">
@@ -170,7 +231,7 @@ export default function Accounts() {
             <Filter className="h-4 w-4" />
             Filters
           </Button>
-          <Button className="gap-2">
+          <Button className="gap-2" onClick={handleAddAccount}>
             <Plus className="h-4 w-4" />
             Add Account
           </Button>
@@ -244,9 +305,21 @@ export default function Accounts() {
                         <ExternalLink className="h-4 w-4 mr-2" />
                         View Details
                       </DropdownMenuItem>
-                      <DropdownMenuItem>Edit Account</DropdownMenuItem>
-                      <DropdownMenuItem>Add Opportunity</DropdownMenuItem>
-                      <DropdownMenuItem>Add Contact</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleEditAccount(account)}>
+                        <Edit2 className="h-4 w-4 mr-2" />
+                        Edit Account
+                      </DropdownMenuItem>
+                      <DropdownMenuItem>
+                        <UserPlus className="h-4 w-4 mr-2" />
+                        Add Contact
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => handleDeleteAccount(account)}
+                        className="text-destructive focus:text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Delete Account
+                      </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableCell>
@@ -260,6 +333,22 @@ export default function Accounts() {
       <div className="flex items-center justify-between mt-4 text-sm text-muted-foreground">
         <p>Showing {filteredAccounts.length} of {accounts.length} accounts</p>
       </div>
+
+      <AddAccountDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        onSave={handleSaveAccount}
+        account={selectedAccount}
+        mode={dialogMode}
+      />
+
+      <DeleteConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        title="Delete Account"
+        description={`Are you sure you want to delete ${selectedAccount?.name}? This will also remove all associated contacts and opportunities.`}
+        onConfirm={handleConfirmDelete}
+      />
     </AppLayout>
   );
 }

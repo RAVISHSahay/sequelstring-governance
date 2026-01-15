@@ -7,8 +7,25 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Search, Filter, Plus, Phone, Mail, Calendar, FileText, CheckCircle, MessageSquare, Video } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { LogActivityDialog } from "@/components/dialogs/LogActivityDialog";
+import { toast } from "sonner";
 
-const activities = [
+interface Activity {
+  id: number;
+  type: string;
+  icon: any;
+  title: string;
+  description: string;
+  account: string;
+  contact: string;
+  user: string;
+  initials: string;
+  time: string;
+  duration: string;
+  outcome: string;
+}
+
+const initialActivities: Activity[] = [
   {
     id: 1,
     type: "call",
@@ -118,8 +135,48 @@ const getOutcomeColor = (outcome: string) => {
   }
 };
 
+const getIconForType = (type: string) => {
+  switch (type) {
+    case "call":
+      return Phone;
+    case "email":
+      return Mail;
+    case "meeting":
+      return Video;
+    case "task":
+      return CheckCircle;
+    case "note":
+      return FileText;
+    default:
+      return FileText;
+  }
+};
+
 export default function Activities() {
+  const [activities, setActivities] = useState<Activity[]>(initialActivities);
   const [searchQuery, setSearchQuery] = useState("");
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("all");
+
+  const filteredActivities = activities.filter((activity) => {
+    const matchesSearch =
+      activity.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      activity.account.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesTab = activeTab === "all" || activity.type === activeTab.slice(0, -1); // Remove 's' from 'calls', 'emails', etc.
+    return matchesSearch && matchesTab;
+  });
+
+  const handleLogActivity = () => {
+    setDialogOpen(true);
+  };
+
+  const handleSaveActivity = (activity: Activity) => {
+    // Set the correct icon based on type
+    const Icon = getIconForType(activity.type);
+    const activityWithIcon = { ...activity, icon: Icon };
+    setActivities((prev) => [activityWithIcon, ...prev]);
+    toast.success('Activity logged successfully');
+  };
 
   return (
     <AppLayout title="Activities">
@@ -141,14 +198,14 @@ export default function Activities() {
                 <Filter className="h-4 w-4" />
                 Filters
               </Button>
-              <Button className="gap-2">
+              <Button className="gap-2" onClick={handleLogActivity}>
                 <Plus className="h-4 w-4" />
                 Log Activity
               </Button>
             </div>
           </div>
 
-          <Tabs defaultValue="all" className="w-full">
+          <Tabs defaultValue="all" className="w-full" onValueChange={setActiveTab}>
             <TabsList>
               <TabsTrigger value="all">All</TabsTrigger>
               <TabsTrigger value="calls">Calls</TabsTrigger>
@@ -157,50 +214,165 @@ export default function Activities() {
               <TabsTrigger value="tasks">Tasks</TabsTrigger>
             </TabsList>
             <TabsContent value="all" className="mt-4 space-y-4">
-              {activities.map((activity) => (
-                <div
-                  key={activity.id}
-                  className="stat-card hover:shadow-md transition-shadow cursor-pointer animate-fade-in"
-                >
-                  <div className="flex gap-4">
-                    <div className={cn("p-3 rounded-xl h-fit", getTypeStyles(activity.type))}>
-                      <activity.icon className="h-5 w-5" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-4">
-                        <div>
-                          <p className="font-semibold text-foreground">{activity.title}</p>
-                          <p className="text-sm text-muted-foreground mt-1">{activity.description}</p>
+              {filteredActivities.map((activity) => {
+                const Icon = activity.icon;
+                return (
+                  <div
+                    key={activity.id}
+                    className="stat-card hover:shadow-md transition-shadow cursor-pointer animate-fade-in"
+                  >
+                    <div className="flex gap-4">
+                      <div className={cn("p-3 rounded-xl h-fit", getTypeStyles(activity.type))}>
+                        <Icon className="h-5 w-5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-4">
+                          <div>
+                            <p className="font-semibold text-foreground">{activity.title}</p>
+                            <p className="text-sm text-muted-foreground mt-1">{activity.description}</p>
+                          </div>
+                          <Badge variant="outline" className={cn("flex-shrink-0", getOutcomeColor(activity.outcome))}>
+                            {activity.outcome}
+                          </Badge>
                         </div>
-                        <Badge variant="outline" className={cn("flex-shrink-0", getOutcomeColor(activity.outcome))}>
-                          {activity.outcome}
-                        </Badge>
-                      </div>
-                      <div className="flex flex-wrap items-center gap-4 mt-3 text-sm text-muted-foreground">
-                        <span>{activity.account}</span>
-                        <span>•</span>
-                        <span>{activity.contact}</span>
-                        {activity.duration !== "-" && (
-                          <>
-                            <span>•</span>
-                            <span>{activity.duration}</span>
-                          </>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border/50">
-                        <Avatar className="h-6 w-6">
-                          <AvatarFallback className="bg-primary/10 text-primary text-[10px]">
-                            {activity.initials}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span className="text-sm text-muted-foreground">{activity.user}</span>
-                        <span className="text-sm text-muted-foreground">•</span>
-                        <span className="text-sm text-muted-foreground">{activity.time}</span>
+                        <div className="flex flex-wrap items-center gap-4 mt-3 text-sm text-muted-foreground">
+                          <span>{activity.account}</span>
+                          <span>•</span>
+                          <span>{activity.contact}</span>
+                          {activity.duration !== "-" && (
+                            <>
+                              <span>•</span>
+                              <span>{activity.duration}</span>
+                            </>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border/50">
+                          <Avatar className="h-6 w-6">
+                            <AvatarFallback className="bg-primary/10 text-primary text-[10px]">
+                              {activity.initials}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span className="text-sm text-muted-foreground">{activity.user}</span>
+                          <span className="text-sm text-muted-foreground">•</span>
+                          <span className="text-sm text-muted-foreground">{activity.time}</span>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
+            </TabsContent>
+            <TabsContent value="calls" className="mt-4 space-y-4">
+              {filteredActivities.filter(a => a.type === 'call').map((activity) => {
+                const Icon = activity.icon;
+                return (
+                  <div
+                    key={activity.id}
+                    className="stat-card hover:shadow-md transition-shadow cursor-pointer animate-fade-in"
+                  >
+                    <div className="flex gap-4">
+                      <div className={cn("p-3 rounded-xl h-fit", getTypeStyles(activity.type))}>
+                        <Icon className="h-5 w-5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-4">
+                          <div>
+                            <p className="font-semibold text-foreground">{activity.title}</p>
+                            <p className="text-sm text-muted-foreground mt-1">{activity.description}</p>
+                          </div>
+                          <Badge variant="outline" className={cn("flex-shrink-0", getOutcomeColor(activity.outcome))}>
+                            {activity.outcome}
+                          </Badge>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </TabsContent>
+            <TabsContent value="emails" className="mt-4 space-y-4">
+              {filteredActivities.filter(a => a.type === 'email').map((activity) => {
+                const Icon = activity.icon;
+                return (
+                  <div
+                    key={activity.id}
+                    className="stat-card hover:shadow-md transition-shadow cursor-pointer animate-fade-in"
+                  >
+                    <div className="flex gap-4">
+                      <div className={cn("p-3 rounded-xl h-fit", getTypeStyles(activity.type))}>
+                        <Icon className="h-5 w-5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-4">
+                          <div>
+                            <p className="font-semibold text-foreground">{activity.title}</p>
+                            <p className="text-sm text-muted-foreground mt-1">{activity.description}</p>
+                          </div>
+                          <Badge variant="outline" className={cn("flex-shrink-0", getOutcomeColor(activity.outcome))}>
+                            {activity.outcome}
+                          </Badge>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </TabsContent>
+            <TabsContent value="meetings" className="mt-4 space-y-4">
+              {filteredActivities.filter(a => a.type === 'meeting').map((activity) => {
+                const Icon = activity.icon;
+                return (
+                  <div
+                    key={activity.id}
+                    className="stat-card hover:shadow-md transition-shadow cursor-pointer animate-fade-in"
+                  >
+                    <div className="flex gap-4">
+                      <div className={cn("p-3 rounded-xl h-fit", getTypeStyles(activity.type))}>
+                        <Icon className="h-5 w-5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-4">
+                          <div>
+                            <p className="font-semibold text-foreground">{activity.title}</p>
+                            <p className="text-sm text-muted-foreground mt-1">{activity.description}</p>
+                          </div>
+                          <Badge variant="outline" className={cn("flex-shrink-0", getOutcomeColor(activity.outcome))}>
+                            {activity.outcome}
+                          </Badge>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </TabsContent>
+            <TabsContent value="tasks" className="mt-4 space-y-4">
+              {filteredActivities.filter(a => a.type === 'task').map((activity) => {
+                const Icon = activity.icon;
+                return (
+                  <div
+                    key={activity.id}
+                    className="stat-card hover:shadow-md transition-shadow cursor-pointer animate-fade-in"
+                  >
+                    <div className="flex gap-4">
+                      <div className={cn("p-3 rounded-xl h-fit", getTypeStyles(activity.type))}>
+                        <Icon className="h-5 w-5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-4">
+                          <div>
+                            <p className="font-semibold text-foreground">{activity.title}</p>
+                            <p className="text-sm text-muted-foreground mt-1">{activity.description}</p>
+                          </div>
+                          <Badge variant="outline" className={cn("flex-shrink-0", getOutcomeColor(activity.outcome))}>
+                            {activity.outcome}
+                          </Badge>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </TabsContent>
           </Tabs>
         </div>
@@ -241,24 +413,30 @@ export default function Activities() {
             <div className="space-y-4">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Calls Made</span>
-                <span className="font-semibold">24</span>
+                <span className="font-semibold">{activities.filter(a => a.type === 'call').length + 24}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Emails Sent</span>
-                <span className="font-semibold">56</span>
+                <span className="font-semibold">{activities.filter(a => a.type === 'email').length + 56}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Meetings</span>
-                <span className="font-semibold">8</span>
+                <span className="font-semibold">{activities.filter(a => a.type === 'meeting').length + 8}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Tasks Completed</span>
-                <span className="font-semibold text-success">12</span>
+                <span className="font-semibold text-success">{activities.filter(a => a.type === 'task').length + 12}</span>
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      <LogActivityDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        onSave={handleSaveActivity}
+      />
     </AppLayout>
   );
 }

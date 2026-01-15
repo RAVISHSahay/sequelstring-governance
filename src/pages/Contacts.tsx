@@ -18,10 +18,25 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Search, Filter, Plus, MoreHorizontal, Phone, Mail, Linkedin } from "lucide-react";
+import { Search, Filter, Plus, MoreHorizontal, Phone, Mail, Linkedin, Edit2, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { AddContactDialog } from "@/components/dialogs/AddContactDialog";
+import { DeleteConfirmDialog } from "@/components/dialogs/DeleteConfirmDialog";
+import { toast } from "sonner";
 
-const contacts = [
+interface Contact {
+  id: number;
+  name: string;
+  title: string;
+  account: string;
+  email: string;
+  phone: string;
+  role: string;
+  influence: string;
+  lastContact: string;
+}
+
+const initialContacts: Contact[] = [
   {
     id: 1,
     name: "Rajesh Sharma",
@@ -108,13 +123,56 @@ const getInfluenceColor = (influence: string) => {
 };
 
 export default function Contacts() {
+  const [contacts, setContacts] = useState<Contact[]>(initialContacts);
   const [searchQuery, setSearchQuery] = useState("");
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogMode, setDialogMode] = useState<'create' | 'edit'>('create');
+  const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   const filteredContacts = contacts.filter(
     (contact) =>
       contact.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       contact.account.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const handleAddContact = () => {
+    setSelectedContact(null);
+    setDialogMode('create');
+    setDialogOpen(true);
+  };
+
+  const handleEditContact = (contact: Contact) => {
+    setSelectedContact(contact);
+    setDialogMode('edit');
+    setDialogOpen(true);
+  };
+
+  const handleDeleteContact = (contact: Contact) => {
+    setSelectedContact(contact);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleSaveContact = (contact: Contact) => {
+    if (dialogMode === 'create') {
+      setContacts((prev) => [...prev, contact]);
+      toast.success(`Contact ${contact.name} added successfully`);
+    } else {
+      setContacts((prev) =>
+        prev.map((c) => (c.id === contact.id ? contact : c))
+      );
+      toast.success(`Contact ${contact.name} updated successfully`);
+    }
+  };
+
+  const handleConfirmDelete = () => {
+    if (selectedContact) {
+      setContacts((prev) => prev.filter((c) => c.id !== selectedContact.id));
+      toast.success(`Contact ${selectedContact.name} deleted`);
+      setDeleteDialogOpen(false);
+      setSelectedContact(null);
+    }
+  };
 
   return (
     <AppLayout title="Contacts">
@@ -133,7 +191,7 @@ export default function Contacts() {
             <Filter className="h-4 w-4" />
             Filters
           </Button>
-          <Button className="gap-2">
+          <Button className="gap-2" onClick={handleAddContact}>
             <Plus className="h-4 w-4" />
             Add Contact
           </Button>
@@ -188,9 +246,6 @@ export default function Contacts() {
                     <Button variant="ghost" size="icon" className="h-8 w-8">
                       <Mail className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <Linkedin className="h-4 w-4" />
-                    </Button>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -198,9 +253,21 @@ export default function Contacts() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem>View Details</DropdownMenuItem>
-                        <DropdownMenuItem>Edit Contact</DropdownMenuItem>
-                        <DropdownMenuItem>Log Activity</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleEditContact(contact)}>
+                          <Edit2 className="h-4 w-4 mr-2" />
+                          Edit Contact
+                        </DropdownMenuItem>
+                        <DropdownMenuItem>
+                          <Linkedin className="h-4 w-4 mr-2" />
+                          View LinkedIn
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => handleDeleteContact(contact)}
+                          className="text-destructive focus:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Delete Contact
+                        </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>
@@ -210,6 +277,22 @@ export default function Contacts() {
           </TableBody>
         </Table>
       </div>
+
+      <AddContactDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        onSave={handleSaveContact}
+        contact={selectedContact}
+        mode={dialogMode}
+      />
+
+      <DeleteConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        title="Delete Contact"
+        description={`Are you sure you want to delete ${selectedContact?.name}? This action cannot be undone.`}
+        onConfirm={handleConfirmDelete}
+      />
     </AppLayout>
   );
 }
