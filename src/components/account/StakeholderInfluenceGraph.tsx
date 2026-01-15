@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback, useRef } from "react";
+import { useMemo, useState, useCallback, useRef, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -41,6 +41,9 @@ import {
   Plus,
   MousePointer,
   Move,
+  GripVertical,
+  Save,
+  RotateCcw,
 } from "lucide-react";
 import { Stakeholder, ContactRelationship, RelationshipType, ContactRole } from "@/types/account";
 import { cn } from "@/lib/utils";
@@ -113,10 +116,32 @@ export function StakeholderInfluenceGraph({
   const [dragOffset] = useState({ x: 0, y: 0 });
   
   // Connection editing state
-  const [editMode, setEditMode] = useState<'select' | 'connect'>('select');
+  const [editMode, setEditMode] = useState<'select' | 'connect' | 'drag'>('select');
   const [connectingFrom, setConnectingFrom] = useState<string | null>(null);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [localRelationships, setLocalRelationships] = useState<ContactRelationship[]>(externalRelationships || initialMockRelationships);
+  
+  // Drag state
+  const [draggingNode, setDraggingNode] = useState<string | null>(null);
+  const [customPositions, setCustomPositions] = useState<Record<string, { x: number; y: number }>>({});
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const dragStartRef = useRef<{ x: number; y: number; nodeX: number; nodeY: number } | null>(null);
+  
+  // Layout storage key based on account name
+  const layoutStorageKey = `stakeholder-layout-${accountName.replace(/\s+/g, '-').toLowerCase()}`;
+  
+  // Load saved positions on mount
+  useEffect(() => {
+    const saved = localStorage.getItem(layoutStorageKey);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        setCustomPositions(parsed);
+      } catch (e) {
+        console.error('Failed to parse saved layout:', e);
+      }
+    }
+  }, [layoutStorageKey]);
   
   // Relationship dialog state
   const [relationshipDialogOpen, setRelationshipDialogOpen] = useState(false);
@@ -140,8 +165,8 @@ export function StakeholderInfluenceGraph({
     return stakeholders.filter(s => s.primaryRole === filterRole || s.roles.includes(filterRole as ContactRole));
   }, [stakeholders, filterRole]);
 
-  // Calculate node positions
-  const nodePositions = useMemo(() => {
+  // Calculate base node positions (algorithmic layout)
+  const baseNodePositions = useMemo(() => {
     const positions: Record<string, { x: number; y: number; tier: number }> = {};
     
     if (viewMode === 'influence') {
@@ -211,11 +236,35 @@ export function StakeholderInfluenceGraph({
     return positions;
   }, [filteredStakeholders, viewMode, centerX, centerY]);
 
+  // Merge custom positions with base positions
+  const nodePositions = useMemo(() => {
+    const positions: Record<string, { x: number; y: number; tier: number }> = {};
+    
+    Object.entries(baseNodePositions).forEach(([id, basePos]) => {
+      if (customPositions[id]) {
+        positions[id] = {
+          ...basePos,
+          x: customPositions[id].x,
+          y: customPositions[id].y,
+        };
+      } else {
+        positions[id] = basePos;
+      }
+    });
+    
+    return positions;
+  }, [baseNodePositions, customPositions]);
+
   const getInitials = (name: string) => name.split(' ').map(n => n[0]).join('').toUpperCase();
 
   // Handle node click in different modes
   const handleNodeClick = useCallback((stakeholder: Stakeholder) => {
-    if (editMode === 'connect') {
+    if (editMode === 'drag') {
+      // In drag mode, clicking just selects for info display
+      const newSelected = selectedNode === stakeholder.id ? null : stakeholder.id;
+      setSelectedNode(newSelected);
+      onStakeholderSelect?.(newSelected ? stakeholder : null);
+    } else if (editMode === 'connect') {
       if (!connectingFrom) {
         setConnectingFrom(stakeholder.id);
         toast({ title: "Connection Started", description: `Click another stakeholder to connect from ${stakeholder.name}` });
@@ -252,6 +301,68 @@ export function StakeholderInfluenceGraph({
       onStakeholderSelect?.(newSelected ? stakeholder : null);
     }
   }, [editMode, connectingFrom, selectedNode, relationships, onStakeholderSelect]);
+
+  // Drag handlers
+  const handleDragStart = useCallback((stakeholderId: string, e: React.MouseEvent) => {
+    if (editMode !== 'drag' || !svgRef.current) return;
+    
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const rect = svgRef.current.getBoundingClientRect();
+    const currentPos = nodePositions[stakeholderId];
+    
+    dragStartRef.current = {
+      x: e.clientX,
+      y: e.clientY,
+      nodeX: currentPos?.x ?? 0,
+      nodeY: currentPos?.y ?? 0,
+    };
+    
+    setDraggingNode(stakeholderId);
+  }, [editMode, nodePositions]);
+
+  const handleDragMove = useCallback((e: React.MouseEvent<SVGSVGElement>) => {
+    if (!draggingNode || !dragStartRef.current || !svgRef.current) return;
+    
+    const rect = svgRef.current.getBoundingClientRect();
+    const scaleX = svgWidth / rect.width / zoom;
+    const scaleY = svgHeight / rect.height / zoom;
+    
+    const deltaX = (e.clientX - dragStartRef.current.x) * scaleX;
+    const deltaY = (e.clientY - dragStartRef.current.y) * scaleY;
+    
+    const newX = Math.max(50, Math.min(svgWidth - 50, dragStartRef.current.nodeX + deltaX));
+    const newY = Math.max(50, Math.min(svgHeight - 50, dragStartRef.current.nodeY + deltaY));
+    
+    setCustomPositions(prev => ({
+      ...prev,
+      [draggingNode]: { x: newX, y: newY },
+    }));
+    setHasUnsavedChanges(true);
+  }, [draggingNode, zoom, svgWidth, svgHeight]);
+
+  const handleDragEnd = useCallback(() => {
+    if (draggingNode) {
+      setDraggingNode(null);
+      dragStartRef.current = null;
+    }
+  }, [draggingNode]);
+
+  // Save layout to localStorage
+  const handleSaveLayout = useCallback(() => {
+    localStorage.setItem(layoutStorageKey, JSON.stringify(customPositions));
+    setHasUnsavedChanges(false);
+    toast({ title: "Layout Saved", description: "Your custom layout has been saved" });
+  }, [customPositions, layoutStorageKey]);
+
+  // Reset layout to default
+  const handleResetLayout = useCallback(() => {
+    setCustomPositions({});
+    localStorage.removeItem(layoutStorageKey);
+    setHasUnsavedChanges(false);
+    toast({ title: "Layout Reset", description: "Layout has been reset to default" });
+  }, [layoutStorageKey]);
 
   // Handle relationship line click
   const handleRelationshipClick = useCallback((rel: ContactRelationship, e: React.MouseEvent) => {
@@ -314,14 +425,20 @@ export function StakeholderInfluenceGraph({
     setEditingRelationship(null);
   }, [editingRelationship, relationships, onRelationshipsChange]);
 
-  // Track mouse for connection line
+  // Track mouse for connection line and drag
   const handleMouseMove = useCallback((e: React.MouseEvent<SVGSVGElement>) => {
+    // Handle drag move
+    if (draggingNode) {
+      handleDragMove(e);
+      return;
+    }
+    
     if (!svgRef.current || !connectingFrom) return;
     const rect = svgRef.current.getBoundingClientRect();
     const x = ((e.clientX - rect.left) / rect.width) * svgWidth;
     const y = ((e.clientY - rect.top) / rect.height) * svgHeight;
     setMousePosition({ x, y });
-  }, [connectingFrom, svgWidth, svgHeight]);
+  }, [draggingNode, handleDragMove, connectingFrom, svgWidth, svgHeight]);
 
   // Cancel connection mode
   const handleSvgClick = useCallback((e: React.MouseEvent) => {
@@ -371,7 +488,7 @@ export function StakeholderInfluenceGraph({
                 <Button
                   variant={editMode === 'select' ? 'secondary' : 'ghost'}
                   size="sm"
-                  onClick={() => { setEditMode('select'); setConnectingFrom(null); }}
+                  onClick={() => { setEditMode('select'); setConnectingFrom(null); setDraggingNode(null); }}
                   className="gap-1"
                 >
                   <MousePointer className="h-3.5 w-3.5" />
@@ -380,13 +497,48 @@ export function StakeholderInfluenceGraph({
                 <Button
                   variant={editMode === 'connect' ? 'secondary' : 'ghost'}
                   size="sm"
-                  onClick={() => { setEditMode('connect'); setSelectedNode(null); }}
+                  onClick={() => { setEditMode('connect'); setSelectedNode(null); setDraggingNode(null); }}
                   className="gap-1"
                 >
                   <Link2 className="h-3.5 w-3.5" />
                   Connect
                 </Button>
+                <Button
+                  variant={editMode === 'drag' ? 'secondary' : 'ghost'}
+                  size="sm"
+                  onClick={() => { setEditMode('drag'); setConnectingFrom(null); }}
+                  className="gap-1"
+                >
+                  <GripVertical className="h-3.5 w-3.5" />
+                  Drag
+                </Button>
               </div>
+              
+              {/* Layout Controls - only visible in drag mode or when there are custom positions */}
+              {(editMode === 'drag' || Object.keys(customPositions).length > 0) && (
+                <div className="flex items-center gap-1 border rounded-md p-0.5">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleSaveLayout}
+                    disabled={!hasUnsavedChanges}
+                    className="gap-1"
+                  >
+                    <Save className="h-3.5 w-3.5" />
+                    Save
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleResetLayout}
+                    disabled={Object.keys(customPositions).length === 0}
+                    className="gap-1"
+                  >
+                    <RotateCcw className="h-3.5 w-3.5" />
+                    Reset
+                  </Button>
+                </div>
+              )}
               
               <Select value={filterRole} onValueChange={setFilterRole}>
                 <SelectTrigger className="w-[140px]">
@@ -457,6 +609,24 @@ export function StakeholderInfluenceGraph({
             </div>
           )}
           
+          {/* Drag Mode Indicator */}
+          {editMode === 'drag' && (
+            <div className="flex items-center gap-2 mt-3 p-2 bg-amber-500/10 rounded-lg">
+              <GripVertical className="h-4 w-4 text-amber-600" />
+              <span className="text-sm font-medium text-amber-700 dark:text-amber-400">
+                {draggingNode 
+                  ? 'Dragging... Release to place the node'
+                  : 'Drag nodes to reposition them. Click Save to persist your layout.'
+                }
+              </span>
+              {hasUnsavedChanges && (
+                <Badge variant="outline" className="ml-auto bg-amber-100 text-amber-700 border-amber-300">
+                  Unsaved changes
+                </Badge>
+              )}
+            </div>
+          )}
+          
           {/* Risk Alerts */}
           {riskIndicators.length > 0 && editMode === 'select' && (
             <div className="flex flex-wrap gap-2 mt-3">
@@ -480,8 +650,15 @@ export function StakeholderInfluenceGraph({
                 width="100%" 
                 height="100%" 
                 viewBox={`${-dragOffset.x / zoom} ${-dragOffset.y / zoom} ${svgWidth / zoom} ${svgHeight / zoom}`}
-                className={cn("transition-all duration-200", editMode === 'connect' && "cursor-crosshair")}
+                className={cn(
+                  "transition-all duration-200", 
+                  editMode === 'connect' && "cursor-crosshair",
+                  editMode === 'drag' && !draggingNode && "cursor-grab",
+                  draggingNode && "cursor-grabbing"
+                )}
                 onMouseMove={handleMouseMove}
+                onMouseUp={handleDragEnd}
+                onMouseLeave={handleDragEnd}
                 onClick={handleSvgClick}
               >
                 <defs>
@@ -600,6 +777,8 @@ export function StakeholderInfluenceGraph({
                   const isSelected = selectedNode === stakeholder.id;
                   const isHovered = hoveredNode === stakeholder.id;
                   const isConnecting = connectingFrom === stakeholder.id;
+                  const isDragging = draggingNode === stakeholder.id;
+                  const hasCustomPosition = !!customPositions[stakeholder.id];
                   const isRelated = selectedNode && relationships.some(r => 
                     (r.sourceContactId === selectedNode && r.targetContactId === stakeholder.id) ||
                     (r.targetContactId === selectedNode && r.sourceContactId === stakeholder.id)
@@ -620,14 +799,28 @@ export function StakeholderInfluenceGraph({
                         <g 
                           transform={`translate(${pos.x}, ${pos.y})`}
                           className={cn(
-                            "cursor-pointer transition-all duration-200",
+                            "transition-all",
+                            !isDragging && "duration-200",
                             isDimmed && "opacity-30",
-                            isConnecting && "animate-pulse"
+                            isConnecting && "animate-pulse",
+                            editMode === 'drag' && "cursor-grab",
+                            isDragging && "cursor-grabbing"
                           )}
-                          onClick={() => handleNodeClick(stakeholder)}
+                          onClick={() => !isDragging && handleNodeClick(stakeholder)}
+                          onMouseDown={(e) => handleDragStart(stakeholder.id, e)}
                           onMouseEnter={() => setHoveredNode(stakeholder.id)}
                           onMouseLeave={() => setHoveredNode(null)}
                         >
+                          {/* Dragging indicator */}
+                          {isDragging && (
+                            <circle r={nodeSize + 15} fill="none" strokeWidth={2} className="stroke-primary stroke-dashed" strokeDasharray="8,4" />
+                          )}
+                          
+                          {/* Custom position indicator */}
+                          {hasCustomPosition && editMode === 'drag' && !isDragging && (
+                            <circle r={nodeSize + 12} fill="none" strokeWidth={1} className="stroke-amber-400/50" strokeDasharray="4,4" />
+                          )}
+                          
                           {/* Connecting indicator ring */}
                           {isConnecting && (
                             <circle r={nodeSize + 12} fill="none" strokeWidth={3} className="stroke-primary animate-ping" />
@@ -698,6 +891,7 @@ export function StakeholderInfluenceGraph({
                         <p className="text-xs text-muted-foreground">{stakeholder.title}</p>
                         <p className="text-xs mt-1">Power: {stakeholder.powerScore} • Influence: {stakeholder.influenceScore}</p>
                         {editMode === 'connect' && <p className="text-xs text-primary mt-1">Click to {connectingFrom ? 'connect' : 'start connection'}</p>}
+                        {editMode === 'drag' && <p className="text-xs text-amber-600 mt-1">Drag to reposition{customPositions[stakeholder.id] ? ' • Has custom position' : ''}</p>}
                       </TooltipContent>
                     </Tooltip>
                   );
