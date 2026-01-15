@@ -48,8 +48,10 @@ interface FieldMapping {
 }
 
 interface ValidationRule {
-  type: 'email' | 'phone' | 'required';
+  type: 'email' | 'phone' | 'required' | 'regex' | 'minLength' | 'maxLength' | 'numeric' | 'alphanumeric';
   message: string;
+  pattern?: string; // Custom regex pattern for 'regex' type
+  value?: number;   // For minLength/maxLength
 }
 
 interface ImportField {
@@ -91,6 +93,32 @@ const validatePhone = (phone: string): boolean => {
   const phoneRegex = /^[\+]?[(]?[0-9]{1,4}[)]?[-\s\.]?[0-9]{1,4}[-\s\.]?[0-9]{1,9}$/;
   const cleaned = phone.replace(/\s/g, '');
   return cleaned.length >= 7 && phoneRegex.test(cleaned);
+};
+
+const validateRegex = (value: string, pattern: string): boolean => {
+  try {
+    const regex = new RegExp(pattern);
+    return regex.test(value.trim());
+  } catch {
+    console.error('Invalid regex pattern:', pattern);
+    return true; // Don't fail validation if regex is invalid
+  }
+};
+
+const validateNumeric = (value: string): boolean => {
+  return /^-?\d*\.?\d+$/.test(value.trim());
+};
+
+const validateAlphanumeric = (value: string): boolean => {
+  return /^[a-zA-Z0-9]+$/.test(value.trim());
+};
+
+const validateMinLength = (value: string, minLength: number): boolean => {
+  return value.trim().length >= minLength;
+};
+
+const validateMaxLength = (value: string, maxLength: number): boolean => {
+  return value.trim().length <= maxLength;
 };
 
 export function CSVImportDialog({
@@ -239,11 +267,42 @@ export function CSVImportDialog({
       // Check validation rules
       if (field.validation && value.trim()) {
         field.validation.forEach((rule) => {
-          if (rule.type === 'email' && !validateEmail(value)) {
-            errors.push({ field: field.name, message: rule.message || 'Invalid email format' });
-          }
-          if (rule.type === 'phone' && !validatePhone(value)) {
-            errors.push({ field: field.name, message: rule.message || 'Invalid phone format' });
+          switch (rule.type) {
+            case 'email':
+              if (!validateEmail(value)) {
+                errors.push({ field: field.name, message: rule.message || 'Invalid email format' });
+              }
+              break;
+            case 'phone':
+              if (!validatePhone(value)) {
+                errors.push({ field: field.name, message: rule.message || 'Invalid phone format' });
+              }
+              break;
+            case 'regex':
+              if (rule.pattern && !validateRegex(value, rule.pattern)) {
+                errors.push({ field: field.name, message: rule.message || 'Invalid format' });
+              }
+              break;
+            case 'numeric':
+              if (!validateNumeric(value)) {
+                errors.push({ field: field.name, message: rule.message || 'Must be a number' });
+              }
+              break;
+            case 'alphanumeric':
+              if (!validateAlphanumeric(value)) {
+                errors.push({ field: field.name, message: rule.message || 'Must be alphanumeric' });
+              }
+              break;
+            case 'minLength':
+              if (rule.value !== undefined && !validateMinLength(value, rule.value)) {
+                errors.push({ field: field.name, message: rule.message || `Minimum ${rule.value} characters` });
+              }
+              break;
+            case 'maxLength':
+              if (rule.value !== undefined && !validateMaxLength(value, rule.value)) {
+                errors.push({ field: field.name, message: rule.message || `Maximum ${rule.value} characters` });
+              }
+              break;
           }
         });
       }

@@ -29,10 +29,12 @@ import {
   Mail,
   Pencil,
   Trash2,
+  Upload,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AddLeadDialog, LeadData } from "@/components/dialogs/AddLeadDialog";
 import { DeleteConfirmDialog } from "@/components/dialogs/DeleteConfirmDialog";
+import { CSVImportDialog } from "@/components/dialogs/CSVImportDialog";
 import { toast } from "sonner";
 
 interface Lead {
@@ -198,6 +200,92 @@ export default function Leads() {
   const [leads, setLeads] = useState<Lead[]>(initialLeads);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [leadToDelete, setLeadToDelete] = useState<Lead | null>(null);
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
+
+  // Define import fields with various validation rules
+  const leadImportFields = [
+    { name: 'firstName', label: 'First Name', required: true },
+    { name: 'lastName', label: 'Last Name', required: true },
+    { name: 'company', label: 'Company', required: true },
+    { name: 'title', label: 'Job Title', required: false },
+    { 
+      name: 'email', 
+      label: 'Email', 
+      required: true,
+      validation: [{ type: 'email' as const, message: 'Invalid email format (e.g., name@company.com)' }]
+    },
+    { 
+      name: 'phone', 
+      label: 'Phone', 
+      required: false,
+      validation: [{ type: 'phone' as const, message: 'Invalid phone format (min 7 digits)' }]
+    },
+    { 
+      name: 'source', 
+      label: 'Lead Source', 
+      required: false,
+      validation: [
+        { 
+          type: 'regex' as const, 
+          pattern: '^(Website|Referral|Event|LinkedIn|Partner|Cold Call|Advertisement|Other)$', 
+          message: 'Source must be: Website, Referral, Event, LinkedIn, Partner, Cold Call, Advertisement, or Other' 
+        }
+      ]
+    },
+    { 
+      name: 'score', 
+      label: 'Lead Score', 
+      required: false,
+      validation: [
+        { type: 'numeric' as const, message: 'Score must be a number' },
+        { type: 'regex' as const, pattern: '^([0-9]|[1-9][0-9]|100)$', message: 'Score must be between 0 and 100' }
+      ]
+    },
+    { 
+      name: 'gstin', 
+      label: 'GSTIN (Optional)', 
+      required: false,
+      validation: [
+        { 
+          type: 'regex' as const, 
+          pattern: '^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$', 
+          message: 'Invalid GSTIN format (e.g., 22AAAAA0000A1Z5)' 
+        }
+      ]
+    },
+    { 
+      name: 'pincode', 
+      label: 'PIN Code (Optional)', 
+      required: false,
+      validation: [
+        { type: 'regex' as const, pattern: '^[1-9][0-9]{5}$', message: 'PIN code must be 6 digits' }
+      ]
+    },
+  ];
+
+  // Prepare existing data for duplicate detection
+  const existingLeadsForDuplicateCheck = leads.map((l) => ({
+    email: l.email,
+  }));
+
+  const handleImportLeads = (data: Record<string, string>[]) => {
+    const newLeads: Lead[] = data.map((row, index) => ({
+      id: Date.now() + index,
+      name: `${row.firstName} ${row.lastName}`.trim(),
+      company: row.company,
+      title: row.title || '',
+      email: row.email,
+      phone: row.phone || '',
+      source: row.source || 'Website',
+      status: 'New',
+      score: row.score ? parseInt(row.score, 10) : Math.floor(Math.random() * 40) + 60,
+      owner: 'Priya Sharma',
+      initials: 'PS',
+      createdAt: 'Just imported',
+    }));
+    setLeads((prev) => [...newLeads, ...prev]);
+    toast.success(`${newLeads.length} leads imported successfully`);
+  };
 
   const filteredLeads = leads.filter(
     (lead) =>
@@ -309,6 +397,10 @@ export default function Leads() {
           <Button variant="outline" className="gap-2">
             <Filter className="h-4 w-4" />
             Filters
+          </Button>
+          <Button variant="outline" className="gap-2" onClick={() => setImportDialogOpen(true)}>
+            <Upload className="h-4 w-4" />
+            Import
           </Button>
           <Button className="gap-2" onClick={handleAddNew}>
             <Plus className="h-4 w-4" />
@@ -446,6 +538,18 @@ export default function Leads() {
         title="Delete Lead"
         description="Are you sure you want to delete this lead? This action cannot be undone."
         itemName={leadToDelete?.name}
+      />
+
+      <CSVImportDialog
+        open={importDialogOpen}
+        onOpenChange={setImportDialogOpen}
+        title="Import Leads"
+        description="Upload a CSV file to bulk import leads with validation for email, phone, GSTIN, and more"
+        fields={leadImportFields}
+        onImport={handleImportLeads}
+        templateFileName="leads_import_template.csv"
+        duplicateCheckFields={['email']}
+        existingData={existingLeadsForDuplicateCheck}
       />
     </AppLayout>
   );
