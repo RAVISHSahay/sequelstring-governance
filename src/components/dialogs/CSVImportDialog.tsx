@@ -47,10 +47,23 @@ interface FieldMapping {
   required: boolean;
 }
 
+interface ValidationRule {
+  type: 'email' | 'phone' | 'required';
+  message: string;
+}
+
 interface ImportField {
   name: string;
   label: string;
   required: boolean;
+  validation?: ValidationRule[];
+}
+
+interface RowValidation {
+  rowIndex: number;
+  errors: { field: string; message: string }[];
+  isDuplicate: boolean;
+  duplicateOf?: number;
 }
 
 interface CSVImportDialogProps {
@@ -61,9 +74,24 @@ interface CSVImportDialogProps {
   fields: ImportField[];
   onImport: (data: Record<string, string>[]) => void;
   templateFileName: string;
+  duplicateCheckFields?: string[]; // Fields to check for duplicates (e.g., ['email'])
+  existingData?: Record<string, string>[]; // Existing data to check duplicates against
 }
 
 type ImportStep = 'upload' | 'mapping' | 'preview' | 'importing' | 'complete';
+
+// Validation helper functions
+const validateEmail = (email: string): boolean => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email.trim());
+};
+
+const validatePhone = (phone: string): boolean => {
+  // Accepts various phone formats: +1234567890, (123) 456-7890, 123-456-7890, etc.
+  const phoneRegex = /^[\+]?[(]?[0-9]{1,4}[)]?[-\s\.]?[0-9]{1,4}[-\s\.]?[0-9]{1,9}$/;
+  const cleaned = phone.replace(/\s/g, '');
+  return cleaned.length >= 7 && phoneRegex.test(cleaned);
+};
 
 export function CSVImportDialog({
   open,
@@ -73,6 +101,8 @@ export function CSVImportDialog({
   fields,
   onImport,
   templateFileName,
+  duplicateCheckFields = [],
+  existingData = [],
 }: CSVImportDialogProps) {
   const [step, setStep] = useState<ImportStep>('upload');
   const [file, setFile] = useState<File | null>(null);
@@ -82,6 +112,8 @@ export function CSVImportDialog({
   const [importProgress, setImportProgress] = useState(0);
   const [importResults, setImportResults] = useState({ success: 0, failed: 0, errors: [] as string[] });
   const [dragActive, setDragActive] = useState(false);
+  const [rowValidations, setRowValidations] = useState<RowValidation[]>([]);
+  const [validationSummary, setValidationSummary] = useState({ valid: 0, invalid: 0, duplicates: 0 });
 
   const parseCSV = (text: string): { headers: string[]; data: string[][] } => {
     const lines = text.split('\n').filter((line) => line.trim() !== '');
@@ -190,6 +222,80 @@ export function CSVImportDialog({
       .every((f) => fieldMappings[f.name] && fieldMappings[f.name] !== '');
   };
 
+  const validateRow = (row: Record<string, string>, rowIndex: number, allRows: Record<string, string>[]): RowValidation => {
+    const errors: { field: string; message: string }[] = [];
+    let isDuplicate = false;
+    let duplicateOf: number | undefined;
+
+    // Validate each field based on its validation rules
+    fields.forEach((field) => {
+      const value = row[field.name] || '';
+      
+      // Check required
+      if (field.required && !value.trim()) {
+        errors.push({ field: field.name, message: `${field.label} is required` });
+      }
+
+      // Check validation rules
+      if (field.validation && value.trim()) {
+        field.validation.forEach((rule) => {
+          if (rule.type === 'email' && !validateEmail(value)) {
+            errors.push({ field: field.name, message: rule.message || 'Invalid email format' });
+          }
+          if (rule.type === 'phone' && !validatePhone(value)) {
+            errors.push({ field: field.name, message: rule.message || 'Invalid phone format' });
+          }
+        });
+      }
+    });
+
+    // Check for duplicates within the import file
+    if (duplicateCheckFields.length > 0) {
+      for (let i = 0; i < rowIndex; i++) {
+        const prevRow = allRows[i];
+        const isDup = duplicateCheckFields.every((field) => {
+          const currentVal = (row[field] || '').toLowerCase().trim();
+          const prevVal = (prevRow[field] || '').toLowerCase().trim();
+          return currentVal && prevVal && currentVal === prevVal;
+        });
+        if (isDup) {
+          isDuplicate = true;
+          duplicateOf = i + 2; // +2 for header row and 1-based index
+          break;
+        }
+      }
+    }
+
+    // Check for duplicates against existing data
+    if (!isDuplicate && duplicateCheckFields.length > 0 && existingData.length > 0) {
+      const existingDup = existingData.find((existing) =>
+        duplicateCheckFields.every((field) => {
+          const currentVal = (row[field] || '').toLowerCase().trim();
+          const existingVal = (existing[field] || '').toLowerCase().trim();
+          return currentVal && existingVal && currentVal === existingVal;
+        })
+      );
+      if (existingDup) {
+        isDuplicate = true;
+        duplicateOf = -1; // Indicates existing data duplicate
+      }
+    }
+
+    return { rowIndex, errors, isDuplicate, duplicateOf };
+  };
+
+  const validateAllRows = useCallback(() => {
+    const data = getMappedData();
+    const validations = data.map((row, index) => validateRow(row, index, data));
+    
+    const valid = validations.filter((v) => v.errors.length === 0 && !v.isDuplicate).length;
+    const invalid = validations.filter((v) => v.errors.length > 0).length;
+    const duplicates = validations.filter((v) => v.isDuplicate).length;
+
+    setRowValidations(validations);
+    setValidationSummary({ valid, invalid, duplicates });
+  }, [csvData, fieldMappings, fields, duplicateCheckFields, existingData]);
+
   const handleImport = async () => {
     setStep('importing');
     const data = getMappedData();
@@ -199,18 +305,20 @@ export function CSVImportDialog({
     const errors: string[] = [];
 
     for (let i = 0; i < data.length; i++) {
-      // Simulate processing delay
-      await new Promise((resolve) => setTimeout(resolve, 50));
+      await new Promise((resolve) => setTimeout(resolve, 30));
 
-      // Validate required fields
-      const row = data[i];
-      const missingRequired = fields
-        .filter((f) => f.required)
-        .filter((f) => !row[f.name] || row[f.name].trim() === '');
-
-      if (missingRequired.length > 0) {
+      const validation = rowValidations[i];
+      
+      if (validation?.errors.length > 0) {
         failed++;
-        errors.push(`Row ${i + 2}: Missing required fields - ${missingRequired.map((f) => f.label).join(', ')}`);
+        const errorMessages = validation.errors.map((e) => e.message).join(', ');
+        errors.push(`Row ${i + 2}: ${errorMessages}`);
+      } else if (validation?.isDuplicate) {
+        failed++;
+        const dupText = validation.duplicateOf === -1 
+          ? 'Duplicate of existing record' 
+          : `Duplicate of row ${validation.duplicateOf}`;
+        errors.push(`Row ${i + 2}: ${dupText}`);
       } else {
         success++;
       }
@@ -220,12 +328,10 @@ export function CSVImportDialog({
 
     setImportResults({ success, failed, errors });
     
-    // Only import successful rows
-    const validData = data.filter((row) => {
-      const missingRequired = fields
-        .filter((f) => f.required)
-        .filter((f) => !row[f.name] || row[f.name].trim() === '');
-      return missingRequired.length === 0;
+    // Only import valid, non-duplicate rows
+    const validData = data.filter((_, index) => {
+      const validation = rowValidations[index];
+      return validation && validation.errors.length === 0 && !validation.isDuplicate;
     });
     
     if (validData.length > 0) {
@@ -256,6 +362,14 @@ export function CSVImportDialog({
     setFieldMappings({});
     setImportProgress(0);
     setImportResults({ success: 0, failed: 0, errors: [] });
+    setRowValidations([]);
+    setValidationSummary({ valid: 0, invalid: 0, duplicates: 0 });
+  };
+
+  const handlePreview = () => {
+    setStep('preview');
+    // Run validation when entering preview
+    setTimeout(() => validateAllRows(), 0);
   };
 
   const handleClose = () => {
@@ -405,17 +519,43 @@ export function CSVImportDialog({
           {/* Preview Step */}
           {step === 'preview' && (
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <p className="text-sm text-muted-foreground">
-                  Preview of first 5 rows
-                </p>
-                <Badge>{csvData.length} total rows</Badge>
+              {/* Validation Summary */}
+              <div className="grid grid-cols-3 gap-3">
+                <div className="p-3 bg-emerald-500/10 rounded-lg text-center">
+                  <div className="flex items-center justify-center gap-1">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                    <span className="text-lg font-bold text-emerald-500">{validationSummary.valid}</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">Valid rows</p>
+                </div>
+                <div className="p-3 bg-destructive/10 rounded-lg text-center">
+                  <div className="flex items-center justify-center gap-1">
+                    <XCircle className="h-4 w-4 text-destructive" />
+                    <span className="text-lg font-bold text-destructive">{validationSummary.invalid}</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">Invalid rows</p>
+                </div>
+                <div className="p-3 bg-amber-500/10 rounded-lg text-center">
+                  <div className="flex items-center justify-center gap-1">
+                    <AlertTriangle className="h-4 w-4 text-amber-500" />
+                    <span className="text-lg font-bold text-amber-500">{validationSummary.duplicates}</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">Duplicates</p>
+                </div>
               </div>
 
-              <ScrollArea className="h-[300px] border rounded-lg">
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-muted-foreground">
+                  Showing first 10 rows with validation status
+                </p>
+                <Badge variant="outline">{csvData.length} total rows</Badge>
+              </div>
+
+              <ScrollArea className="h-[250px] border rounded-lg">
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead className="w-[80px]">Status</TableHead>
                       {fields.map((field) => (
                         <TableHead key={field.name}>{field.label}</TableHead>
                       ))}
@@ -423,19 +563,85 @@ export function CSVImportDialog({
                   </TableHeader>
                   <TableBody>
                     {getMappedData()
-                      .slice(0, 5)
-                      .map((row, i) => (
-                        <TableRow key={i}>
-                          {fields.map((field) => (
-                            <TableCell key={field.name} className="max-w-[200px] truncate">
-                              {row[field.name] || '-'}
+                      .slice(0, 10)
+                      .map((row, i) => {
+                        const validation = rowValidations[i];
+                        const hasErrors = validation?.errors.length > 0;
+                        const isDuplicate = validation?.isDuplicate;
+                        const isValid = !hasErrors && !isDuplicate;
+
+                        return (
+                          <TableRow 
+                            key={i} 
+                            className={cn(
+                              hasErrors && 'bg-destructive/5',
+                              isDuplicate && !hasErrors && 'bg-amber-500/5'
+                            )}
+                          >
+                            <TableCell>
+                              {isValid && (
+                                <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-200">
+                                  <CheckCircle2 className="h-3 w-3 mr-1" />
+                                  Valid
+                                </Badge>
+                              )}
+                              {hasErrors && (
+                                <Badge variant="destructive" className="text-xs">
+                                  <XCircle className="h-3 w-3 mr-1" />
+                                  Error
+                                </Badge>
+                              )}
+                              {isDuplicate && !hasErrors && (
+                                <Badge variant="outline" className="bg-amber-500/10 text-amber-600 border-amber-200">
+                                  <AlertTriangle className="h-3 w-3 mr-1" />
+                                  Duplicate
+                                </Badge>
+                              )}
                             </TableCell>
-                          ))}
-                        </TableRow>
-                      ))}
+                            {fields.map((field) => {
+                              const fieldError = validation?.errors.find((e) => e.field === field.name);
+                              return (
+                                <TableCell 
+                                  key={field.name} 
+                                  className={cn(
+                                    'max-w-[180px] truncate',
+                                    fieldError && 'text-destructive'
+                                  )}
+                                  title={fieldError?.message}
+                                >
+                                  <div className="flex items-center gap-1">
+                                    {row[field.name] || '-'}
+                                    {fieldError && (
+                                      <span className="text-destructive text-xs">*</span>
+                                    )}
+                                  </div>
+                                </TableCell>
+                              );
+                            })}
+                          </TableRow>
+                        );
+                      })}
                   </TableBody>
                 </Table>
               </ScrollArea>
+
+              {/* Validation errors summary */}
+              {validationSummary.invalid > 0 && (
+                <Alert variant="destructive">
+                  <XCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    {validationSummary.invalid} row(s) have validation errors and will be skipped during import.
+                  </AlertDescription>
+                </Alert>
+              )}
+              {validationSummary.duplicates > 0 && (
+                <Alert className="border-amber-200 bg-amber-50 text-amber-800">
+                  <AlertTriangle className="h-4 w-4 text-amber-500" />
+                  <AlertDescription className="text-amber-700">
+                    {validationSummary.duplicates} duplicate row(s) detected and will be skipped during import.
+                  </AlertDescription>
+                </Alert>
+              )}
             </div>
           )}
 
@@ -507,8 +713,8 @@ export function CSVImportDialog({
               <Button variant="outline" onClick={() => setStep('upload')}>
                 Back
               </Button>
-              <Button onClick={() => setStep('preview')} disabled={!validateMappings()}>
-                Preview Data
+              <Button onClick={handlePreview} disabled={!validateMappings()}>
+                Validate & Preview
               </Button>
             </>
           )}
@@ -517,9 +723,9 @@ export function CSVImportDialog({
               <Button variant="outline" onClick={() => setStep('mapping')}>
                 Back
               </Button>
-              <Button onClick={handleImport}>
+              <Button onClick={handleImport} disabled={validationSummary.valid === 0}>
                 <Upload className="h-4 w-4 mr-2" />
-                Import {csvData.length} Rows
+                Import {validationSummary.valid} Valid Rows
               </Button>
             </>
           )}

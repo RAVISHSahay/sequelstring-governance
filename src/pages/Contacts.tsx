@@ -137,11 +137,26 @@ export default function Contacts() {
     { name: 'lastName', label: 'Last Name', required: true },
     { name: 'title', label: 'Job Title', required: false },
     { name: 'account', label: 'Account', required: true },
-    { name: 'email', label: 'Email', required: true },
-    { name: 'phone', label: 'Phone', required: false },
+    { 
+      name: 'email', 
+      label: 'Email', 
+      required: true,
+      validation: [{ type: 'email' as const, message: 'Invalid email format (e.g., name@company.com)' }]
+    },
+    { 
+      name: 'phone', 
+      label: 'Phone', 
+      required: false,
+      validation: [{ type: 'phone' as const, message: 'Invalid phone format (min 7 digits)' }]
+    },
     { name: 'role', label: 'Contact Role', required: false },
     { name: 'influence', label: 'Influence Level', required: false },
   ];
+
+  // Prepare existing data for duplicate detection
+  const existingContactsForDuplicateCheck = contacts.map((c) => ({
+    email: c.email,
+  }));
 
   const filteredContacts = contacts.filter(
     (contact) =>
@@ -335,6 +350,8 @@ export default function Contacts() {
         fields={contactImportFields}
         onImport={handleImportContacts}
         templateFileName="contacts_import_template.csv"
+        duplicateCheckFields={['email']}
+        existingData={existingContactsForDuplicateCheck}
       />
     </AppLayout>
   );

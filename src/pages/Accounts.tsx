@@ -181,7 +181,24 @@ export default function Accounts() {
     { name: 'revenue', label: 'Annual Revenue', required: false },
     { name: 'status', label: 'Status', required: false },
     { name: 'owner', label: 'Account Owner', required: true },
+    { 
+      name: 'email', 
+      label: 'Contact Email', 
+      required: false,
+      validation: [{ type: 'email' as const, message: 'Invalid email format (e.g., info@company.com)' }]
+    },
+    { 
+      name: 'phone', 
+      label: 'Contact Phone', 
+      required: false,
+      validation: [{ type: 'phone' as const, message: 'Invalid phone format (min 7 digits)' }]
+    },
   ];
+
+  // Prepare existing data for duplicate detection
+  const existingAccountsForDuplicateCheck = accounts.map((a) => ({
+    name: a.name,
+  }));
 
   const filteredAccounts = accounts.filter((account) =>
     account.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -390,6 +407,8 @@ export default function Accounts() {
         fields={accountImportFields}
         onImport={handleImportAccounts}
         templateFileName="accounts_import_template.csv"
+        duplicateCheckFields={['name']}
+        existingData={existingAccountsForDuplicateCheck}
       />
     </AppLayout>
   );
