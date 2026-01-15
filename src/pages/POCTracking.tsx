@@ -49,6 +49,7 @@ import {
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 import { POCStatus, POCKPI } from "@/types/account";
+import { AddPOCDialog, POCFormData } from "@/components/dialogs/AddPOCDialog";
 
 // POC Status configuration
 const pocStatusConfig: Record<POCStatus, { label: string; color: string; bgColor: string; icon: any }> = {
@@ -188,6 +189,7 @@ export default function POCTracking() {
   const [pocs, setPocs] = useState(mockPOCs);
   const [selectedPOC, setSelectedPOC] = useState<typeof mockPOCs[0] | null>(null);
   const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
@@ -223,6 +225,39 @@ export default function POCTracking() {
     });
   };
 
+  const handleAddPOC = (pocData: POCFormData) => {
+    const newPOC = {
+      id: `poc_${Date.now()}`,
+      name: pocData.name,
+      opportunityId: pocData.opportunityId,
+      opportunityName: pocData.opportunityName,
+      accountName: pocData.accountName,
+      status: pocData.status,
+      startDate: new Date(pocData.startDate),
+      expectedEndDate: new Date(pocData.expectedEndDate),
+      daysElapsed: 0,
+      daysRemaining: Math.ceil((new Date(pocData.expectedEndDate).getTime() - new Date(pocData.startDate).getTime()) / (1000 * 60 * 60 * 24)),
+      objectives: pocData.objectives.filter(o => o.trim() !== ''),
+      pocOwner: pocData.pocOwner || 'Unassigned',
+      customerContact: pocData.customerContact || 'TBD',
+      technicalLead: pocData.technicalLead || 'TBD',
+      estimatedCost: pocData.estimatedCost,
+      actualCost: 0,
+      overallScore: 0,
+      probabilityAdjustment: 0,
+      kpis: pocData.kpis.map(kpi => ({
+        ...kpi,
+        actualValue: undefined,
+      })),
+    };
+
+    setPocs(prev => [newPOC, ...prev]);
+    toast({
+      title: "POC Created",
+      description: `"${pocData.name}" has been created with ${pocData.kpis.length} KPIs configured.`,
+    });
+  };
+
   const getKPIProgress = (kpi: typeof mockPOCs[0]['kpis'][0]) => {
     if (kpi.actualValue === undefined) return 0;
     const isLowerBetter = kpi.category === 'performance' || kpi.name.toLowerCase().includes('time') || kpi.name.toLowerCase().includes('cost');
@@ -247,7 +282,7 @@ export default function POCTracking() {
               Manage active Proof of Concepts with KPI progress tracking
             </p>
           </div>
-          <Button>
+          <Button onClick={() => setIsAddDialogOpen(true)}>
             <Plus className="h-4 w-4 mr-2" />
             New POC
           </Button>
@@ -773,6 +808,13 @@ export default function POCTracking() {
             )}
           </DialogContent>
         </Dialog>
+
+        {/* Add POC Dialog */}
+        <AddPOCDialog 
+          open={isAddDialogOpen} 
+          onOpenChange={setIsAddDialogOpen} 
+          onSave={handleAddPOC} 
+        />
       </div>
     </AppLayout>
   );
