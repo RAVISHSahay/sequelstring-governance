@@ -16,6 +16,7 @@ import {
 import { AddOpportunityDialog, OpportunityData } from "@/components/dialogs/AddOpportunityDialog";
 import { DeleteConfirmDialog } from "@/components/dialogs/DeleteConfirmDialog";
 import { OpportunityDetailDialog } from "@/components/dialogs/OpportunityDetailDialog";
+import { ContextualHelp } from "@/components/help/ContextualHelp";
 import { toast } from "sonner";
 
 interface Deal {
@@ -452,6 +453,10 @@ export default function Opportunities() {
             <Plus className="h-4 w-4" />
             Add Opportunity
           </Button>
+          <ContextualHelp 
+            articleId="opportunity-management" 
+            tooltip="Learn about opportunities" 
+          />
         </div>
       </div>
 

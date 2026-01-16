@@ -16,6 +16,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { roleInfo } from "@/types/rbac";
 import { RoleSwitcher } from "@/components/auth/RoleSwitcher";
 import { TourTrigger } from "@/components/onboarding/TourTrigger";
+import { HelpTrigger } from "@/components/help/HelpTrigger";
 
 interface HeaderProps {
   title: string;
@@ -70,6 +71,9 @@ export function Header({ title }: HeaderProps) {
 
         {/* Tour Trigger */}
         <TourTrigger />
+
+        {/* Help Center */}
+        <HelpTrigger />
 
         {/* Notifications */}
         <Button variant="ghost" size="icon" className="relative">
