@@ -5,8 +5,6 @@ import {
   ActivityEntityType, 
   mockActivityLog 
 } from "@/data/activityLog";
-import { useAuth } from "@/contexts/AuthContext";
-import { roleInfo } from "@/types/rbac";
 
 interface ActivityLogContextType {
   activities: ActivityLogEntry[];
@@ -16,7 +14,8 @@ interface ActivityLogContextType {
     entityName: string,
     description: string,
     entityId?: string,
-    metadata?: Record<string, any>
+    metadata?: Record<string, any>,
+    userInfo?: { userId: string; userName: string; userRole: string }
   ) => void;
   clearActivities: () => void;
   getActivitiesByType: (entityType: ActivityEntityType) => ActivityLogEntry[];
@@ -28,7 +27,6 @@ const ActivityLogContext = createContext<ActivityLogContextType | undefined>(und
 
 export function ActivityLogProvider({ children }: { children: ReactNode }) {
   const [activities, setActivities] = useState<ActivityLogEntry[]>(mockActivityLog);
-  const { user } = useAuth();
 
   const logActivity = useCallback(
     (
@@ -37,7 +35,8 @@ export function ActivityLogProvider({ children }: { children: ReactNode }) {
       entityName: string,
       description: string,
       entityId?: string,
-      metadata?: Record<string, any>
+      metadata?: Record<string, any>,
+      userInfo?: { userId: string; userName: string; userRole: string }
     ) => {
       const newActivity: ActivityLogEntry = {
         id: crypto.randomUUID(),
@@ -47,15 +46,15 @@ export function ActivityLogProvider({ children }: { children: ReactNode }) {
         entityId,
         description,
         metadata,
-        userId: user?.id || "anonymous",
-        userName: user ? `${user.firstName} ${user.lastName}` : "Anonymous",
-        userRole: user ? roleInfo[user.role].label : "Unknown",
+        userId: userInfo?.userId || "anonymous",
+        userName: userInfo?.userName || "Anonymous",
+        userRole: userInfo?.userRole || "Unknown",
         timestamp: new Date(),
       };
 
       setActivities((prev) => [newActivity, ...prev]);
     },
-    [user]
+    []
   );
 
   const clearActivities = useCallback(() => {
