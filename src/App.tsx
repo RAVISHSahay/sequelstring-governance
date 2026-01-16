@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { OnboardingProvider } from "@/contexts/OnboardingContext";
 import { NotificationProvider } from "@/contexts/NotificationContext";
+import { ActivityLogProvider } from "@/contexts/ActivityLogContext";
 import { TourOverlay } from "@/components/onboarding/TourOverlay";
 import { CommandPalette } from "@/components/command/CommandPalette";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
@@ -42,13 +43,14 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <AuthProvider>
-        <OnboardingProvider>
-          <NotificationProvider>
-            <Toaster />
-            <Sonner />
-            <TourOverlay />
-            <BrowserRouter>
-              <CommandPalette />
+        <ActivityLogProvider>
+          <OnboardingProvider>
+            <NotificationProvider>
+              <Toaster />
+              <Sonner />
+              <TourOverlay />
+              <BrowserRouter>
+                <CommandPalette />
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/accounts" element={<Accounts />} />
@@ -99,10 +101,11 @@ const App = () => (
             />
             <Route path="/user-guide" element={<UserGuide />} />
             <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-          </NotificationProvider>
-        </OnboardingProvider>
+              </Routes>
+            </BrowserRouter>
+            </NotificationProvider>
+          </OnboardingProvider>
+        </ActivityLogProvider>
       </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
