@@ -1,7 +1,6 @@
-import { Bell, Search, Plus, ChevronDown, LogOut, User, Settings } from "lucide-react";
+import { Search, Plus, ChevronDown, LogOut, User, Settings } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,12 +10,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import { roleInfo } from "@/types/rbac";
 import { RoleSwitcher } from "@/components/auth/RoleSwitcher";
 import { TourTrigger } from "@/components/onboarding/TourTrigger";
 import { HelpTrigger } from "@/components/help/HelpTrigger";
+import { NotificationCenter } from "@/components/notifications/NotificationCenter";
 
 interface HeaderProps {
   title: string;
@@ -83,12 +82,7 @@ export function Header({ title }: HeaderProps) {
         <HelpTrigger />
 
         {/* Notifications */}
-        <Button variant="ghost" size="icon" className="relative">
-          <Bell className="h-5 w-5" />
-          <span className="absolute -right-0.5 -top-0.5 h-4 w-4 rounded-full bg-accent text-[10px] font-bold text-accent-foreground flex items-center justify-center">
-            3
-          </span>
-        </Button>
+        <NotificationCenter />
 
         {/* User Menu */}
         <DropdownMenu>
