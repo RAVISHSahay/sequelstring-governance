@@ -12,6 +12,12 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
   Bell,
   AlertTriangle,
   Clock,
@@ -21,6 +27,9 @@ import {
   Trash2,
   Check,
   X,
+  Volume2,
+  VolumeX,
+  Zap,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNotifications } from "@/contexts/NotificationContext";
@@ -39,8 +48,17 @@ const typeConfig: Record<
 
 export function NotificationCenter() {
   const [open, setOpen] = useState(false);
-  const { notifications, unreadCount, markAsRead, markAllAsRead, deleteNotification, clearAll } =
-    useNotifications();
+  const { 
+    notifications, 
+    unreadCount, 
+    markAsRead, 
+    markAllAsRead, 
+    deleteNotification, 
+    clearAll,
+    soundEnabled,
+    toggleSound,
+    simulateIncomingNotification,
+  } = useNotifications();
   const navigate = useNavigate();
 
   const handleNotificationClick = (notification: Notification) => {
@@ -78,8 +96,50 @@ export function NotificationCenter() {
                 </Badge>
               )}
             </SheetTitle>
-            {notifications.length > 0 && (
-              <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1">
+              {/* Test notification button */}
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={simulateIncomingNotification}
+                      className="h-8 w-8"
+                    >
+                      <Zap className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Test notification</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+
+              {/* Sound toggle */}
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={toggleSound}
+                      className="h-8 w-8"
+                    >
+                      {soundEnabled ? (
+                        <Volume2 className="h-4 w-4" />
+                      ) : (
+                        <VolumeX className="h-4 w-4 text-muted-foreground" />
+                      )}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{soundEnabled ? "Mute sounds" : "Enable sounds"}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+
+              {notifications.length > 0 && (
                 <Button
                   variant="ghost"
                   size="sm"
@@ -90,8 +150,8 @@ export function NotificationCenter() {
                   <Check className="h-3 w-3 mr-1" />
                   Mark all read
                 </Button>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </SheetHeader>
 
