@@ -39,6 +39,7 @@ import { AddAccountDialog } from "@/components/dialogs/AddAccountDialog";
 import { DeleteConfirmDialog } from "@/components/dialogs/DeleteConfirmDialog";
 import { CSVImportDialog } from "@/components/dialogs/CSVImportDialog";
 import { ExportDialog } from "@/components/dialogs/ExportDialog";
+import { ContextualHelp } from "@/components/help/ContextualHelp";
 import { toast } from "sonner";
 
 interface Account {
@@ -315,6 +316,10 @@ export default function Accounts() {
             <Plus className="h-4 w-4" />
             Add Account
           </Button>
+          <ContextualHelp 
+            articleId="account-management" 
+            tooltip="Learn about accounts" 
+          />
         </div>
       </div>
       <div className="bg-card rounded-xl border border-border/50 overflow-hidden animate-fade-in">
