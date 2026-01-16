@@ -16,6 +16,7 @@ import { RoleSwitcher } from "@/components/auth/RoleSwitcher";
 import { TourTrigger } from "@/components/onboarding/TourTrigger";
 import { HelpTrigger } from "@/components/help/HelpTrigger";
 import { NotificationCenter } from "@/components/notifications/NotificationCenter";
+import { GlobalActivityLog } from "@/components/activity/GlobalActivityLog";
 
 interface HeaderProps {
   title: string;
@@ -80,6 +81,9 @@ export function Header({ title }: HeaderProps) {
 
         {/* Help Center */}
         <HelpTrigger />
+
+        {/* Activity Log */}
+        <GlobalActivityLog />
 
         {/* Notifications */}
         <NotificationCenter />
