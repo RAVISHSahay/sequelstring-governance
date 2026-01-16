@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { OnboardingProvider } from "@/contexts/OnboardingContext";
+import { NotificationProvider } from "@/contexts/NotificationContext";
 import { TourOverlay } from "@/components/onboarding/TourOverlay";
 import { CommandPalette } from "@/components/command/CommandPalette";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
@@ -42,11 +43,12 @@ const App = () => (
     <TooltipProvider>
       <AuthProvider>
         <OnboardingProvider>
-          <Toaster />
-          <Sonner />
-          <TourOverlay />
-          <BrowserRouter>
-            <CommandPalette />
+          <NotificationProvider>
+            <Toaster />
+            <Sonner />
+            <TourOverlay />
+            <BrowserRouter>
+              <CommandPalette />
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/accounts" element={<Accounts />} />
@@ -97,8 +99,9 @@ const App = () => (
             />
             <Route path="/user-guide" element={<UserGuide />} />
             <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
+            </Routes>
+          </BrowserRouter>
+          </NotificationProvider>
         </OnboardingProvider>
       </AuthProvider>
     </TooltipProvider>
