@@ -94,7 +94,7 @@ export function Sidebar() {
       )}
     >
       {/* Logo */}
-      <div className="flex h-16 items-center justify-between px-4 border-b border-sidebar-border">
+      <div className="flex h-16 items-center justify-between px-4 border-b border-sidebar-border" data-tour="sidebar-logo">
         {!collapsed && (
           <div className="flex items-center gap-2">
             <div className="h-8 w-8 rounded-lg bg-gradient-accent flex items-center justify-center">
@@ -117,10 +117,12 @@ export function Sidebar() {
         <div className="space-y-1">
           {visibleNavigation.map((item) => {
             const isActive = location.pathname === item.href;
+            const tourId = item.name.toLowerCase().replace(/\s+/g, '-');
             return (
               <Link
                 key={item.name}
                 to={item.href}
+                data-tour={`nav-${tourId}`}
                 className={cn(
                   "nav-item",
                   isActive ? "nav-item-active" : "nav-item-inactive"
@@ -164,7 +166,7 @@ export function Sidebar() {
 
         {/* Incentive Engine Section */}
         {visibleIncentiveNav.length > 0 && (
-          <div className="mt-6 pt-4 border-t border-sidebar-border">
+          <div className="mt-6 pt-4 border-t border-sidebar-border" data-tour="nav-incentives">
             {!collapsed && (
               <p className="px-3 mb-2 text-xs font-semibold text-sidebar-foreground/60 uppercase tracking-wider">
                 Incentive Engine
