@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import { roleInfo } from "@/types/rbac";
 import { RoleSwitcher } from "@/components/auth/RoleSwitcher";
+import { TourTrigger } from "@/components/onboarding/TourTrigger";
 
 interface HeaderProps {
   title: string;
@@ -38,7 +39,7 @@ export function Header({ title }: HeaderProps) {
 
       <div className="flex items-center gap-4">
         {/* Search */}
-        <div className="relative hidden md:block">
+        <div className="relative hidden md:block" data-tour="global-search">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Search accounts, deals, contacts..."
@@ -49,7 +50,7 @@ export function Header({ title }: HeaderProps) {
         {/* Quick Actions */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button size="sm" className="gap-1">
+            <Button size="sm" className="gap-1" data-tour="quick-actions">
               <Plus className="h-4 w-4" />
               <span className="hidden sm:inline">New</span>
               <ChevronDown className="h-3 w-3" />
@@ -67,6 +68,9 @@ export function Header({ title }: HeaderProps) {
         {/* Role Switcher (Demo) */}
         <RoleSwitcher />
 
+        {/* Tour Trigger */}
+        <TourTrigger />
+
         {/* Notifications */}
         <Button variant="ghost" size="icon" className="relative">
           <Bell className="h-5 w-5" />
@@ -78,7 +82,7 @@ export function Header({ title }: HeaderProps) {
         {/* User Menu */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="gap-2 pl-2 pr-3">
+            <Button variant="ghost" className="gap-2 pl-2 pr-3" data-tour="user-menu">
               <Avatar className="h-8 w-8">
                 <AvatarImage src={user?.avatarUrl} />
                 <AvatarFallback className="bg-primary text-primary-foreground text-xs">
