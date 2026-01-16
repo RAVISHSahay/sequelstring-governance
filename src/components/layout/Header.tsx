@@ -39,14 +39,21 @@ export function Header({ title }: HeaderProps) {
       </div>
 
       <div className="flex items-center gap-4">
-        {/* Search */}
-        <div className="relative hidden md:block" data-tour="global-search">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder="Search accounts, deals, contacts..."
-            className="w-80 pl-10 bg-background"
-          />
-        </div>
+        {/* Search - Command Palette Trigger */}
+        <button
+          onClick={() => {
+            const event = new KeyboardEvent('keydown', { key: 'k', metaKey: true });
+            document.dispatchEvent(event);
+          }}
+          className="relative hidden md:flex items-center gap-2 h-10 w-80 rounded-md border border-input bg-background px-3 text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+          data-tour="global-search"
+        >
+          <Search className="h-4 w-4" />
+          <span className="flex-1 text-left">Search anything...</span>
+          <kbd className="pointer-events-none hidden h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground sm:flex">
+            <span className="text-xs">⌘</span>K
+          </kbd>
+        </button>
 
         {/* Quick Actions */}
         <DropdownMenu>
