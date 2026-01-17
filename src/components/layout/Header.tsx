@@ -1,3 +1,4 @@
+import React from "react";
 import { Search, Plus, ChevronDown, LogOut, User, Settings } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,7 @@ import { TourTrigger } from "@/components/onboarding/TourTrigger";
 import { HelpTrigger } from "@/components/help/HelpTrigger";
 import { NotificationCenter } from "@/components/notifications/NotificationCenter";
 import { GlobalActivityLog } from "@/components/activity/GlobalActivityLog";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
 
 interface HeaderProps {
   title: string;
@@ -84,6 +86,9 @@ export function Header({ title }: HeaderProps) {
 
         {/* Activity Log */}
         <GlobalActivityLog />
+
+        {/* Theme Toggle */}
+        <ThemeToggle />
 
         {/* Notifications */}
         <NotificationCenter />
