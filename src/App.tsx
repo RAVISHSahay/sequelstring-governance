@@ -12,6 +12,7 @@ import { ActivityLogProvider } from "@/contexts/ActivityLogContext";
 import { TourOverlay } from "@/components/onboarding/TourOverlay";
 import { CommandPalette } from "@/components/command/CommandPalette";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import Auth from "./pages/Auth";
 import Index from "./pages/Index";
 import Accounts from "./pages/Accounts";
 import AccountMap from "./pages/AccountMap";
@@ -45,71 +46,77 @@ const App = () => (
   <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <AuthProvider>
-          <OnboardingProvider>
-            <NotificationProvider>
-              <ActivityLogProvider>
-                <Toaster />
-                <Sonner />
-                <TourOverlay />
-              <BrowserRouter>
-                <CommandPalette />
-                <Routes>
-                  <Route path="/" element={<Index />} />
-                  <Route path="/accounts" element={<Accounts />} />
-                  <Route path="/account-map" element={<AccountMap />} />
-                  <Route path="/contacts" element={<Contacts />} />
-                  <Route path="/leads" element={<Leads />} />
-                  <Route path="/opportunities" element={<Opportunities />} />
-                  <Route path="/quotes" element={<Quotes />} />
-                  <Route path="/quotes/new" element={<QuoteBuilder />} />
-                  <Route path="/contracts" element={<Contracts />} />
-                  <Route path="/orders" element={<Orders />} />
-                  <Route path="/activities" element={<Activities />} />
-                  <Route path="/reports" element={<Reports />} />
-                  <Route path="/pricing" element={<Pricing />} />
-                  <Route path="/settings" element={<Settings />} />
-                  {/* Intelligence Routes */}
-                  <Route path="/forecasting" element={<Forecasting />} />
-                  <Route path="/win-loss" element={<WinLossAnalysis />} />
-                  <Route path="/poc-tracking" element={<POCTracking />} />
-                  <Route
-                    path="/sales-stages"
-                    element={
-                      <ProtectedRoute requiredPermissions={['view_admin']}>
-                        <SalesStageConfig />
-                      </ProtectedRoute>
-                    }
-                  />
-                  {/* Incentive Engine Routes */}
-                  <Route path="/targets" element={<Targets />} />
-                  <Route path="/incentives" element={<Incentives />} />
-                  <Route path="/payouts" element={<Payouts />} />
-                  <Route path="/performance" element={<Performance />} />
-                  <Route
-                    path="/admin"
-                    element={
-                      <ProtectedRoute requiredPermissions={['view_admin']}>
-                        <AdminControls />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/users"
-                    element={
-                      <ProtectedRoute requiredPermissions={['manage_users']}>
-                        <UserManagement />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route path="/user-guide" element={<UserGuide />} />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </BrowserRouter>
-              </ActivityLogProvider>
-            </NotificationProvider>
-          </OnboardingProvider>
-        </AuthProvider>
+        <BrowserRouter>
+          <AuthProvider>
+            <OnboardingProvider>
+              <NotificationProvider>
+                <ActivityLogProvider>
+                  <Toaster />
+                  <Sonner />
+                  <TourOverlay />
+                  <CommandPalette />
+                  <Routes>
+                    {/* Public route */}
+                    <Route path="/auth" element={<Auth />} />
+                    
+                    {/* Protected routes */}
+                    <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+                    <Route path="/accounts" element={<ProtectedRoute><Accounts /></ProtectedRoute>} />
+                    <Route path="/account-map" element={<ProtectedRoute><AccountMap /></ProtectedRoute>} />
+                    <Route path="/contacts" element={<ProtectedRoute><Contacts /></ProtectedRoute>} />
+                    <Route path="/leads" element={<ProtectedRoute><Leads /></ProtectedRoute>} />
+                    <Route path="/opportunities" element={<ProtectedRoute><Opportunities /></ProtectedRoute>} />
+                    <Route path="/quotes" element={<ProtectedRoute><Quotes /></ProtectedRoute>} />
+                    <Route path="/quotes/new" element={<ProtectedRoute><QuoteBuilder /></ProtectedRoute>} />
+                    <Route path="/contracts" element={<ProtectedRoute><Contracts /></ProtectedRoute>} />
+                    <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
+                    <Route path="/activities" element={<ProtectedRoute><Activities /></ProtectedRoute>} />
+                    <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
+                    <Route path="/pricing" element={<ProtectedRoute><Pricing /></ProtectedRoute>} />
+                    <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+                    
+                    {/* Intelligence Routes */}
+                    <Route path="/forecasting" element={<ProtectedRoute><Forecasting /></ProtectedRoute>} />
+                    <Route path="/win-loss" element={<ProtectedRoute><WinLossAnalysis /></ProtectedRoute>} />
+                    <Route path="/poc-tracking" element={<ProtectedRoute><POCTracking /></ProtectedRoute>} />
+                    <Route
+                      path="/sales-stages"
+                      element={
+                        <ProtectedRoute requiredPermissions={['view_admin']}>
+                          <SalesStageConfig />
+                        </ProtectedRoute>
+                      }
+                    />
+                    
+                    {/* Incentive Engine Routes */}
+                    <Route path="/targets" element={<ProtectedRoute><Targets /></ProtectedRoute>} />
+                    <Route path="/incentives" element={<ProtectedRoute><Incentives /></ProtectedRoute>} />
+                    <Route path="/payouts" element={<ProtectedRoute><Payouts /></ProtectedRoute>} />
+                    <Route path="/performance" element={<ProtectedRoute><Performance /></ProtectedRoute>} />
+                    <Route
+                      path="/admin"
+                      element={
+                        <ProtectedRoute requiredPermissions={['view_admin']}>
+                          <AdminControls />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/users"
+                      element={
+                        <ProtectedRoute requiredPermissions={['manage_users']}>
+                          <UserManagement />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route path="/user-guide" element={<ProtectedRoute><UserGuide /></ProtectedRoute>} />
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </ActivityLogProvider>
+              </NotificationProvider>
+            </OnboardingProvider>
+          </AuthProvider>
+        </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
   </ThemeProvider>

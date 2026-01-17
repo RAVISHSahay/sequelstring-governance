@@ -1,12 +1,31 @@
-import { createContext, useContext, useState, useCallback, ReactNode } from 'react';
-import { User, UserRole, Permission, rolePermissions } from '@/types/rbac';
+import React, { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
+import { User as SupabaseUser, Session } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
+import { Permission, rolePermissions, UserRole } from '@/types/rbac';
+
+export interface User {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  role: UserRole;
+  teamId?: string;
+  teamName?: string;
+  region?: string;
+  avatarUrl?: string;
+  isActive: boolean;
+  createdAt: string;
+  lastLogin?: string;
+}
 
 interface AuthContextType {
   user: User | null;
+  session: Session | null;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<boolean>;
-  logout: () => void;
-  switchRole: (role: UserRole) => void; // For demo purposes
+  isLoading: boolean;
+  login: (email: string, password: string) => Promise<{ error: string | null }>;
+  logout: () => Promise<void>;
+  switchRole: (role: UserRole) => void;
   hasPermission: (permission: Permission) => boolean;
   hasAnyPermission: (permissions: Permission[]) => boolean;
   hasAllPermissions: (permissions: Permission[]) => boolean;
@@ -14,56 +33,6 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-// Mock users for demo - in production, this would come from a database
-const mockUsers: Record<string, User> = {
-  admin: {
-    id: 'USR-001',
-    email: 'admin@sequelstring.com',
-    firstName: 'System',
-    lastName: 'Admin',
-    role: 'admin',
-    isActive: true,
-    createdAt: '2024-01-01',
-    lastLogin: new Date().toISOString(),
-  },
-  sales_head: {
-    id: 'USR-002',
-    email: 'vikram.singh@sequelstring.com',
-    firstName: 'Vikram',
-    lastName: 'Singh',
-    role: 'sales_head',
-    teamId: 'TEAM-ENT',
-    teamName: 'Enterprise Sales',
-    region: 'North',
-    isActive: true,
-    createdAt: '2024-01-01',
-    lastLogin: new Date().toISOString(),
-  },
-  finance: {
-    id: 'USR-003',
-    email: 'priya.finance@sequelstring.com',
-    firstName: 'Priya',
-    lastName: 'Gupta',
-    role: 'finance',
-    isActive: true,
-    createdAt: '2024-01-01',
-    lastLogin: new Date().toISOString(),
-  },
-  sales: {
-    id: 'USR-004',
-    email: 'rahul.sharma@sequelstring.com',
-    firstName: 'Rahul',
-    lastName: 'Sharma',
-    role: 'sales',
-    teamId: 'TEAM-ENT',
-    teamName: 'Enterprise Sales',
-    region: 'North',
-    isActive: true,
-    createdAt: '2024-01-01',
-    lastLogin: new Date().toISOString(),
-  },
-};
 
 // Route-permission mapping
 const routePermissions: Record<string, Permission[]> = {
@@ -88,32 +57,118 @@ const routePermissions: Record<string, Permission[]> = {
 };
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  // Default to admin user for demo
-  const [user, setUser] = useState<User | null>(mockUsers.admin);
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const isAuthenticated = user !== null;
+  // Fetch user profile from profiles table
+  const fetchProfile = useCallback(async (userId: string): Promise<User | null> => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
 
-  const login = useCallback(async (email: string, password: string): Promise<boolean> => {
-    // Mock login - in production, this would validate against a backend
-    const foundUser = Object.values(mockUsers).find((u) => u.email === email);
-    if (foundUser) {
-      setUser({ ...foundUser, lastLogin: new Date().toISOString() });
-      return true;
+      if (error || !data) {
+        console.error('Error fetching profile:', error);
+        return null;
+      }
+
+      return {
+        id: data.id,
+        email: data.email,
+        firstName: data.first_name || '',
+        lastName: data.last_name || '',
+        role: (data.role as UserRole) || 'sales',
+        teamId: data.team_id || undefined,
+        teamName: data.team_name || undefined,
+        region: data.region || undefined,
+        avatarUrl: data.avatar_url || undefined,
+        isActive: data.is_active,
+        createdAt: data.created_at,
+        lastLogin: new Date().toISOString(),
+      };
+    } catch (err) {
+      console.error('Error fetching profile:', err);
+      return null;
     }
-    return false;
   }, []);
 
-  const logout = useCallback(() => {
+  // Initialize auth state
+  useEffect(() => {
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, currentSession) => {
+        setSession(currentSession);
+        
+        if (currentSession?.user) {
+          // Defer profile fetch with setTimeout to prevent deadlock
+          setTimeout(() => {
+            fetchProfile(currentSession.user.id).then(profile => {
+              setUser(profile);
+              setIsLoading(false);
+            });
+          }, 0);
+        } else {
+          setUser(null);
+          setIsLoading(false);
+        }
+      }
+    );
+
+    // THEN check for existing session
+    supabase.auth.getSession().then(({ data: { session: existingSession } }) => {
+      setSession(existingSession);
+      
+      if (existingSession?.user) {
+        fetchProfile(existingSession.user.id).then(profile => {
+          setUser(profile);
+          setIsLoading(false);
+        });
+      } else {
+        setIsLoading(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [fetchProfile]);
+
+  const isAuthenticated = user !== null && session !== null;
+
+  const login = useCallback(async (email: string, password: string): Promise<{ error: string | null }> => {
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      return { error: error.message };
+    }
+
+    return { error: null };
+  }, []);
+
+  const logout = useCallback(async () => {
+    await supabase.auth.signOut();
     setUser(null);
+    setSession(null);
   }, []);
 
-  // For demo purposes - allows switching between roles to test RBAC
-  const switchRole = useCallback((role: UserRole) => {
-    const mockUser = mockUsers[role];
-    if (mockUser) {
-      setUser({ ...mockUser, lastLogin: new Date().toISOString() });
+  // For demo purposes - allows switching between roles
+  const switchRole = useCallback(async (role: UserRole) => {
+    if (!user) return;
+    
+    // Update role in database
+    const { error } = await supabase
+      .from('profiles')
+      .update({ role })
+      .eq('id', user.id);
+
+    if (!error) {
+      setUser(prev => prev ? { ...prev, role } : null);
     }
-  }, []);
+  }, [user]);
 
   const hasPermission = useCallback(
     (permission: Permission): boolean => {
@@ -141,7 +196,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const canAccessRoute = useCallback(
     (route: string): boolean => {
       const requiredPermissions = routePermissions[route];
-      if (!requiredPermissions) return true; // Routes not in the map are accessible
+      if (!requiredPermissions) return true;
       return hasAnyPermission(requiredPermissions);
     },
     [hasAnyPermission]
@@ -151,7 +206,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     <AuthContext.Provider
       value={{
         user,
+        session,
         isAuthenticated,
+        isLoading,
         login,
         logout,
         switchRole,
