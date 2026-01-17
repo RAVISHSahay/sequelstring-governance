@@ -136,6 +136,107 @@ export type Database = {
         }
         Relationships: []
       }
+      communications: {
+        Row: {
+          account_id: string | null
+          attachments: Json | null
+          completed_at: string | null
+          contact_id: string | null
+          created_at: string
+          description: string | null
+          direction: string | null
+          duration_minutes: number | null
+          external_id: string | null
+          follow_up_date: string | null
+          follow_up_notes: string | null
+          id: string
+          lead_id: string | null
+          opportunity_id: string | null
+          outcome: string | null
+          scheduled_at: string | null
+          source: string | null
+          subject: string | null
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_id?: string | null
+          attachments?: Json | null
+          completed_at?: string | null
+          contact_id?: string | null
+          created_at?: string
+          description?: string | null
+          direction?: string | null
+          duration_minutes?: number | null
+          external_id?: string | null
+          follow_up_date?: string | null
+          follow_up_notes?: string | null
+          id?: string
+          lead_id?: string | null
+          opportunity_id?: string | null
+          outcome?: string | null
+          scheduled_at?: string | null
+          source?: string | null
+          subject?: string | null
+          type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_id?: string | null
+          attachments?: Json | null
+          completed_at?: string | null
+          contact_id?: string | null
+          created_at?: string
+          description?: string | null
+          direction?: string | null
+          duration_minutes?: number | null
+          external_id?: string | null
+          follow_up_date?: string | null
+          follow_up_notes?: string | null
+          id?: string
+          lead_id?: string | null
+          opportunity_id?: string | null
+          outcome?: string | null
+          scheduled_at?: string | null
+          source?: string | null
+          subject?: string | null
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "communications_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "communications_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "communications_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "communications_opportunity_id_fkey"
+            columns: ["opportunity_id"]
+            isOneToOne: false
+            referencedRelation: "opportunities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contacts: {
         Row: {
           account_id: string | null
