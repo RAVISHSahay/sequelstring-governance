@@ -1,12 +1,13 @@
-import { ReactNode } from 'react';
+import React, { ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Permission } from '@/types/rbac';
+import { Loader2 } from 'lucide-react';
 
 interface ProtectedRouteProps {
   children: ReactNode;
   requiredPermissions?: Permission[];
-  requireAll?: boolean; // If true, user must have ALL permissions. If false, ANY permission is enough.
+  requireAll?: boolean;
   fallbackPath?: string;
 }
 
@@ -16,12 +17,24 @@ export function ProtectedRoute({
   requireAll = false,
   fallbackPath = '/',
 }: ProtectedRouteProps) {
-  const { isAuthenticated, hasAnyPermission, hasAllPermissions } = useAuth();
+  const { isAuthenticated, isLoading, hasAnyPermission, hasAllPermissions } = useAuth();
   const location = useLocation();
 
+  // Show loading while checking auth state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (!isAuthenticated) {
-    // Redirect to login (or home for now since we don't have a login page)
-    return <Navigate to="/" state={{ from: location }} replace />;
+    // Redirect to auth page
+    return <Navigate to="/auth" state={{ from: location }} replace />;
   }
 
   if (requiredPermissions.length > 0) {
