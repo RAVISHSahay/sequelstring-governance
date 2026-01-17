@@ -207,6 +207,118 @@ export type Database = {
           },
         ]
       }
+      leads: {
+        Row: {
+          address: string | null
+          city: string | null
+          company_name: string | null
+          converted_account_id: string | null
+          converted_at: string | null
+          converted_contact_id: string | null
+          converted_opportunity_id: string | null
+          country: string | null
+          created_at: string
+          description: string | null
+          email: string | null
+          first_name: string
+          id: string
+          industry: string | null
+          job_title: string | null
+          last_name: string
+          lead_source: string | null
+          owner_id: string | null
+          phone: string | null
+          postal_code: string | null
+          rating: string | null
+          score: number | null
+          state: string | null
+          status: string | null
+          updated_at: string
+          user_id: string
+          website: string | null
+        }
+        Insert: {
+          address?: string | null
+          city?: string | null
+          company_name?: string | null
+          converted_account_id?: string | null
+          converted_at?: string | null
+          converted_contact_id?: string | null
+          converted_opportunity_id?: string | null
+          country?: string | null
+          created_at?: string
+          description?: string | null
+          email?: string | null
+          first_name: string
+          id?: string
+          industry?: string | null
+          job_title?: string | null
+          last_name: string
+          lead_source?: string | null
+          owner_id?: string | null
+          phone?: string | null
+          postal_code?: string | null
+          rating?: string | null
+          score?: number | null
+          state?: string | null
+          status?: string | null
+          updated_at?: string
+          user_id: string
+          website?: string | null
+        }
+        Update: {
+          address?: string | null
+          city?: string | null
+          company_name?: string | null
+          converted_account_id?: string | null
+          converted_at?: string | null
+          converted_contact_id?: string | null
+          converted_opportunity_id?: string | null
+          country?: string | null
+          created_at?: string
+          description?: string | null
+          email?: string | null
+          first_name?: string
+          id?: string
+          industry?: string | null
+          job_title?: string | null
+          last_name?: string
+          lead_source?: string | null
+          owner_id?: string | null
+          phone?: string | null
+          postal_code?: string | null
+          rating?: string | null
+          score?: number | null
+          state?: string | null
+          status?: string | null
+          updated_at?: string
+          user_id?: string
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leads_converted_account_id_fkey"
+            columns: ["converted_account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_converted_contact_id_fkey"
+            columns: ["converted_contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_converted_opportunity_id_fkey"
+            columns: ["converted_opportunity_id"]
+            isOneToOne: false
+            referencedRelation: "opportunities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       opportunities: {
         Row: {
           account_id: string | null
