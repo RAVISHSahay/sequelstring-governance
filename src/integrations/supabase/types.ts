@@ -14,6 +14,83 @@ export type Database = {
   }
   public: {
     Tables: {
+      accounts: {
+        Row: {
+          account_type: string | null
+          address: string | null
+          annual_revenue: number | null
+          city: string | null
+          country: string | null
+          created_at: string
+          employee_count: number | null
+          id: string
+          industry: string | null
+          name: string
+          notes: string | null
+          owner_id: string | null
+          parent_account_id: string | null
+          phone: string | null
+          postal_code: string | null
+          state: string | null
+          status: string | null
+          updated_at: string
+          user_id: string
+          website: string | null
+        }
+        Insert: {
+          account_type?: string | null
+          address?: string | null
+          annual_revenue?: number | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          employee_count?: number | null
+          id?: string
+          industry?: string | null
+          name: string
+          notes?: string | null
+          owner_id?: string | null
+          parent_account_id?: string | null
+          phone?: string | null
+          postal_code?: string | null
+          state?: string | null
+          status?: string | null
+          updated_at?: string
+          user_id: string
+          website?: string | null
+        }
+        Update: {
+          account_type?: string | null
+          address?: string | null
+          annual_revenue?: number | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          employee_count?: number | null
+          id?: string
+          industry?: string | null
+          name?: string
+          notes?: string | null
+          owner_id?: string | null
+          parent_account_id?: string | null
+          phone?: string | null
+          postal_code?: string | null
+          state?: string | null
+          status?: string | null
+          updated_at?: string
+          user_id?: string
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "accounts_parent_account_id_fkey"
+            columns: ["parent_account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       activity_logs: {
         Row: {
           action: string
@@ -58,6 +135,158 @@ export type Database = {
           user_role?: string
         }
         Relationships: []
+      }
+      contacts: {
+        Row: {
+          account_id: string | null
+          created_at: string
+          department: string | null
+          email: string | null
+          first_name: string
+          id: string
+          influence_level: number | null
+          is_primary: boolean | null
+          job_title: string | null
+          last_name: string
+          linkedin_url: string | null
+          mobile: string | null
+          notes: string | null
+          phone: string | null
+          role_type: string | null
+          sentiment: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_id?: string | null
+          created_at?: string
+          department?: string | null
+          email?: string | null
+          first_name: string
+          id?: string
+          influence_level?: number | null
+          is_primary?: boolean | null
+          job_title?: string | null
+          last_name: string
+          linkedin_url?: string | null
+          mobile?: string | null
+          notes?: string | null
+          phone?: string | null
+          role_type?: string | null
+          sentiment?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_id?: string | null
+          created_at?: string
+          department?: string | null
+          email?: string | null
+          first_name?: string
+          id?: string
+          influence_level?: number | null
+          is_primary?: boolean | null
+          job_title?: string | null
+          last_name?: string
+          linkedin_url?: string | null
+          mobile?: string | null
+          notes?: string | null
+          phone?: string | null
+          role_type?: string | null
+          sentiment?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contacts_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      opportunities: {
+        Row: {
+          account_id: string | null
+          actual_close_date: string | null
+          amount: number | null
+          competitor: string | null
+          created_at: string
+          currency: string | null
+          description: string | null
+          expected_close_date: string | null
+          id: string
+          lead_source: string | null
+          loss_reason: string | null
+          name: string
+          next_step: string | null
+          owner_id: string | null
+          primary_contact_id: string | null
+          probability: number | null
+          stage: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_id?: string | null
+          actual_close_date?: string | null
+          amount?: number | null
+          competitor?: string | null
+          created_at?: string
+          currency?: string | null
+          description?: string | null
+          expected_close_date?: string | null
+          id?: string
+          lead_source?: string | null
+          loss_reason?: string | null
+          name: string
+          next_step?: string | null
+          owner_id?: string | null
+          primary_contact_id?: string | null
+          probability?: number | null
+          stage?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_id?: string | null
+          actual_close_date?: string | null
+          amount?: number | null
+          competitor?: string | null
+          created_at?: string
+          currency?: string | null
+          description?: string | null
+          expected_close_date?: string | null
+          id?: string
+          lead_source?: string | null
+          loss_reason?: string | null
+          name?: string
+          next_step?: string | null
+          owner_id?: string | null
+          primary_contact_id?: string | null
+          probability?: number | null
+          stage?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "opportunities_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "opportunities_primary_contact_id_fkey"
+            columns: ["primary_contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
