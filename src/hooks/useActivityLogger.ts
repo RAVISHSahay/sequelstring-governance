@@ -8,7 +8,7 @@ export function useActivityLogger() {
   const { user } = useAuth();
 
   const log = useCallback(
-    (
+    async (
       action: ActivityActionType,
       entityType: ActivityEntityType,
       entityName: string,
@@ -24,7 +24,7 @@ export function useActivityLogger() {
           }
         : undefined;
 
-      logActivity(action, entityType, entityName, description, entityId, metadata, userInfo);
+      await logActivity(action, entityType, entityName, description, entityId, metadata, userInfo);
     },
     [logActivity, user]
   );

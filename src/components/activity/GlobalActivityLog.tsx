@@ -44,6 +44,7 @@ import {
   MessageSquare,
   ArrowRightLeft,
   X,
+  Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useActivityLog } from "@/contexts/ActivityLogContext";
@@ -98,7 +99,7 @@ export function GlobalActivityLog() {
   const [actionFilter, setActionFilter] = useState<string>("all");
   const [entityFilter, setEntityFilter] = useState<string>("all");
   const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date }>({});
-  const { activities } = useActivityLog();
+  const { activities, isLoading } = useActivityLog();
 
   const filteredActivities = useMemo(() => {
     return activities.filter((activity) => {
@@ -252,7 +253,12 @@ export function GlobalActivityLog() {
         {/* Activity List */}
         <ScrollArea className="flex-1">
           <div className="p-4 space-y-2">
-            {filteredActivities.length === 0 ? (
+            {isLoading ? (
+              <div className="text-center py-12">
+                <Loader2 className="h-8 w-8 text-primary animate-spin mx-auto mb-4" />
+                <p className="text-muted-foreground">Loading activities...</p>
+              </div>
+            ) : filteredActivities.length === 0 ? (
               <div className="text-center py-12">
                 <History className="h-12 w-12 text-muted-foreground/30 mx-auto mb-4" />
                 <p className="text-muted-foreground">No activities found</p>
