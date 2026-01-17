@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/select';
 import { ClipboardList, Phone, Mail, Video, CheckCircle, FileText, MessageSquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useActivityLogger } from '@/hooks/useActivityLogger';
 
 interface Activity {
   id: number;
@@ -84,6 +85,7 @@ export function LogActivityDialog({ open, onOpenChange, onSave, defaultAccount =
     duration: '',
     outcome: 'Positive',
   });
+  const { log } = useActivityLogger();
 
   useEffect(() => {
     if (open) {
@@ -120,6 +122,10 @@ export function LogActivityDialog({ open, onOpenChange, onSave, defaultAccount =
       duration: formData.duration || '-',
       outcome: formData.outcome,
     };
+
+    // Log to global activity log
+    log("create", "activity", formData.title, `Logged ${formData.type} activity with ${formData.contact} at ${formData.account}`, undefined, { type: formData.type, outcome: formData.outcome, account: formData.account });
+
     onSave(newActivity);
     onOpenChange(false);
   };

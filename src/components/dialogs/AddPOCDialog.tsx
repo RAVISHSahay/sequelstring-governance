@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { POCKPI, POCStatus } from "@/types/account";
+import { useActivityLogger } from "@/hooks/useActivityLogger";
 
 interface AddPOCDialogProps {
   open: boolean;
@@ -77,6 +78,7 @@ const mockOpportunities = [
 ];
 
 export function AddPOCDialog({ open, onOpenChange, onSave }: AddPOCDialogProps) {
+  const { log } = useActivityLogger();
   const [activeTab, setActiveTab] = useState('details');
   const [formData, setFormData] = useState<POCFormData>({
     name: '',
@@ -200,6 +202,13 @@ export function AddPOCDialog({ open, onOpenChange, onSave }: AddPOCDialogProps) 
   const totalWeight = formData.kpis.reduce((sum, kpi) => sum + kpi.weight, 0);
 
   const handleSave = () => {
+    // Log activity
+    log("create", "poc", formData.name, `Created POC for ${formData.accountName} with ${formData.kpis.length} KPIs`, undefined, { 
+      opportunity: formData.opportunityName, 
+      account: formData.accountName,
+      kpiCount: formData.kpis.length 
+    });
+
     onSave(formData);
     setFormData({
       name: '',

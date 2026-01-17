@@ -27,6 +27,7 @@ import { CalendarDays } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useActivityLogger } from "@/hooks/useActivityLogger";
 
 export interface ContractData {
   id?: string;
@@ -75,6 +76,7 @@ const emptyFormData: ContractData = {
 
 export function AddContractDialog({ open, onOpenChange, editData, onSave }: AddContractDialogProps) {
   const [formData, setFormData] = useState<ContractData>(emptyFormData);
+  const { log } = useActivityLogger();
   const isEditing = !!editData;
 
   useEffect(() => {
@@ -101,6 +103,13 @@ export function AddContractDialog({ open, onOpenChange, editData, onSave }: AddC
     const contractId = formData.id || (formData.type === "NDA" 
       ? `NDA-${year}-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`
       : `CNT-${year}-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`);
+
+    // Log activity
+    if (isEditing) {
+      log("update", "contract", formData.name, `Updated contract for ${formData.account}`, formData.id);
+    } else {
+      log("create", "contract", contractId, `Created new ${formData.type} contract for ${formData.account}`, undefined, { type: formData.type, account: formData.account, value: formData.value });
+    }
 
     toast.success(isEditing ? "Contract updated successfully" : "Contract created successfully", {
       description: isEditing 

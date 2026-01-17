@@ -18,6 +18,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { UserPlus } from 'lucide-react';
+import { useActivityLogger } from '@/hooks/useActivityLogger';
 
 interface Contact {
   id: number;
@@ -64,6 +65,7 @@ export function AddContactDialog({ open, onOpenChange, onSave, contact, mode = '
     role: '',
     influence: '',
   });
+  const { log } = useActivityLogger();
 
   useEffect(() => {
     if (contact && mode === 'edit') {
@@ -93,9 +95,10 @@ export function AddContactDialog({ open, onOpenChange, onSave, contact, mode = '
   }, [contact, mode, open, defaultAccount]);
 
   const handleSubmit = () => {
+    const fullName = `${formData.firstName} ${formData.lastName}`.trim();
     const newContact: Contact = {
       id: contact?.id || Date.now(),
-      name: `${formData.firstName} ${formData.lastName}`.trim(),
+      name: fullName,
       title: formData.title,
       account: formData.account,
       email: formData.email,
@@ -104,6 +107,14 @@ export function AddContactDialog({ open, onOpenChange, onSave, contact, mode = '
       influence: formData.influence,
       lastContact: 'Just now',
     };
+
+    // Log activity
+    if (mode === 'edit') {
+      log("update", "contact", fullName, `Updated contact at ${formData.account}`, contact?.id?.toString());
+    } else {
+      log("create", "contact", fullName, `Added new contact at ${formData.account} (${formData.title || 'No title'})`, undefined, { account: formData.account, role: formData.role });
+    }
+
     onSave(newContact);
     onOpenChange(false);
   };

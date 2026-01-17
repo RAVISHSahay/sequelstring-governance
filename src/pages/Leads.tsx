@@ -38,6 +38,7 @@ import { DeleteConfirmDialog } from "@/components/dialogs/DeleteConfirmDialog";
 import { CSVImportDialog } from "@/components/dialogs/CSVImportDialog";
 import { ExportDialog } from "@/components/dialogs/ExportDialog";
 import { toast } from "sonner";
+import { useActivityLogger } from "@/hooks/useActivityLogger";
 
 interface Lead {
   id: number;
@@ -204,6 +205,7 @@ export default function Leads() {
   const [leadToDelete, setLeadToDelete] = useState<Lead | null>(null);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
+  const { log } = useActivityLogger();
 
   // Define export fields
   const leadExportFields = [
@@ -301,6 +303,10 @@ export default function Leads() {
       createdAt: 'Just imported',
     }));
     setLeads((prev) => [...newLeads, ...prev]);
+    
+    // Log activity
+    log("import", "lead", "Leads Import", `Imported ${newLeads.length} leads from CSV`, undefined, { recordCount: newLeads.length });
+    
     toast.success(`${newLeads.length} leads imported successfully`);
   };
 
@@ -323,6 +329,10 @@ export default function Leads() {
   const confirmDelete = () => {
     if (leadToDelete) {
       setLeads(leads.filter(l => l.id !== leadToDelete.id));
+      
+      // Log activity
+      log("delete", "lead", leadToDelete.name, `Deleted lead from ${leadToDelete.company}`, leadToDelete.id.toString());
+      
       toast.success("Lead deleted", {
         description: `${leadToDelete.name} has been removed`,
       });
