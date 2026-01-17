@@ -18,6 +18,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Building2 } from 'lucide-react';
+import { useActivityLogger } from '@/hooks/useActivityLogger';
 
 interface Account {
   id: number;
@@ -64,6 +65,7 @@ export function AddAccountDialog({ open, onOpenChange, onSave, account, mode = '
     status: 'Prospect',
     owner: '',
   });
+  const { log } = useActivityLogger();
 
   useEffect(() => {
     if (account && mode === 'edit') {
@@ -99,6 +101,14 @@ export function AddAccountDialog({ open, onOpenChange, onSave, account, mode = '
       status: formData.status,
       owner: formData.owner,
     };
+
+    // Log activity
+    if (mode === 'edit') {
+      log("update", "account", formData.name, `Updated account in ${formData.industry}`, account?.id?.toString());
+    } else {
+      log("create", "account", formData.name, `Created new ${formData.type} account in ${formData.industry}`, undefined, { type: formData.type, industry: formData.industry });
+    }
+
     onSave(newAccount);
     onOpenChange(false);
   };

@@ -41,6 +41,7 @@ import { CSVImportDialog } from "@/components/dialogs/CSVImportDialog";
 import { ExportDialog } from "@/components/dialogs/ExportDialog";
 import { ContextualHelp } from "@/components/help/ContextualHelp";
 import { toast } from "sonner";
+import { useActivityLogger } from "@/hooks/useActivityLogger";
 
 interface Account {
   id: number;
@@ -181,6 +182,7 @@ export default function Accounts() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
+  const { log } = useActivityLogger();
 
   const handleViewAccountMap = (accountName: string) => {
     navigate(`/account-map?account=${encodeURIComponent(accountName)}`);
@@ -260,6 +262,10 @@ export default function Accounts() {
   const handleConfirmDelete = () => {
     if (selectedAccount) {
       setAccounts((prev) => prev.filter((a) => a.id !== selectedAccount.id));
+      
+      // Log activity
+      log("delete", "account", selectedAccount.name, `Deleted ${selectedAccount.type} account in ${selectedAccount.industry}`, selectedAccount.id.toString());
+      
       toast.success(`Account ${selectedAccount.name} deleted`);
       setDeleteDialogOpen(false);
       setSelectedAccount(null);
@@ -279,6 +285,10 @@ export default function Accounts() {
       owner: row.owner,
     }));
     setAccounts((prev) => [...prev, ...newAccounts]);
+    
+    // Log activity
+    log("import", "account", "Accounts Import", `Imported ${newAccounts.length} accounts from CSV`, undefined, { recordCount: newAccounts.length });
+    
     toast.success(`${newAccounts.length} accounts imported successfully`);
   };
 

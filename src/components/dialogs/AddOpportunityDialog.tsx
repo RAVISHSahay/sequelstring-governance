@@ -27,6 +27,7 @@ import { CalendarDays } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useActivityLogger } from "@/hooks/useActivityLogger";
 
 export interface OpportunityData {
   id?: number;
@@ -92,6 +93,7 @@ export function AddOpportunityDialog({
   onSave,
 }: AddOpportunityDialogProps) {
   const [formData, setFormData] = useState<OpportunityData>({ ...emptyFormData, stage: initialStage });
+  const { log } = useActivityLogger();
   const isEditing = !!editData;
 
   useEffect(() => {
@@ -112,6 +114,13 @@ export function AddOpportunityDialog({
 
     if (onSave) {
       onSave(formData);
+    }
+
+    // Log activity
+    if (isEditing) {
+      log("update", "opportunity", formData.name, `Updated opportunity for ${formData.account} (₹${formData.value})`, formData.id?.toString(), { stage: formData.stage });
+    } else {
+      log("create", "opportunity", formData.name, `Created new opportunity worth ₹${formData.value} for ${formData.account}`, undefined, { value: formData.value, stage: formData.stage, account: formData.account });
     }
 
     toast.success(isEditing ? "Opportunity updated successfully" : "Opportunity created successfully", {

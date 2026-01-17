@@ -18,6 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { useActivityLogger } from "@/hooks/useActivityLogger";
 
 export interface LeadData {
   id?: number;
@@ -57,6 +58,7 @@ const emptyFormData: LeadData = {
 
 export function AddLeadDialog({ open, onOpenChange, editData, onSave }: AddLeadDialogProps) {
   const [formData, setFormData] = useState<LeadData>(emptyFormData);
+  const { log } = useActivityLogger();
   const isEditing = !!editData;
 
   useEffect(() => {
@@ -77,6 +79,13 @@ export function AddLeadDialog({ open, onOpenChange, editData, onSave }: AddLeadD
 
     if (onSave) {
       onSave(formData);
+    }
+
+    // Log activity
+    if (isEditing) {
+      log("update", "lead", formData.name, `Updated lead from ${formData.company}`, formData.id?.toString());
+    } else {
+      log("create", "lead", formData.name, `Created new lead from ${formData.company}`, undefined, { company: formData.company, source: formData.source });
     }
 
     toast.success(isEditing ? "Lead updated successfully" : "Lead created successfully", {
