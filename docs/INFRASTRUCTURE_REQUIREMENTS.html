@@ -1,0 +1,1584 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SequelString CRM - Infrastructure Requirements</title>
+    <style>
+        /* Print-optimized CSS */
+        @page {
+            size: A4;
+            margin: 1.5cm;
+        }
+
+        @media print {
+            body {
+                font-size: 10pt;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            .page-break {
+                page-break-before: always;
+            }
+
+            .no-print {
+                display: none;
+            }
+
+            h1,
+            h2,
+            h3 {
+                page-break-after: avoid;
+            }
+
+            table,
+            pre {
+                page-break-inside: avoid;
+            }
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #1a1a2e;
+            background: #ffffff;
+            max-width: 210mm;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            padding: 30px 0;
+            border-bottom: 3px solid #059669;
+            margin-bottom: 30px;
+            background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+            border-radius: 10px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            color: #065f46;
+            margin-bottom: 10px;
+        }
+
+        .header .subtitle {
+            font-size: 16px;
+            color: #047857;
+        }
+
+        .header .badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #059669, #10b981);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            margin-top: 10px;
+        }
+
+        /* Document Info */
+        .doc-info {
+            background: #f0fdf4;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            border: 1px solid #bbf7d0;
+        }
+
+        .doc-info-item {
+            text-align: center;
+        }
+
+        .doc-info-item label {
+            font-size: 11px;
+            color: #6b7280;
+            display: block;
+        }
+
+        .doc-info-item span {
+            font-weight: 600;
+            color: #065f46;
+        }
+
+        /* Sections */
+        section {
+            margin-bottom: 30px;
+        }
+
+        h2 {
+            font-size: 20px;
+            color: #065f46;
+            border-bottom: 2px solid #d1fae5;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        h3 {
+            font-size: 16px;
+            color: #047857;
+            margin: 20px 0 10px;
+        }
+
+        h4 {
+            font-size: 14px;
+            color: #059669;
+            margin: 15px 0 8px;
+        }
+
+        p {
+            margin-bottom: 15px;
+            color: #374151;
+        }
+
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            font-size: 11px;
+        }
+
+        th {
+            background: linear-gradient(135deg, #065f46, #059669);
+            color: white;
+            padding: 10px 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        td {
+            padding: 8px 12px;
+            border-bottom: 1px solid #d1fae5;
+        }
+
+        tr:nth-child(even) {
+            background: #f0fdf4;
+        }
+
+        tr:hover {
+            background: #ecfdf5;
+        }
+
+        /* Code Blocks */
+        pre {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 10px;
+            line-height: 1.4;
+            margin: 15px 0;
+        }
+
+        code {
+            font-family: 'Consolas', 'Monaco', monospace;
+            background: #d1fae5;
+            color: #065f46;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 11px;
+        }
+
+        /* Cost Cards */
+        .cost-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .cost-card {
+            background: linear-gradient(135deg, #f0fdf4, #ecfdf5);
+            border: 2px solid #86efac;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .cost-card.recommended {
+            background: linear-gradient(135deg, #059669, #10b981);
+            color: white;
+            border-color: #059669;
+        }
+
+        .cost-card h4 {
+            margin: 0 0 10px;
+            color: inherit;
+        }
+
+        .cost-card .price {
+            font-size: 28px;
+            font-weight: 700;
+            color: #059669;
+        }
+
+        .cost-card.recommended .price {
+            color: white;
+        }
+
+        .cost-card .period {
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .cost-card.recommended .period {
+            color: #d1fae5;
+        }
+
+        .cost-card .features {
+            margin-top: 15px;
+            font-size: 11px;
+            text-align: left;
+        }
+
+        .cost-card .features li {
+            margin: 5px 0;
+            list-style: none;
+        }
+
+        .cost-card .features li::before {
+            content: "✓ ";
+            color: #059669;
+        }
+
+        .cost-card.recommended .features li::before {
+            color: #86efac;
+        }
+
+        /* Provider Comparison */
+        .provider-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .provider-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .provider-card.recommended {
+            border: 2px solid #059669;
+            background: #f0fdf4;
+        }
+
+        .provider-card .logo {
+            font-size: 36px;
+            margin-bottom: 10px;
+        }
+
+        .provider-card .name {
+            font-weight: 600;
+            font-size: 14px;
+            color: #1e293b;
+        }
+
+        .provider-card .tag {
+            display: inline-block;
+            background: #059669;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 10px;
+            margin-top: 5px;
+        }
+
+        /* Callout Boxes */
+        .callout {
+            border-left: 4px solid #059669;
+            background: #f0fdf4;
+            padding: 15px 20px;
+            margin: 15px 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .callout.warning {
+            border-color: #f59e0b;
+            background: #fffbeb;
+        }
+
+        .callout.info {
+            border-color: #3b82f6;
+            background: #eff6ff;
+        }
+
+        /* Architecture Diagram */
+        .diagram-box {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .diagram-box pre {
+            background: white;
+            color: #1e293b;
+            border: 1px solid #e2e8f0;
+        }
+
+        /* Phase Timeline */
+        .timeline {
+            position: relative;
+            padding-left: 30px;
+            margin: 20px 0;
+        }
+
+        .timeline::before {
+            content: "";
+            position: absolute;
+            left: 10px;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: linear-gradient(to bottom, #059669, #10b981);
+            border-radius: 3px;
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f0fdf4;
+            border-radius: 8px;
+            border: 1px solid #bbf7d0;
+        }
+
+        .timeline-item::before {
+            content: "";
+            position: absolute;
+            left: -24px;
+            top: 20px;
+            width: 12px;
+            height: 12px;
+            background: #059669;
+            border-radius: 50%;
+            border: 3px solid white;
+        }
+
+        .timeline-item h4 {
+            margin: 0 0 5px;
+            color: #065f46;
+        }
+
+        .timeline-item .budget {
+            font-size: 18px;
+            font-weight: 700;
+            color: #059669;
+        }
+
+        /* Checklist */
+        .checklist {
+            list-style: none;
+            padding: 0;
+        }
+
+        .checklist li {
+            padding: 8px 0 8px 30px;
+            position: relative;
+            border-bottom: 1px dashed #d1fae5;
+        }
+
+        .checklist li::before {
+            content: "☐";
+            position: absolute;
+            left: 0;
+            color: #059669;
+            font-size: 16px;
+        }
+
+        /* Footer */
+        .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 2px solid #d1fae5;
+            text-align: center;
+            color: #6b7280;
+            font-size: 11px;
+        }
+
+        /* Print Button */
+        .print-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, #059669, #10b981);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(5, 150, 105, 0.4);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .print-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(5, 150, 105, 0.5);
+        }
+
+        /* TOC */
+        .toc {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .toc h3 {
+            margin: 0 0 15px;
+            color: #065f46;
+        }
+
+        .toc-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            column-count: 2;
+        }
+
+        .toc-list li {
+            padding: 5px 0;
+            border-bottom: 1px dashed #bbf7d0;
+        }
+
+        .toc-list a {
+            color: #059669;
+            text-decoration: none;
+            font-size: 12px;
+        }
+
+        .toc-list a:hover {
+            text-decoration: underline;
+        }
+
+        /* Summary Box */
+        .summary-box {
+            background: linear-gradient(135deg, #065f46, #059669);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            margin: 25px 0;
+        }
+
+        .summary-box h3 {
+            color: white;
+            margin: 0 0 15px;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+
+        .summary-item {
+            text-align: center;
+        }
+
+        .summary-item .value {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .summary-item .label {
+            font-size: 11px;
+            opacity: 0.9;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Print Button -->
+    <button class="print-btn no-print" onclick="window.print()">📥 Download PDF</button>
+
+    <!-- Header -->
+    <header class="header">
+        <h1>🏗️ Infrastructure Requirements</h1>
+        <p class="subtitle">SequelString CRM - Enterprise Features</p>
+        <span class="badge">Production Ready v1.0</span>
+    </header>
+
+    <!-- Document Info -->
+    <div class="doc-info">
+        <div class="doc-info-item">
+            <label>Version</label>
+            <span>1.0.0</span>
+        </div>
+        <div class="doc-info-item">
+            <label>Date</label>
+            <span>January 29, 2026</span>
+        </div>
+        <div class="doc-info-item">
+            <label>Provider</label>
+            <span>AWS (Recommended)</span>
+        </div>
+        <div class="doc-info-item">
+            <label>Status</label>
+            <span>Production Ready</span>
+        </div>
+    </div>
+
+    <!-- Executive Summary -->
+    <div class="summary-box">
+        <h3>📊 Quick Summary</h3>
+        <div class="summary-grid">
+            <div class="summary-item">
+                <div class="value">100-10K</div>
+                <div class="label">Concurrent Users</div>
+            </div>
+            <div class="summary-item">
+                <div class="value">$1.9K-$17K</div>
+                <div class="label">Monthly Cost Range</div>
+            </div>
+            <div class="summary-item">
+                <div class="value">3 AZs</div>
+                <div class="label">High Availability</div>
+            </div>
+            <div class="summary-item">
+                <div class="value">&lt;5min</div>
+                <div class="label">RTO Target</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOC -->
+    <div class="toc">
+        <h3>📑 Table of Contents</h3>
+        <ol class="toc-list">
+            <li><a href="#cloud-provider">Cloud Provider Comparison</a></li>
+            <li><a href="#architecture">Architecture Overview</a></li>
+            <li><a href="#environments">Environment Specifications</a></li>
+            <li><a href="#database">Database Infrastructure</a></li>
+            <li><a href="#compute">Compute Requirements</a></li>
+            <li><a href="#storage">Storage Requirements</a></li>
+            <li><a href="#third-party">Third-Party Services</a></li>
+            <li><a href="#costs">Cost Estimates</a></li>
+            <li><a href="#scaling">Scaling Strategy</a></li>
+            <li><a href="#phases">Implementation Phases</a></li>
+        </ol>
+    </div>
+
+    <!-- Cloud Provider Comparison -->
+    <section id="cloud-provider">
+        <h2>☁️ Cloud Provider Comparison</h2>
+
+        <div class="provider-grid">
+            <div class="provider-card recommended">
+                <div class="logo">🟠</div>
+                <div class="name">AWS</div>
+                <span class="tag">⭐ Recommended</span>
+                <p style="font-size:11px; margin-top:10px; color:#6b7280;">$2,500-$8,000/mo</p>
+            </div>
+            <div class="provider-card">
+                <div class="logo">🔵</div>
+                <div class="name">Google Cloud</div>
+                <p style="font-size:11px; margin-top:10px; color:#6b7280;">$2,800-$9,000/mo</p>
+            </div>
+            <div class="provider-card">
+                <div class="logo">🟦</div>
+                <div class="name">Microsoft Azure</div>
+                <p style="font-size:11px; margin-top:10px; color:#6b7280;">$3,000-$10,000/mo</p>
+            </div>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Service</th>
+                    <th>AWS (Recommended)</th>
+                    <th>Purpose</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Container Orchestration</td>
+                    <td>EKS (Elastic Kubernetes)</td>
+                    <td>Kubernetes cluster</td>
+                </tr>
+                <tr>
+                    <td>Load Balancer</td>
+                    <td>ALB (Application LB)</td>
+                    <td>HTTP/HTTPS traffic</td>
+                </tr>
+                <tr>
+                    <td>Database</td>
+                    <td>MongoDB Atlas</td>
+                    <td>Primary database</td>
+                </tr>
+                <tr>
+                    <td>Cache</td>
+                    <td>ElastiCache (Redis)</td>
+                    <td>Session, cache, queues</td>
+                </tr>
+                <tr>
+                    <td>Search</td>
+                    <td>OpenSearch</td>
+                    <td>Intelligence search</td>
+                </tr>
+                <tr>
+                    <td>Storage</td>
+                    <td>S3</td>
+                    <td>Call recordings</td>
+                </tr>
+                <tr>
+                    <td>CDN</td>
+                    <td>CloudFront</td>
+                    <td>Static assets</td>
+                </tr>
+                <tr>
+                    <td>DNS</td>
+                    <td>Route 53</td>
+                    <td>Domain management</td>
+                </tr>
+                <tr>
+                    <td>Secrets</td>
+                    <td>Secrets Manager</td>
+                    <td>API keys, credentials</td>
+                </tr>
+                <tr>
+                    <td>Monitoring</td>
+                    <td>CloudWatch</td>
+                    <td>Logs, metrics, alerts</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <!-- Architecture Overview -->
+    <section id="architecture">
+        <h2>🏛️ Architecture Overview</h2>
+
+        <div class="diagram-box">
+            <pre>
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                              PRODUCTION ARCHITECTURE                             │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                  │
+│  ┌─────────────┐     ┌─────────────┐     ┌─────────────┐                       │
+│  │ CloudFlare  │────▶│     ALB     │────▶│   WAF +     │                       │
+│  │     CDN     │     │ (Load Bal.) │     │   Shield    │                       │
+│  └─────────────┘     └─────────────┘     └─────────────┘                       │
+│                             │                                                    │
+│         ┌───────────────────┼───────────────────┐                               │
+│         ▼                   ▼                   ▼                               │
+│  ┌─────────────┐     ┌─────────────┐     ┌─────────────┐                       │
+│  │   Frontend  │     │     API     │     │   Worker    │                       │
+│  │   (EKS)     │     │   (EKS)     │     │   (EKS)     │                       │
+│  │   2-5 pods  │     │  3-20 pods  │     │  2-10 pods  │                       │
+│  └─────────────┘     └─────────────┘     └─────────────┘                       │
+│                             │                   │                               │
+│         ┌───────────────────┴───────────────────┘                               │
+│         ▼                                                                        │
+│  ┌─────────────────────────────────────────────────────────────────────────┐   │
+│  │                         DATA LAYER                                        │   │
+│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐     │   │
+│  │  │   MongoDB   │  │    Redis    │  │Elasticsearch│  │     S3      │     │   │
+│  │  │   Atlas     │  │ ElastiCache │  │  OpenSearch │  │   Storage   │     │   │
+│  │  │   M30+      │  │  r6g.large  │  │   t3.med    │  │  Standard   │     │   │
+│  │  └─────────────┘  └─────────────┘  └─────────────┘  └─────────────┘     │   │
+│  └─────────────────────────────────────────────────────────────────────────┘   │
+│                                                                                  │
+└─────────────────────────────────────────────────────────────────────────────────┘
+            </pre>
+        </div>
+    </section>
+
+    <div class="page-break"></div>
+
+    <!-- Environment Specifications -->
+    <section id="environments">
+        <h2>🌍 Environment Specifications</h2>
+
+        <h3>Development Environment</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Component</th>
+                    <th>Specification</th>
+                    <th>Monthly Cost</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Compute</td>
+                    <td>2x t3.medium (2 vCPU, 4GB)</td>
+                    <td>$60</td>
+                </tr>
+                <tr>
+                    <td>MongoDB</td>
+                    <td>Atlas M10 (2GB, shared)</td>
+                    <td>$57</td>
+                </tr>
+                <tr>
+                    <td>Redis</td>
+                    <td>ElastiCache t3.micro</td>
+                    <td>$12</td>
+                </tr>
+                <tr>
+                    <td>Elasticsearch</td>
+                    <td>t3.small.search (1 node)</td>
+                    <td>$25</td>
+                </tr>
+                <tr>
+                    <td>S3</td>
+                    <td>50GB Standard</td>
+                    <td>$1</td>
+                </tr>
+                <tr>
+                    <td><strong>Total</strong></td>
+                    <td></td>
+                    <td><strong>~$155/month</strong></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Staging Environment</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Component</th>
+                    <th>Specification</th>
+                    <th>Monthly Cost</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Compute</td>
+                    <td>EKS cluster (2x t3.large)</td>
+                    <td>$150</td>
+                </tr>
+                <tr>
+                    <td>MongoDB</td>
+                    <td>Atlas M20 (4GB RAM, dedicated)</td>
+                    <td>$175</td>
+                </tr>
+                <tr>
+                    <td>Redis</td>
+                    <td>ElastiCache r6g.medium</td>
+                    <td>$65</td>
+                </tr>
+                <tr>
+                    <td>Elasticsearch</td>
+                    <td>t3.medium.search (2 nodes)</td>
+                    <td>$100</td>
+                </tr>
+                <tr>
+                    <td>S3</td>
+                    <td>200GB Standard</td>
+                    <td>$5</td>
+                </tr>
+                <tr>
+                    <td>ALB</td>
+                    <td>Application Load Balancer</td>
+                    <td>$22</td>
+                </tr>
+                <tr>
+                    <td><strong>Total</strong></td>
+                    <td></td>
+                    <td><strong>~$520/month</strong></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Production Environment (Recommended)</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Component</th>
+                    <th>Specification</th>
+                    <th>Monthly Cost</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Compute</td>
+                    <td>EKS cluster (5x m5.large)</td>
+                    <td>$450</td>
+                </tr>
+                <tr>
+                    <td>MongoDB</td>
+                    <td>Atlas M30 (8GB RAM, 40GB SSD)</td>
+                    <td>$500</td>
+                </tr>
+                <tr>
+                    <td>Redis</td>
+                    <td>ElastiCache r6g.large (3 nodes)</td>
+                    <td>$390</td>
+                </tr>
+                <tr>
+                    <td>Elasticsearch</td>
+                    <td>m5.large.search (3 nodes)</td>
+                    <td>$400</td>
+                </tr>
+                <tr>
+                    <td>S3</td>
+                    <td>2TB Standard + Glacier</td>
+                    <td>$50</td>
+                </tr>
+                <tr>
+                    <td>CloudFront</td>
+                    <td>1TB/month transfer</td>
+                    <td>$85</td>
+                </tr>
+                <tr>
+                    <td>ALB + WAF</td>
+                    <td>Load Balancer + Firewall</td>
+                    <td>$47</td>
+                </tr>
+                <tr>
+                    <td>Monitoring</td>
+                    <td>CloudWatch + Logs</td>
+                    <td>$50</td>
+                </tr>
+                <tr>
+                    <td><strong>Total</strong></td>
+                    <td></td>
+                    <td><strong>~$1,980/month</strong></td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <!-- Database Infrastructure -->
+    <section id="database">
+        <h2>🗄️ Database Infrastructure</h2>
+
+        <h3>MongoDB Atlas Tiers</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Tier</th>
+                    <th>RAM</th>
+                    <th>Storage</th>
+                    <th>IOPS</th>
+                    <th>Use Case</th>
+                    <th>Cost/month</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>M10</td>
+                    <td>2GB</td>
+                    <td>10GB</td>
+                    <td>500</td>
+                    <td>Development</td>
+                    <td>$57</td>
+                </tr>
+                <tr>
+                    <td>M20</td>
+                    <td>4GB</td>
+                    <td>20GB</td>
+                    <td>1,000</td>
+                    <td>Staging</td>
+                    <td>$175</td>
+                </tr>
+                <tr style="background:#d1fae5;">
+                    <td><strong>M30</strong></td>
+                    <td>8GB</td>
+                    <td>40GB</td>
+                    <td>3,000</td>
+                    <td><strong>Production ⭐</strong></td>
+                    <td>$500</td>
+                </tr>
+                <tr>
+                    <td>M50</td>
+                    <td>32GB</td>
+                    <td>160GB</td>
+                    <td>6,000</td>
+                    <td>Medium Prod</td>
+                    <td>$2,000</td>
+                </tr>
+                <tr>
+                    <td>M80</td>
+                    <td>128GB</td>
+                    <td>750GB</td>
+                    <td>20,000</td>
+                    <td>Enterprise</td>
+                    <td>$7,500</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Redis (ElastiCache) Tiers</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Instance</th>
+                    <th>Memory</th>
+                    <th>Network</th>
+                    <th>Use Case</th>
+                    <th>Cost/month</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>t3.micro</td>
+                    <td>0.5GB</td>
+                    <td>Low</td>
+                    <td>Development</td>
+                    <td>$12</td>
+                </tr>
+                <tr>
+                    <td>r6g.medium</td>
+                    <td>6.38GB</td>
+                    <td>Up to 10Gbps</td>
+                    <td>Staging</td>
+                    <td>$65</td>
+                </tr>
+                <tr style="background:#d1fae5;">
+                    <td><strong>r6g.large (3 nodes)</strong></td>
+                    <td>13GB</td>
+                    <td>Up to 10Gbps</td>
+                    <td><strong>Production ⭐</strong></td>
+                    <td>$390</td>
+                </tr>
+                <tr>
+                    <td>r6g.xlarge (6 nodes)</td>
+                    <td>26GB</td>
+                    <td>Up to 10Gbps</td>
+                    <td>Enterprise</td>
+                    <td>$1,100</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Collection Size Estimates</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Collection</th>
+                    <th>Records</th>
+                    <th>Size/Record</th>
+                    <th>Total Size</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>contacts</td>
+                    <td>100,000</td>
+                    <td>5KB</td>
+                    <td>500MB</td>
+                </tr>
+                <tr>
+                    <td>calls</td>
+                    <td>500,000</td>
+                    <td>10KB</td>
+                    <td>5GB</td>
+                </tr>
+                <tr>
+                    <td>call_transcripts</td>
+                    <td>500,000</td>
+                    <td>50KB</td>
+                    <td>25GB</td>
+                </tr>
+                <tr>
+                    <td>news_alerts</td>
+                    <td>500,000</td>
+                    <td>3KB</td>
+                    <td>1.5GB</td>
+                </tr>
+                <tr>
+                    <td>social_activities</td>
+                    <td>1,000,000</td>
+                    <td>2KB</td>
+                    <td>2GB</td>
+                </tr>
+                <tr style="background:#d1fae5;">
+                    <td><strong>Total</strong></td>
+                    <td></td>
+                    <td></td>
+                    <td><strong>~35GB</strong></td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <div class="page-break"></div>
+
+    <!-- Compute Requirements -->
+    <section id="compute">
+        <h2>🖥️ Compute Requirements</h2>
+
+        <h3>EKS Node Sizing</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Instance</th>
+                    <th>vCPU</th>
+                    <th>Memory</th>
+                    <th>Network</th>
+                    <th>Cost/month</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>t3.medium</td>
+                    <td>2</td>
+                    <td>4GB</td>
+                    <td>Up to 5Gbps</td>
+                    <td>$30</td>
+                </tr>
+                <tr>
+                    <td>t3.large</td>
+                    <td>2</td>
+                    <td>8GB</td>
+                    <td>Up to 5Gbps</td>
+                    <td>$60</td>
+                </tr>
+                <tr style="background:#d1fae5;">
+                    <td><strong>m5.large</strong></td>
+                    <td>2</td>
+                    <td>8GB</td>
+                    <td>Up to 10Gbps</td>
+                    <td>$70</td>
+                </tr>
+                <tr>
+                    <td>m5.xlarge</td>
+                    <td>4</td>
+                    <td>16GB</td>
+                    <td>Up to 10Gbps</td>
+                    <td>$140</td>
+                </tr>
+                <tr>
+                    <td>m5.2xlarge</td>
+                    <td>8</td>
+                    <td>32GB</td>
+                    <td>Up to 10Gbps</td>
+                    <td>$280</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Pod Requirements</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Service</th>
+                    <th>Min Pods</th>
+                    <th>Max Pods</th>
+                    <th>CPU/Pod</th>
+                    <th>Memory/Pod</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Frontend</td>
+                    <td>2</td>
+                    <td>5</td>
+                    <td>100m</td>
+                    <td>128Mi</td>
+                </tr>
+                <tr>
+                    <td>API</td>
+                    <td>3</td>
+                    <td>20</td>
+                    <td>500m</td>
+                    <td>512Mi</td>
+                </tr>
+                <tr>
+                    <td>Worker</td>
+                    <td>2</td>
+                    <td>10</td>
+                    <td>500m</td>
+                    <td>1Gi</td>
+                </tr>
+                <tr>
+                    <td>Scheduler</td>
+                    <td>1</td>
+                    <td>2</td>
+                    <td>200m</td>
+                    <td>256Mi</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="callout">
+            <strong>💡 Recommended Production Cluster:</strong>
+            <ul style="margin-top:10px; font-size:12px;">
+                <li>Node Group 1 (API/Frontend): 3-8x m5.large</li>
+                <li>Node Group 2 (Workers): 2-5x m5.xlarge</li>
+                <li>Estimated cost: $450 - $1,200/month</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- Storage Requirements -->
+    <section id="storage">
+        <h2>💾 Storage Requirements</h2>
+
+        <h3>S3 Storage Classes</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Storage Class</th>
+                    <th>Use Case</th>
+                    <th>Cost/GB/month</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>S3 Standard</td>
+                    <td>Recent recordings (&lt; 30 days)</td>
+                    <td>$0.023</td>
+                </tr>
+                <tr>
+                    <td>S3 Infrequent Access</td>
+                    <td>Older recordings (30-90 days)</td>
+                    <td>$0.0125</td>
+                </tr>
+                <tr>
+                    <td>S3 Glacier Instant</td>
+                    <td>Archive (90-365 days)</td>
+                    <td>$0.004</td>
+                </tr>
+                <tr>
+                    <td>S3 Glacier Deep</td>
+                    <td>Long-term (&gt; 365 days)</td>
+                    <td>$0.00099</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Storage Estimates</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Data Type</th>
+                    <th>Monthly Growth</th>
+                    <th>Annual Storage</th>
+                    <th>Cost/year</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Call Recordings</td>
+                    <td>500GB</td>
+                    <td>6TB</td>
+                    <td>$1,400</td>
+                </tr>
+                <tr>
+                    <td>Transcripts</td>
+                    <td>25GB</td>
+                    <td>300GB</td>
+                    <td>$80</td>
+                </tr>
+                <tr>
+                    <td>Documents</td>
+                    <td>10GB</td>
+                    <td>120GB</td>
+                    <td>$35</td>
+                </tr>
+                <tr style="background:#d1fae5;">
+                    <td><strong>Total</strong></td>
+                    <td><strong>535GB</strong></td>
+                    <td><strong>6.4TB</strong></td>
+                    <td><strong>~$1,500/year</strong></td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <div class="page-break"></div>
+
+    <!-- Third-Party Services -->
+    <section id="third-party">
+        <h2>🔌 Third-Party Services</h2>
+
+        <h3>Required Services</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Service</th>
+                    <th>Purpose</th>
+                    <th>Tier</th>
+                    <th>Monthly Cost</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>SendGrid</td>
+                    <td>Email delivery</td>
+                    <td>Pro (100K emails)</td>
+                    <td>$89</td>
+                </tr>
+                <tr>
+                    <td>OpenAI GPT-4</td>
+                    <td>Call analysis</td>
+                    <td>Pay-as-you-go</td>
+                    <td>$200-2,000</td>
+                </tr>
+                <tr>
+                    <td>Twilio</td>
+                    <td>CTI integration</td>
+                    <td>Pay-as-you-go</td>
+                    <td>$500-2,000</td>
+                </tr>
+                <tr>
+                    <td>NewsAPI</td>
+                    <td>Intelligence feeds</td>
+                    <td>Business</td>
+                    <td>$449</td>
+                </tr>
+                <tr>
+                    <td>CloudFlare</td>
+                    <td>CDN + Security</td>
+                    <td>Pro</td>
+                    <td>$20</td>
+                </tr>
+                <tr>
+                    <td>DataDog</td>
+                    <td>APM Monitoring</td>
+                    <td>Pro</td>
+                    <td>$200</td>
+                </tr>
+                <tr>
+                    <td>PagerDuty</td>
+                    <td>Incident management</td>
+                    <td>Starter</td>
+                    <td>$19/user</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Cost by Feature</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Feature</th>
+                    <th>Services Required</th>
+                    <th>Monthly Cost</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>🎂 Occasion Email</td>
+                    <td>SendGrid</td>
+                    <td>$89</td>
+                </tr>
+                <tr>
+                    <td>👥 Social Profile</td>
+                    <td>LinkedIn API + Twitter API</td>
+                    <td>$100</td>
+                </tr>
+                <tr>
+                    <td>📰 Intelligence</td>
+                    <td>NewsAPI + OpenAI</td>
+                    <td>$650</td>
+                </tr>
+                <tr>
+                    <td>📞 Call AI</td>
+                    <td>Twilio + OpenAI</td>
+                    <td>$700-2,500</td>
+                </tr>
+                <tr style="background:#d1fae5;">
+                    <td><strong>Total</strong></td>
+                    <td></td>
+                    <td><strong>$1,540-3,340</strong></td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <!-- Cost Estimates -->
+    <section id="costs">
+        <h2>💰 Cost Estimates</h2>
+
+        <div class="cost-grid">
+            <div class="cost-card">
+                <h4>Small Scale</h4>
+                <div class="price">$1,925</div>
+                <div class="period">/month</div>
+                <ul class="features">
+                    <li>100 users</li>
+                    <li>5,000 calls/month</li>
+                    <li>MongoDB M30</li>
+                    <li>3 EKS nodes</li>
+                </ul>
+            </div>
+            <div class="cost-card recommended">
+                <h4>⭐ Medium Scale</h4>
+                <div class="price">$4,700</div>
+                <div class="period">/month</div>
+                <ul class="features">
+                    <li>1,000 users</li>
+                    <li>20,000 calls/month</li>
+                    <li>MongoDB M40</li>
+                    <li>5 EKS nodes</li>
+                    <li>Full AI features</li>
+                </ul>
+            </div>
+            <div class="cost-card">
+                <h4>Enterprise</h4>
+                <div class="price">$17,500</div>
+                <div class="period">/month</div>
+                <ul class="features">
+                    <li>10,000 users</li>
+                    <li>100,000 calls/month</li>
+                    <li>MongoDB M60 sharded</li>
+                    <li>Multi-region HA</li>
+                    <li>DR setup</li>
+                </ul>
+            </div>
+        </div>
+
+        <h3>Cost Breakdown (Medium Scale)</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Category</th>
+                    <th>Monthly Cost</th>
+                    <th>%</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Compute (EKS)</td>
+                    <td>$600</td>
+                    <td>13%</td>
+                </tr>
+                <tr>
+                    <td>MongoDB Atlas M40</td>
+                    <td>$1,000</td>
+                    <td>21%</td>
+                </tr>
+                <tr>
+                    <td>Redis ElastiCache</td>
+                    <td>$400</td>
+                    <td>9%</td>
+                </tr>
+                <tr>
+                    <td>Elasticsearch</td>
+                    <td>$400</td>
+                    <td>9%</td>
+                </tr>
+                <tr>
+                    <td>S3 Storage</td>
+                    <td>$100</td>
+                    <td>2%</td>
+                </tr>
+                <tr>
+                    <td>Third-party APIs</td>
+                    <td>$2,000</td>
+                    <td>42%</td>
+                </tr>
+                <tr>
+                    <td>Monitoring</td>
+                    <td>$200</td>
+                    <td>4%</td>
+                </tr>
+                <tr style="background:#d1fae5;">
+                    <td><strong>Total</strong></td>
+                    <td><strong>$4,700</strong></td>
+                    <td>100%</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <!-- Scaling Strategy -->
+    <section id="scaling">
+        <h2>📈 Scaling Strategy</h2>
+
+        <h3>Auto-Scaling Triggers</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Component</th>
+                    <th>Metric</th>
+                    <th>Threshold</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>API Pods</td>
+                    <td>CPU</td>
+                    <td>&gt; 70%</td>
+                    <td>Scale +1 pod</td>
+                </tr>
+                <tr>
+                    <td>API Pods</td>
+                    <td>RPS</td>
+                    <td>&gt; 1000/pod</td>
+                    <td>Scale +1 pod</td>
+                </tr>
+                <tr>
+                    <td>Worker Pods</td>
+                    <td>Queue Depth</td>
+                    <td>&gt; 100 jobs</td>
+                    <td>Scale +1 pod</td>
+                </tr>
+                <tr>
+                    <td>MongoDB</td>
+                    <td>IOPS</td>
+                    <td>&gt; 80%</td>
+                    <td>Upgrade tier</td>
+                </tr>
+                <tr>
+                    <td>Redis</td>
+                    <td>Memory</td>
+                    <td>&gt; 80%</td>
+                    <td>Add node</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Growth Projections</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Month</th>
+                    <th>Users</th>
+                    <th>Calls/month</th>
+                    <th>Infra Cost</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>1</td>
+                    <td>100</td>
+                    <td>2,000</td>
+                    <td>$1,500</td>
+                </tr>
+                <tr>
+                    <td>6</td>
+                    <td>500</td>
+                    <td>10,000</td>
+                    <td>$2,500</td>
+                </tr>
+                <tr>
+                    <td>12</td>
+                    <td>2,000</td>
+                    <td>40,000</td>
+                    <td>$5,000</td>
+                </tr>
+                <tr>
+                    <td>24</td>
+                    <td>10,000</td>
+                    <td>200,000</td>
+                    <td>$15,000</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <div class="page-break"></div>
+
+    <!-- Implementation Phases -->
+    <section id="phases">
+        <h2>🚀 Implementation Phases</h2>
+
+        <div class="timeline">
+            <div class="timeline-item">
+                <h4>Phase 1: MVP Launch (Month 1-3)</h4>
+                <div class="budget">$1,500 - $2,500/month</div>
+                <ul style="font-size:11px; margin-top:10px;">
+                    <li>EKS with 3 m5.large nodes</li>
+                    <li>MongoDB Atlas M30</li>
+                    <li>Redis ElastiCache single node</li>
+                    <li>S3 Standard for recordings</li>
+                    <li>CloudFlare Free tier</li>
+                    <li>SendGrid Pro + OpenAI</li>
+                </ul>
+            </div>
+            <div class="timeline-item">
+                <h4>Phase 2: Growth (Month 4-6)</h4>
+                <div class="budget">$3,000 - $5,000/month</div>
+                <ul style="font-size:11px; margin-top:10px;">
+                    <li>Scale EKS to 5 nodes</li>
+                    <li>Upgrade MongoDB to M40</li>
+                    <li>Add Redis cluster (3 nodes)</li>
+                    <li>Add Elasticsearch cluster</li>
+                    <li>Enable CloudFlare Pro</li>
+                    <li>Add Twilio integration</li>
+                </ul>
+            </div>
+            <div class="timeline-item">
+                <h4>Phase 3: Scale (Month 7-12)</h4>
+                <div class="budget">$5,000 - $10,000/month</div>
+                <ul style="font-size:11px; margin-top:10px;">
+                    <li>Multi-AZ deployment</li>
+                    <li>Geographic redundancy</li>
+                    <li>MongoDB M50 sharded</li>
+                    <li>Enhanced monitoring</li>
+                    <li>DR region setup</li>
+                    <li>Enterprise support</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- Checklist -->
+    <section>
+        <h2>✅ Quick Start Checklist</h2>
+
+        <h3>AWS Setup</h3>
+        <ul class="checklist">
+            <li>Create AWS account with MFA</li>
+            <li>Set up VPC with 3 Availability Zones</li>
+            <li>Create EKS cluster</li>
+            <li>Set up MongoDB Atlas with VPC peering</li>
+            <li>Create ElastiCache Redis cluster</li>
+            <li>Create S3 buckets with lifecycle policies</li>
+            <li>Configure ALB and SSL certificates</li>
+            <li>Set up CloudWatch dashboards</li>
+        </ul>
+
+        <h3>Third-Party Setup</h3>
+        <ul class="checklist">
+            <li>Create SendGrid account, verify domain</li>
+            <li>Create OpenAI account, set up API key</li>
+            <li>Create Twilio account for CTI</li>
+            <li>Create NewsAPI account</li>
+            <li>Set up CloudFlare DNS</li>
+            <li>Configure DataDog monitoring</li>
+        </ul>
+
+        <h3>Security</h3>
+        <ul class="checklist">
+            <li>Enable AWS WAF</li>
+            <li>Configure security groups</li>
+            <li>Set up IAM roles with least privilege</li>
+            <li>Enable VPC Flow Logs</li>
+            <li>Configure MongoDB Atlas IP whitelist</li>
+            <li>Enable encryption at rest</li>
+        </ul>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p><strong>SequelString CRM - Infrastructure Requirements</strong></p>
+        <p>Version 1.0.0 | January 29, 2026 | Confidential</p>
+        <p>© 2026 SequelString Inc. All rights reserved.</p>
+    </footer>
+
+</body>
+
+</html>
