@@ -1,0 +1,94 @@
+# ============================================================================
+# Ingress Configuration (nginx-ingress)
+# ============================================================================
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: sequelstring-ingress
+  namespace: sequelstring
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
+    nginx.ingress.kubernetes.io/websocket-services: "api"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    # Rate limiting
+    nginx.ingress.kubernetes.io/limit-rps: "100"
+    nginx.ingress.kubernetes.io/limit-connections: "50"
+spec:
+  tls:
+    - hosts:
+        - app.sequelstring.com
+        - api.sequelstring.com
+      secretName: sequelstring-tls
+  rules:
+    # Frontend
+    - host: app.sequelstring.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend
+                port:
+                  number: 3000
+    
+    # API
+    - host: api.sequelstring.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: api
+                port:
+                  number: 4000
+
+---
+# ============================================================================
+# Secrets (Create manually or via sealed-secrets)
+# ============================================================================
+# kubectl create secret generic sequelstring-secrets \
+#   --from-literal=mongodb-uri='mongodb://...' \
+#   --from-literal=redis-url='redis://...' \
+#   --from-literal=jwt-secret='...' \
+#   --from-literal=openai-api-key='...' \
+#   --from-literal=sendgrid-api-key='...' \
+#   -n sequelstring
+
+---
+# ============================================================================
+# ConfigMap for application configuration
+# ============================================================================
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sequelstring-config
+  namespace: sequelstring
+data:
+  # Application settings
+  APP_NAME: "SequelString CRM"
+  APP_ENV: "production"
+  LOG_LEVEL: "info"
+  
+  # Feature flags
+  FEATURE_OCCASION_EMAIL: "true"
+  FEATURE_SOCIAL_PROFILE: "true"
+  FEATURE_INTELLIGENCE: "true"
+  FEATURE_CALL_AI: "true"
+  
+  # Email scheduler settings
+  EMAIL_SCHEDULER_CRON: "0 0 * * *"
+  EMAIL_SCHEDULER_TIMEZONE: "UTC"
+  
+  # Intelligence settings
+  INTEL_AGGREGATION_CRON: "*/15 * * * *"
+  INTEL_CLEANUP_DAYS: "30"
+  
+  # Rate limits
+  API_RATE_LIMIT: "100"
+  API_RATE_WINDOW: "60"

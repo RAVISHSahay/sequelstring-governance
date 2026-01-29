@@ -1,0 +1,84 @@
+# ============================================================================
+# Worker Deployment (Background Job Processor)
+# ============================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: worker
+  namespace: sequelstring
+  labels:
+    app: worker
+    tier: backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: worker
+  template:
+    metadata:
+      labels:
+        app: worker
+        tier: backend
+    spec:
+      containers:
+        - name: worker
+          image: sequelstring/api:latest
+          imagePullPolicy: Always
+          command: ["npm", "run", "worker"]
+          env:
+            - name: NODE_ENV
+              value: "production"
+            - name: MONGODB_URI
+              valueFrom:
+                secretKeyRef:
+                  name: sequelstring-secrets
+                  key: mongodb-uri
+            - name: REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: sequelstring-secrets
+                  key: redis-url
+            - name: OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: sequelstring-secrets
+                  key: openai-api-key
+            - name: SENDGRID_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: sequelstring-secrets
+                  key: sendgrid-api-key
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "200m"
+            limits:
+              memory: "1Gi"
+              cpu: "1000m"
+      imagePullSecrets:
+        - name: regcred
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: worker-hpa
+  namespace: sequelstring
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: worker
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+    - type: External
+      external:
+        metric:
+          name: redis_queue_depth
+          selector:
+            matchLabels:
+              queue: "email-queue"
+        target:
+          type: Value
+          value: "100"

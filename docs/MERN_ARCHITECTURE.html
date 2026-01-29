@@ -1,0 +1,1059 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SequelString CRM - MERN Stack Architecture</title>
+    <style>
+        /* Print-optimized CSS */
+        @page {
+            size: A4;
+            margin: 1.5cm;
+        }
+
+        @media print {
+            body { 
+                font-size: 10pt; 
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .page-break { page-break-before: always; }
+            .no-print { display: none; }
+            h1 { page-break-after: avoid; }
+            h2, h3 { page-break-after: avoid; }
+            table, pre { page-break-inside: avoid; }
+        }
+
+        /* Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #1a1a2e;
+            background: #ffffff;
+            max-width: 210mm;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            padding: 30px 0;
+            border-bottom: 3px solid #2563eb;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            color: #1e3a5f;
+            margin-bottom: 10px;
+        }
+
+        .header .subtitle {
+            font-size: 16px;
+            color: #64748b;
+        }
+
+        .header .badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            margin-top: 10px;
+        }
+
+        /* Document Info */
+        .doc-info {
+            background: #f8fafc;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+
+        .doc-info-item {
+            text-align: center;
+        }
+
+        .doc-info-item label {
+            font-size: 11px;
+            color: #64748b;
+            display: block;
+        }
+
+        .doc-info-item span {
+            font-weight: 600;
+            color: #1e3a5f;
+        }
+
+        /* Sections */
+        section {
+            margin-bottom: 30px;
+        }
+
+        h2 {
+            font-size: 20px;
+            color: #1e3a5f;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        h2 .icon {
+            font-size: 24px;
+        }
+
+        h3 {
+            font-size: 16px;
+            color: #334155;
+            margin: 20px 0 10px;
+        }
+
+        h4 {
+            font-size: 14px;
+            color: #475569;
+            margin: 15px 0 8px;
+        }
+
+        p {
+            margin-bottom: 15px;
+            color: #475569;
+        }
+
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            font-size: 12px;
+        }
+
+        th {
+            background: linear-gradient(135deg, #1e3a5f, #2563eb);
+            color: white;
+            padding: 12px 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        td {
+            padding: 10px 15px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        tr:nth-child(even) {
+            background: #f8fafc;
+        }
+
+        tr:hover {
+            background: #f1f5f9;
+        }
+
+        /* Code Blocks */
+        pre {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 11px;
+            line-height: 1.5;
+            margin: 15px 0;
+        }
+
+        code {
+            font-family: 'Consolas', 'Monaco', monospace;
+            background: #e2e8f0;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 11px;
+        }
+
+        /* Architecture Diagram Box */
+        .diagram-box {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .diagram-box pre {
+            background: white;
+            color: #1e3a5f;
+            border: 1px solid #e2e8f0;
+        }
+
+        /* Feature Cards Grid */
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .feature-card {
+            background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        .feature-card h4 {
+            color: #2563eb;
+            margin: 0 0 10px;
+            font-size: 14px;
+        }
+
+        .feature-card p {
+            font-size: 12px;
+            margin: 0;
+            color: #64748b;
+        }
+
+        .feature-card .priority {
+            display: inline-block;
+            background: #2563eb;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 10px;
+            margin-top: 10px;
+        }
+
+        .feature-card .priority.p1 {
+            background: #f59e0b;
+        }
+
+        /* Tech Stack Grid */
+        .stack-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .stack-item {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .stack-item .name {
+            font-weight: 600;
+            font-size: 12px;
+            color: #1e3a5f;
+        }
+
+        .stack-item .type {
+            font-size: 10px;
+            color: #64748b;
+        }
+
+        /* Lists */
+        ul, ol {
+            margin: 10px 0 15px 25px;
+        }
+
+        li {
+            margin: 5px 0;
+            color: #475569;
+            font-size: 13px;
+        }
+
+        /* Badges */
+        .badge-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin: 10px 0;
+        }
+
+        .tech-badge {
+            background: #e2e8f0;
+            color: #475569;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 11px;
+        }
+
+        /* Callout Boxes */
+        .callout {
+            border-left: 4px solid #2563eb;
+            background: #eff6ff;
+            padding: 15px 20px;
+            margin: 15px 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .callout.warning {
+            border-color: #f59e0b;
+            background: #fffbeb;
+        }
+
+        .callout.success {
+            border-color: #10b981;
+            background: #ecfdf5;
+        }
+
+        /* Footer */
+        .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 2px solid #e2e8f0;
+            text-align: center;
+            color: #64748b;
+            font-size: 11px;
+        }
+
+        /* Print Button */
+        .print-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .print-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(37, 99, 235, 0.5);
+        }
+
+        /* TOC */
+        .toc {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .toc h3 {
+            margin: 0 0 15px;
+            color: #1e3a5f;
+        }
+
+        .toc-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .toc-list li {
+            padding: 5px 0;
+            border-bottom: 1px dashed #e2e8f0;
+        }
+
+        .toc-list li:last-child {
+            border-bottom: none;
+        }
+
+        .toc-list a {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        .toc-list a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Print Button -->
+    <button class="print-btn no-print" onclick="window.print()">📥 Download PDF</button>
+
+    <!-- Header -->
+    <header class="header">
+        <h1>🏗️ SequelString CRM</h1>
+        <p class="subtitle">MERN Stack Architecture Document</p>
+        <span class="badge">Enterprise Features v1.0</span>
+    </header>
+
+    <!-- Document Info -->
+    <div class="doc-info">
+        <div class="doc-info-item">
+            <label>Version</label>
+            <span>1.0.0</span>
+        </div>
+        <div class="doc-info-item">
+            <label>Date</label>
+            <span>January 29, 2026</span>
+        </div>
+        <div class="doc-info-item">
+            <label>Author</label>
+            <span>Tech Architect</span>
+        </div>
+        <div class="doc-info-item">
+            <label>Status</label>
+            <span>Production Ready</span>
+        </div>
+    </div>
+
+    <!-- Table of Contents -->
+    <div class="toc">
+        <h3>📑 Table of Contents</h3>
+        <ol class="toc-list">
+            <li><a href="#executive-summary">Executive Summary</a></li>
+            <li><a href="#tech-stack">Technology Stack</a></li>
+            <li><a href="#architecture">High-Level Architecture</a></li>
+            <li><a href="#features">Feature Architecture</a></li>
+            <li><a href="#database">Database Design</a></li>
+            <li><a href="#api">API Specification</a></li>
+            <li><a href="#deployment">Deployment Architecture</a></li>
+            <li><a href="#security">Security Architecture</a></li>
+        </ol>
+    </div>
+
+    <!-- Executive Summary -->
+    <section id="executive-summary">
+        <h2><span class="icon">📋</span> Executive Summary</h2>
+        <p>SequelString CRM is a modern Customer Relationship Management system built on the MERN Stack (MongoDB, Express.js, React, Node.js). This document outlines the technical architecture for four enterprise-grade features.</p>
+        
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h4>🎂 Occasion-Based Auto Email</h4>
+                <p>Automated birthday/anniversary emails with customizable templates and scheduling</p>
+                <span class="priority">Priority: P0</span>
+            </div>
+            <div class="feature-card">
+                <h4>👥 Social Profile Integration</h4>
+                <p>LinkedIn/Twitter profile linking with OAuth and real-time activity feed sync</p>
+                <span class="priority">Priority: P0</span>
+            </div>
+            <div class="feature-card">
+                <h4>📰 Public Domain Intelligence</h4>
+                <p>AI-powered news aggregation, sentiment analysis, and competitive alerts</p>
+                <span class="priority p1">Priority: P1</span>
+            </div>
+            <div class="feature-card">
+                <h4>📞 Calls with AI Analysis</h4>
+                <p>CTI integration with transcription, GPT-4 summaries, and action item extraction</p>
+                <span class="priority p1">Priority: P1</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Technology Stack -->
+    <section id="tech-stack">
+        <h2><span class="icon">🛠️</span> Technology Stack</h2>
+        
+        <h3>MERN Stack Overview</h3>
+        <div class="diagram-box">
+            <pre>
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                              FRONTEND LAYER                                  │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  React 18.3      │ TypeScript 5.x  │  Vite 5.x       │  TailwindCSS       │
+│  React Router 6  │ React Query     │  Zustand        │  Shadcn/UI         │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                      │
+                                      ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                              BACKEND LAYER                                   │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  Node.js 20 LTS  │ Express.js 4.x  │  TypeScript     │  Mongoose 8.x      │
+│  JWT Auth        │ Passport.js     │  Bull Queue     │  Socket.io         │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                      │
+                                      ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                              DATABASE LAYER                                  │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  MongoDB 7.x     │ Redis 7.x       │  Elasticsearch  │  S3 (Storage)      │
+│  (Primary DB)    │ (Cache/Queue)   │  (Search/Intel) │  (Recordings)      │
+└─────────────────────────────────────────────────────────────────────────────┘
+            </pre>
+        </div>
+
+        <h3>Complete Package List</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Layer</th>
+                    <th>Technology</th>
+                    <th>Version</th>
+                    <th>Purpose</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>Frontend</td><td>React</td><td>18.3.1</td><td>UI Framework</td></tr>
+                <tr><td>Frontend</td><td>TypeScript</td><td>5.x</td><td>Type Safety</td></tr>
+                <tr><td>Frontend</td><td>Vite</td><td>5.x</td><td>Build Tool</td></tr>
+                <tr><td>Frontend</td><td>TailwindCSS</td><td>3.4.x</td><td>Styling</td></tr>
+                <tr><td>Frontend</td><td>React Query</td><td>5.x</td><td>Server State</td></tr>
+                <tr><td>Frontend</td><td>Zustand</td><td>4.5.x</td><td>Client State</td></tr>
+                <tr><td>Backend</td><td>Node.js</td><td>20 LTS</td><td>Runtime</td></tr>
+                <tr><td>Backend</td><td>Express.js</td><td>4.19.x</td><td>Web Framework</td></tr>
+                <tr><td>Backend</td><td>Mongoose</td><td>8.x</td><td>MongoDB ODM</td></tr>
+                <tr><td>Backend</td><td>Bull</td><td>4.12.x</td><td>Job Queues</td></tr>
+                <tr><td>Database</td><td>MongoDB</td><td>7.x</td><td>Primary Database</td></tr>
+                <tr><td>Database</td><td>Redis</td><td>7.x</td><td>Cache & Queues</td></tr>
+                <tr><td>AI/ML</td><td>OpenAI GPT-4</td><td>Latest</td><td>Call Analysis</td></tr>
+                <tr><td>Integrations</td><td>SendGrid</td><td>8.x</td><td>Email Delivery</td></tr>
+                <tr><td>Integrations</td><td>Twilio</td><td>Latest</td><td>CTI/Calls</td></tr>
+            </tbody>
+        </table>
+    </section>
+
+    <div class="page-break"></div>
+
+    <!-- High-Level Architecture -->
+    <section id="architecture">
+        <h2><span class="icon">🏛️</span> High-Level Architecture</h2>
+        
+        <div class="diagram-box">
+            <pre>
+                                    ┌─────────────────┐
+                                    │   CDN (CloudFlare)   │
+                                    └────────┬────────┘
+                                             │
+                                             ▼
+┌────────────────────────────────────────────────────────────────────────────────┐
+│                              LOAD BALANCER (nginx/ALB)                          │
+└────────────────────────────────────────────────────────────────────────────────┘
+                                             │
+                    ┌────────────────────────┼────────────────────────┐
+                    │                        │                        │
+                    ▼                        ▼                        ▼
+           ┌─────────────┐          ┌─────────────┐          ┌─────────────┐
+           │   React     │          │   React     │          │   React     │
+           │   App #1    │          │   App #2    │          │   App #N    │
+           │   (Static)  │          │   (Static)  │          │   (Static)  │
+           └─────────────┘          └─────────────┘          └─────────────┘
+                    │                        │                        │
+                    └────────────────────────┼────────────────────────┘
+                                             │
+                                             ▼
+┌────────────────────────────────────────────────────────────────────────────────┐
+│                              API GATEWAY (Express + Kong)                       │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐       │
+│  │ Rate Limit   │  │ Auth/JWT     │  │ Request Log  │  │ API Version  │       │
+│  └──────────────┘  └──────────────┘  └──────────────┘  └──────────────┘       │
+└────────────────────────────────────────────────────────────────────────────────┘
+                                             │
+          ┌──────────────┬──────────────┬────┴────┬──────────────┬──────────────┐
+          ▼              ▼              ▼         ▼              ▼              ▼
+    ┌──────────┐   ┌──────────┐  ┌──────────┐ ┌──────────┐ ┌──────────┐  ┌──────────┐
+    │  Auth    │   │  Email   │  │  Social  │ │  Intel   │ │  Calls   │  │  Core    │
+    │ Service  │   │ Service  │  │ Service  │ │ Service  │ │ Service  │  │  CRM     │
+    └──────────┘   └──────────┘  └──────────┘ └──────────┘ └──────────┘  └──────────┘
+          │              │              │           │            │             │
+          └──────────────┴──────────────┴─────┬─────┴────────────┴─────────────┘
+                                              │
+                                              ▼
+┌────────────────────────────────────────────────────────────────────────────────┐
+│                              MESSAGE BROKER (Redis + Bull)                      │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐       │
+│  │ Email Queue  │  │ Webhook Queue│  │ Notify Queue │  │ AI/ML Queue  │       │
+│  └──────────────┘  └──────────────┘  └──────────────┘  └──────────────┘       │
+└────────────────────────────────────────────────────────────────────────────────┘
+                                              │
+          ┌───────────────┬───────────────────┼───────────────┬───────────────┐
+          ▼               ▼                   ▼               ▼               ▼
+    ┌──────────┐    ┌──────────┐       ┌──────────┐    ┌──────────┐    ┌──────────┐
+    │ MongoDB  │    │  Redis   │       │Elasticsearch│ │    S3    │    │  OpenAI  │
+    │ Primary  │    │  Cache   │       │  (Search)  │  │ Storage  │    │  GPT-4   │
+    └──────────┘    └──────────┘       └──────────┘    └──────────┘    └──────────┘
+            </pre>
+        </div>
+
+        <h3>Architecture Principles</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Principle</th>
+                    <th>Implementation</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>Microservices</td><td>Independent scaling, fault isolation, technology flexibility</td></tr>
+                <tr><td>Event-Driven</td><td>Async processing for emails, notifications, webhooks via Bull queues</td></tr>
+                <tr><td>API-First</td><td>RESTful APIs with OpenAPI spec, versioning support</td></tr>
+                <tr><td>Container-Native</td><td>Docker + Kubernetes for orchestration</td></tr>
+                <tr><td>12-Factor App</td><td>Cloud-native methodology compliance</td></tr>
+            </tbody>
+        </table>
+    </section>
+
+    <div class="page-break"></div>
+
+    <!-- Feature Architecture -->
+    <section id="features">
+        <h2><span class="icon">⚙️</span> Feature-Specific Architecture</h2>
+
+        <h3>Feature 1: Occasion-Based Auto Email</h3>
+        <div class="diagram-box">
+            <pre>
+┌──────────────┐    ┌──────────────┐    ┌──────────────┐    ┌──────────────┐
+│    React     │───▶│   Express    │───▶│   MongoDB    │    │   SendGrid   │
+│  Frontend    │    │    API       │    │   Database   │    │   Email      │
+└──────────────┘    └──────────────┘    └──────────────┘    └──────────────┘
+                           │                                       ▲
+                           │                                       │
+                           ▼                                       │
+                    ┌──────────────┐    ┌──────────────┐          │
+                    │  Scheduler   │───▶│  Bull Queue  │──────────┘
+                    │  (node-cron) │    │  (Email Jobs)│
+                    └──────────────┘    └──────────────┘
+
+FLOW:
+1. User creates important date via React UI
+2. API stores date in MongoDB with nextSendAt
+3. Node-cron scheduler checks daily for upcoming dates
+4. Matching dates are queued in Bull (Redis-backed)
+5. Email worker processes queue and sends via SendGrid
+6. Delivery status is updated in MongoDB
+            </pre>
+        </div>
+
+        <h3>Feature 2: Social Profile Integration</h3>
+        <div class="diagram-box">
+            <pre>
+┌──────────────┐    ┌──────────────┐    ┌──────────────┐
+│    React     │───▶│   Express    │───▶│   MongoDB    │
+│  Frontend    │    │    API       │    │   Database   │
+└──────────────┘    └──────────────┘    └──────────────┘
+                           │                   ▲
+                    ┌──────┴──────┐            │
+                    ▼             ▼            │
+             ┌──────────┐  ┌──────────┐       │
+             │ LinkedIn │  │ Twitter  │       │
+             │   API    │  │   API    │       │
+             └──────────┘  └──────────┘       │
+                    │             │           │
+                    ▼             ▼           │
+             ┌────────────────────────┐       │
+             │    Sync Queue (Bull)   │───────┘
+             │  - Profile data sync   │
+             │  - Activity fetch      │
+             └────────────────────────┘
+            </pre>
+        </div>
+
+        <h3>Feature 3: Public Domain Intelligence</h3>
+        <div class="diagram-box">
+            <pre>
+┌────────────────────────────────────────────────────────────┐
+│                    INTELLIGENCE ENGINE                      │
+│  ┌────────────────────────────────────────────────────┐   │
+│  │  News Aggregator Service                           │   │
+│  │  - NewsAPI, Google News, RSS Feeds                 │   │
+│  └────────────────────────────────────────────────────┘   │
+│  ┌────────────────────────────────────────────────────┐   │
+│  │  Content Processor (OpenAI)                        │   │
+│  │  - NLP Classification, Sentiment, Entity Extraction│   │
+│  └────────────────────────────────────────────────────┘   │
+│  ┌────────────────────────────────────────────────────┐   │
+│  │  Matching Engine                                    │   │
+│  │  - Account matching, Keyword rules, Relevance score│   │
+│  └────────────────────────────────────────────────────┘   │
+└────────────────────────────────────────────────────────────┘
+                            │
+                            ▼
+                 ┌──────────────────────┐
+                 │    Elasticsearch     │
+                 │  - Full-text search  │
+                 │  - Real-time index   │
+                 └──────────────────────┘
+            </pre>
+        </div>
+
+        <h3>Feature 4: Calls with AI Analysis</h3>
+        <div class="diagram-box">
+            <pre>
+┌─────────┐     ┌─────────┐     ┌─────────┐     ┌─────────┐     ┌─────────┐
+│  Call   │────▶│ Twilio  │────▶│  Store  │────▶│   S3    │────▶│ Whisper │
+│ Started │     │   CTI   │     │Recording│     │ Upload  │     │Transcribe│
+└─────────┘     └─────────┘     └─────────┘     └─────────┘     └─────────┘
+                                                                      │
+                    ┌─────────────────────────────────────────────────┘
+                    │
+                    ▼
+             ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+             │ Transcript  │────▶│   OpenAI    │────▶│  AI Summary │
+             │   Ready     │     │   GPT-4     │     │   Ready     │
+             └─────────────┘     └─────────────┘     └─────────────┘
+                                       │
+                    ┌──────────────────┴──────────────────┐
+                    ▼                                      ▼
+             ┌─────────────┐                        ┌─────────────┐
+             │ Key Points  │                        │   Action    │
+             │ Sentiment   │                        │   Items     │
+             │   Topics    │                        │Opportunities│
+             └─────────────┘                        └─────────────┘
+            </pre>
+        </div>
+    </section>
+
+    <div class="page-break"></div>
+
+    <!-- Database Design -->
+    <section id="database">
+        <h2><span class="icon">🗄️</span> Database Design</h2>
+
+        <h3>MongoDB Collections</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Collection</th>
+                    <th>Purpose</th>
+                    <th>Key Fields</th>
+                    <th>Est. Size</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>contacts</code></td>
+                    <td>Contact records with embedded Important Dates & Social Profiles</td>
+                    <td>firstName, lastName, email, importantDates[], socialProfiles[]</td>
+                    <td>~1M docs</td>
+                </tr>
+                <tr>
+                    <td><code>accounts</code></td>
+                    <td>Company records with Intelligence subscriptions</td>
+                    <td>name, website, industry, intelligenceConfig{}</td>
+                    <td>~100K docs</td>
+                </tr>
+                <tr>
+                    <td><code>calls</code></td>
+                    <td>Call records with Transcripts & AI Summaries</td>
+                    <td>contactId, transcript{}, aiSummary{}, recording{}</td>
+                    <td>~5M docs</td>
+                </tr>
+                <tr>
+                    <td><code>news_alerts</code></td>
+                    <td>Intelligence news articles</td>
+                    <td>title, summary, analysis{}, category, sentiment</td>
+                    <td>~1M docs (TTL: 30d)</td>
+                </tr>
+                <tr>
+                    <td><code>email_templates</code></td>
+                    <td>Email template library</td>
+                    <td>name, subject, htmlBody, textBody, variables[]</td>
+                    <td>~100 docs</td>
+                </tr>
+                <tr>
+                    <td><code>social_activities</code></td>
+                    <td>Social media posts/activities</td>
+                    <td>contactId, platform, content{}, engagement{}</td>
+                    <td>~10M docs</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Key Schema: Contacts with Embedded Data</h3>
+        <pre>
+{
+  _id: ObjectId,
+  firstName: String,
+  lastName: String,
+  email: String (unique),
+  
+  // Feature 1: Important Dates (Embedded)
+  importantDates: [{
+    type: 'birthday' | 'anniversary' | 'custom',
+    date: String, // DD-MM format
+    sendTime: String,
+    emailTemplateId: ObjectId,
+    repeatAnnually: Boolean,
+    isActive: Boolean,
+    nextSendAt: Date
+  }],
+  
+  // Feature 2: Social Profiles (Embedded)
+  socialProfiles: [{
+    platform: 'linkedin' | 'twitter',
+    profileUrl: String,
+    displayName: String,
+    accessToken: String (encrypted),
+    lastSyncedAt: Date
+  }],
+  
+  accountId: ObjectId,
+  ownerId: ObjectId,
+  createdAt: Date,
+  updatedAt: Date
+}
+        </pre>
+
+        <h3>Redis Cache Strategy</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Key Pattern</th>
+                    <th>Data</th>
+                    <th>TTL</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td><code>session:{userId}</code></td><td>Session data</td><td>24 hours</td></tr>
+                <tr><td><code>dates:upcoming:{userId}</code></td><td>Upcoming dates</td><td>15 minutes</td></tr>
+                <tr><td><code>social:activity:{contactId}</code></td><td>Activity feed</td><td>30 minutes</td></tr>
+                <tr><td><code>intel:news:{accountId}</code></td><td>News feed</td><td>15 minutes</td></tr>
+                <tr><td><code>call:transcript:{callId}</code></td><td>Transcript</td><td>24 hours</td></tr>
+            </tbody>
+        </table>
+    </section>
+
+    <div class="page-break"></div>
+
+    <!-- API Specification -->
+    <section id="api">
+        <h2><span class="icon">🔌</span> API Specification</h2>
+
+        <p><strong>Base URL:</strong> <code>https://api.sequelstring.com/v1</code></p>
+
+        <h3>Feature 1: Important Dates API</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Method</th>
+                    <th>Endpoint</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>GET</td><td>/contacts/:contactId/dates</td><td>List all important dates</td></tr>
+                <tr><td>POST</td><td>/contacts/:contactId/dates</td><td>Create new date</td></tr>
+                <tr><td>PUT</td><td>/contacts/:contactId/dates/:dateId</td><td>Update date</td></tr>
+                <tr><td>DELETE</td><td>/contacts/:contactId/dates/:dateId</td><td>Delete date</td></tr>
+                <tr><td>POST</td><td>/contacts/:contactId/dates/:dateId/send</td><td>Send email now</td></tr>
+            </tbody>
+        </table>
+
+        <h3>Feature 2: Social Profiles API</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Method</th>
+                    <th>Endpoint</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>GET</td><td>/contacts/:contactId/social</td><td>List social profiles</td></tr>
+                <tr><td>POST</td><td>/contacts/:contactId/social</td><td>Connect profile</td></tr>
+                <tr><td>DELETE</td><td>/contacts/:contactId/social/:profileId</td><td>Disconnect profile</td></tr>
+                <tr><td>POST</td><td>/contacts/:contactId/social/:profileId/sync</td><td>Force sync</td></tr>
+                <tr><td>GET</td><td>/contacts/:contactId/social/activity</td><td>Get activity feed</td></tr>
+            </tbody>
+        </table>
+
+        <h3>Feature 3: Intelligence API</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Method</th>
+                    <th>Endpoint</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>GET</td><td>/accounts/:accountId/news</td><td>Get news feed</td></tr>
+                <tr><td>POST</td><td>/intelligence/alerts/:alertId/action</td><td>Take action on alert</td></tr>
+                <tr><td>GET</td><td>/intelligence/subscriptions</td><td>Get subscriptions</td></tr>
+                <tr><td>PUT</td><td>/intelligence/subscriptions/:id</td><td>Update subscription</td></tr>
+            </tbody>
+        </table>
+
+        <h3>Feature 4: Calls API</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Method</th>
+                    <th>Endpoint</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>GET</td><td>/calls</td><td>List all calls</td></tr>
+                <tr><td>POST</td><td>/calls</td><td>Schedule new call</td></tr>
+                <tr><td>GET</td><td>/calls/:callId</td><td>Get call details</td></tr>
+                <tr><td>GET</td><td>/calls/:callId/recording</td><td>Get recording URL</td></tr>
+                <tr><td>GET</td><td>/calls/:callId/transcript</td><td>Get transcript</td></tr>
+                <tr><td>GET</td><td>/calls/:callId/ai-summary</td><td>Get AI summary</td></tr>
+                <tr><td>POST</td><td>/calls/:callId/ai-summary/generate</td><td>Generate AI summary</td></tr>
+            </tbody>
+        </table>
+    </section>
+
+    <div class="page-break"></div>
+
+    <!-- Deployment Architecture -->
+    <section id="deployment">
+        <h2><span class="icon">🚀</span> Deployment Architecture</h2>
+
+        <h3>Docker Compose (Development)</h3>
+        <pre>
+version: '3.8'
+
+services:
+  frontend:
+    build: ./frontend
+    ports: ["3000:3000"]
+    
+  api:
+    build: ./server
+    ports: ["4000:4000"]
+    environment:
+      - MONGODB_URI=mongodb://mongo:27017/sequelstring
+      - REDIS_URL=redis://redis:6379
+    depends_on: [mongo, redis]
+    
+  worker:
+    build: ./server
+    command: npm run worker
+    depends_on: [mongo, redis]
+    
+  mongo:
+    image: mongo:7
+    volumes: [mongo_data:/data/db]
+    
+  redis:
+    image: redis:7-alpine
+    volumes: [redis_data:/data]
+    
+  elasticsearch:
+    image: elasticsearch:8.11.0
+    environment:
+      - discovery.type=single-node
+
+volumes:
+  mongo_data:
+  redis_data:
+        </pre>
+
+        <h3>Kubernetes Deployment</h3>
+        <div class="diagram-box">
+            <pre>
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                              Kubernetes Cluster                              │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │                         Ingress Controller                           │   │
+│  │                      (nginx-ingress / ALB)                          │   │
+│  └─────────────────────────────────────────────────────────────────────┘   │
+│       ┌────────────────────────────┼────────────────────────────┐          │
+│       ▼                            ▼                            ▼          │
+│  ┌──────────┐               ┌──────────┐               ┌──────────┐       │
+│  │ Frontend │               │   API    │               │  Worker  │       │
+│  │ Service  │               │ Service  │               │ Service  │       │
+│  │ (3 pods) │               │ (5 pods) │               │ (3 pods) │       │
+│  └──────────┘               └──────────┘               └──────────┘       │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │                          StatefulSets                                │   │
+│  │  ┌──────────┐       ┌──────────┐       ┌──────────────┐            │   │
+│  │  │ MongoDB  │       │  Redis   │       │Elasticsearch │            │   │
+│  │  │ Replica  │       │ Cluster  │       │   Cluster    │            │   │
+│  │  └──────────┘       └──────────┘       └──────────────┘            │   │
+│  └─────────────────────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────────────────────┘
+            </pre>
+        </div>
+
+        <h3>Scaling Strategy</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Component</th>
+                    <th>Scaling Trigger</th>
+                    <th>Min/Max Pods</th>
+                    <th>Strategy</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>Frontend</td><td>CPU > 70%</td><td>2-10</td><td>Stateless, CDN</td></tr>
+                <tr><td>API</td><td>CPU > 70%, RPS > 1000</td><td>3-20</td><td>Stateless, LB</td></tr>
+                <tr><td>Worker</td><td>Queue depth > 100</td><td>2-10</td><td>Queue-based</td></tr>
+                <tr><td>MongoDB</td><td>Storage > 80%</td><td>3 (replica)</td><td>Sharding</td></tr>
+                <tr><td>Redis</td><td>Memory > 80%</td><td>3 (cluster)</td><td>Cluster mode</td></tr>
+            </tbody>
+        </table>
+    </section>
+
+    <!-- Security Architecture -->
+    <section id="security">
+        <h2><span class="icon">🔒</span> Security Architecture</h2>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Layer</th>
+                    <th>Security Measure</th>
+                    <th>Implementation</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>Transport</td><td>TLS 1.3</td><td>HTTPS everywhere</td></tr>
+                <tr><td>API</td><td>JWT + Refresh Tokens</td><td>Passport.js + Redis</td></tr>
+                <tr><td>Data</td><td>Field-level encryption</td><td>bcryptjs for passwords, AES-256 for tokens</td></tr>
+                <tr><td>Application</td><td>Input validation</td><td>Zod + express-validator</td></tr>
+                <tr><td>Infrastructure</td><td>WAF + DDoS protection</td><td>CloudFlare/AWS Shield</td></tr>
+            </tbody>
+        </table>
+
+        <div class="callout success">
+            <strong>✅ Security Checklist:</strong>
+            <ul>
+                <li>JWT authentication with refresh tokens</li>
+                <li>bcrypt password hashing (cost factor: 12)</li>
+                <li>Helmet.js security headers</li>
+                <li>Rate limiting per endpoint</li>
+                <li>CORS configuration</li>
+                <li>Encrypted OAuth tokens (AES-256-GCM)</li>
+            </ul>
+        </div>
+
+        <h3>Performance Targets</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Metric</th>
+                    <th>Target</th>
+                    <th>Measurement</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>API Response Time (P95)</td><td>&lt; 200ms</td><td>New Relic APM</td></tr>
+                <tr><td>Page Load Time</td><td>&lt; 2s</td><td>Lighthouse</td></tr>
+                <tr><td>Time to First Byte</td><td>&lt; 100ms</td><td>Real User Monitoring</td></tr>
+                <tr><td>Database Query Time (P95)</td><td>&lt; 50ms</td><td>MongoDB Profiler</td></tr>
+                <tr><td>WebSocket Latency</td><td>&lt; 50ms</td><td>Custom metrics</td></tr>
+            </tbody>
+        </table>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p><strong>SequelString CRM - MERN Stack Architecture Document</strong></p>
+        <p>Version 1.0.0 | January 29, 2026 | Confidential</p>
+        <p>© 2026 SequelString Inc. All rights reserved.</p>
+    </footer>
+
+</body>
+</html>
