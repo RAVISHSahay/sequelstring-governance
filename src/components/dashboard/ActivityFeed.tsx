@@ -1,7 +1,9 @@
 import { Phone, Mail, Calendar, FileText, CheckCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useNavigate } from "react-router-dom";
 
 const activities = [
+  // ... (keep existing data)
   {
     id: 1,
     type: "call",
@@ -67,6 +69,8 @@ const getIconStyles = (type: string) => {
 };
 
 export function ActivityFeed() {
+  const navigate = useNavigate();
+
   return (
     <div className="stat-card animate-slide-up" style={{ animationDelay: "0.25s" }}>
       <div className="mb-6 flex items-center justify-between">
@@ -89,7 +93,8 @@ export function ActivityFeed() {
         {activities.map((activity, index) => (
           <div
             key={activity.id}
-            className="flex gap-3 pb-4 border-b border-border/50 last:border-0 last:pb-0"
+            onClick={() => navigate('/activities')}
+            className="flex gap-3 pb-4 border-b border-border/50 last:border-0 last:pb-0 cursor-pointer hover:bg-muted/50 p-2 rounded-lg transition-colors"
           >
             <div
               className={cn(

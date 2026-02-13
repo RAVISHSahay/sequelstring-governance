@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
     Building2,
     Mail,
@@ -18,9 +19,13 @@ import {
     Briefcase,
     Calendar,
     TrendingUp,
+    Newspaper,
+    History
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ImportantDatesSection } from "@/components/contact/ImportantDatesSection";
+import { NewsAlertsSection } from "@/components/intelligence/NewsAlertsSection";
+import { ClickToCallButton } from "@/components/call/ClickToCallButton";
 
 interface Contact {
     id: number;
@@ -32,6 +37,7 @@ interface Contact {
     role: string;
     influence: string;
     lastContact: string;
+    accountId: string;
 }
 
 interface ContactDetailDialogProps {
@@ -75,10 +81,6 @@ export function ContactDetailDialog({ open, onOpenChange, contact }: ContactDeta
         window.location.href = `mailto:${contact.email}`;
     };
 
-    const handlePhoneClick = () => {
-        window.location.href = `tel:${contact.phone}`;
-    };
-
     const handleLinkedInClick = () => {
         const searchQuery = encodeURIComponent(`${contact.name} ${contact.account}`);
         window.open(`https://www.linkedin.com/search/results/all/?keywords=${searchQuery}`, '_blank');
@@ -86,7 +88,7 @@ export function ContactDetailDialog({ open, onOpenChange, contact }: ContactDeta
 
     return (
         <Sheet open={open} onOpenChange={onOpenChange}>
-            <SheetContent className="sm:max-w-lg">
+            <SheetContent className="sm:max-w-xl w-full overflow-y-auto">
                 <SheetHeader>
                     <div className="flex items-center gap-4">
                         <Avatar className="h-16 w-16">
@@ -104,104 +106,118 @@ export function ContactDetailDialog({ open, onOpenChange, contact }: ContactDeta
                     </div>
                 </SheetHeader>
 
-                <div className="mt-6 space-y-6">
-                    {/* Role and Influence */}
-                    <div className="flex items-center gap-3">
-                        <Badge variant="outline" className={cn("font-medium", getRoleColor(contact.role))}>
-                            {contact.role}
-                        </Badge>
-                        <div className="flex items-center gap-1">
-                            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                            <span className={cn("font-semibold", getInfluenceColor(contact.influence))}>
-                                {contact.influence}
-                            </span>
-                            <span className="text-sm text-muted-foreground">influence</span>
-                        </div>
-                    </div>
+                <Tabs defaultValue="overview" className="mt-6">
+                    <TabsList className="grid w-full grid-cols-3">
+                        <TabsTrigger value="overview">Overview</TabsTrigger>
+                        <TabsTrigger value="news">News & Intel</TabsTrigger>
+                        <TabsTrigger value="dates">Dates</TabsTrigger>
+                    </TabsList>
 
-                    <Separator />
-
-                    {/* Account Info */}
-                    <div className="space-y-4">
-                        <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                            Account
-                        </h4>
+                    <TabsContent value="overview" className="space-y-6 mt-4">
+                        {/* Role and Influence */}
                         <div className="flex items-center gap-3">
-                            <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                                <Building2 className="h-5 w-5 text-primary" />
-                            </div>
-                            <div>
-                                <p className="font-medium">{contact.account}</p>
-                                <p className="text-sm text-muted-foreground">Last contact: {contact.lastContact}</p>
+                            <Badge variant="outline" className={cn("font-medium", getRoleColor(contact.role))}>
+                                {contact.role}
+                            </Badge>
+                            <div className="flex items-center gap-1">
+                                <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                                <span className={cn("font-semibold", getInfluenceColor(contact.influence))}>
+                                    {contact.influence}
+                                </span>
+                                <span className="text-sm text-muted-foreground">influence</span>
                             </div>
                         </div>
-                    </div>
 
-                    <Separator />
+                        <Separator />
 
-                    {/* Contact Info */}
-                    <div className="space-y-4">
-                        <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                            Contact Information
-                        </h4>
-                        <div className="space-y-3">
-                            <button
-                                onClick={handleEmailClick}
-                                className="flex items-center gap-3 w-full p-3 rounded-lg hover:bg-muted/50 transition-colors text-left"
-                            >
-                                <Mail className="h-5 w-5 text-muted-foreground" />
-                                <div>
-                                    <p className="text-sm text-muted-foreground">Email</p>
-                                    <p className="font-medium text-primary">{contact.email}</p>
+                        {/* Account Info */}
+                        <div className="space-y-4">
+                            <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                                Account
+                            </h4>
+                            <div className="flex items-center gap-3">
+                                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                                    <Building2 className="h-5 w-5 text-primary" />
                                 </div>
-                            </button>
-                            <button
-                                onClick={handlePhoneClick}
-                                className="flex items-center gap-3 w-full p-3 rounded-lg hover:bg-muted/50 transition-colors text-left"
-                            >
-                                <Phone className="h-5 w-5 text-muted-foreground" />
                                 <div>
-                                    <p className="text-sm text-muted-foreground">Phone</p>
-                                    <p className="font-medium text-primary">{contact.phone}</p>
+                                    <p className="font-medium">{contact.account}</p>
+                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                        <History className="h-3 w-3" />
+                                        <span>Last contact: {contact.lastContact}</span>
+                                    </div>
                                 </div>
-                            </button>
-                            <button
-                                onClick={handleLinkedInClick}
-                                className="flex items-center gap-3 w-full p-3 rounded-lg hover:bg-muted/50 transition-colors text-left"
-                            >
-                                <Linkedin className="h-5 w-5 text-[#0077B5]" />
-                                <div>
-                                    <p className="text-sm text-muted-foreground">LinkedIn</p>
-                                    <p className="font-medium text-primary">View Profile</p>
-                                </div>
-                            </button>
+                            </div>
                         </div>
-                    </div>
 
-                    {/* Quick Actions */}
-                    <div className="flex gap-2 pt-4">
-                        <Button variant="outline" className="flex-1 gap-2" onClick={handleEmailClick}>
-                            <Mail className="h-4 w-4" />
-                            Email
-                        </Button>
-                        <Button variant="outline" className="flex-1 gap-2" onClick={handlePhoneClick}>
-                            <Phone className="h-4 w-4" />
-                            Call
-                        </Button>
-                        <Button variant="outline" className="flex-1 gap-2" onClick={handleLinkedInClick}>
-                            <Linkedin className="h-4 w-4" />
-                            LinkedIn
-                        </Button>
-                    </div>
+                        <Separator />
 
-                    <Separator />
+                        {/* Contact Info */}
+                        <div className="space-y-4">
+                            <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                                Contact Information
+                            </h4>
+                            <div className="space-y-3">
+                                <div className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors border border-transparent hover:border-border/50">
+                                    <div className="flex items-center gap-3">
+                                        <Mail className="h-5 w-5 text-muted-foreground" />
+                                        <div>
+                                            <p className="text-sm text-muted-foreground">Email</p>
+                                            <p className="font-medium text-primary">{contact.email}</p>
+                                        </div>
+                                    </div>
+                                    <Button variant="ghost" size="sm" onClick={handleEmailClick}>
+                                        <Mail className="h-4 w-4" />
+                                    </Button>
+                                </div>
 
-                    {/* Important Dates Section */}
-                    <ImportantDatesSection
-                        contactId={contact.id.toString()}
-                        contactName={contact.name}
-                    />
-                </div>
+                                <div className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors border border-transparent hover:border-border/50">
+                                    <div className="flex items-center gap-3">
+                                        <Phone className="h-5 w-5 text-muted-foreground" />
+                                        <div>
+                                            <p className="text-sm text-muted-foreground">Phone</p>
+                                            <p className="font-medium text-primary">{contact.phone}</p>
+                                        </div>
+                                    </div>
+                                    <ClickToCallButton
+                                        phoneNumber={contact.phone}
+                                        entityType="contact"
+                                        entityId={contact.id.toString()}
+                                        entityName={contact.name}
+                                    />
+                                </div>
+
+                                <div className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors border border-transparent hover:border-border/50">
+                                    <div className="flex items-center gap-3">
+                                        <Linkedin className="h-5 w-5 text-[#0077B5]" />
+                                        <div>
+                                            <p className="text-sm text-muted-foreground">LinkedIn</p>
+                                            <p className="font-medium text-primary">View Profile</p>
+                                        </div>
+                                    </div>
+                                    <Button variant="ghost" size="sm" onClick={handleLinkedInClick}>
+                                        <Linkedin className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                            </div>
+                        </div>
+                    </TabsContent>
+
+                    <TabsContent value="news" className="mt-4">
+                        <div className="mb-4">
+                            <h4 className="text-sm font-medium text-muted-foreground mb-1">Account Intelligence</h4>
+                            <p className="text-sm">Latest news and alerts for <span className="font-semibold">{contact.account}</span></p>
+                        </div>
+                        <NewsAlertsSection accountId={contact.accountId} accountName={contact.account} />
+                    </TabsContent>
+
+                    <TabsContent value="dates" className="mt-4">
+                        <div className="mb-4">
+                            <h4 className="text-sm font-medium text-muted-foreground mb-1">Important Dates</h4>
+                            <p className="text-sm">Manage birthdays, anniversaries, and automated greetings.</p>
+                        </div>
+                        <ImportantDatesSection contactId={contact.id.toString()} contactName={contact.name} />
+                    </TabsContent>
+                </Tabs>
             </SheetContent>
         </Sheet>
     );

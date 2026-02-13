@@ -14,15 +14,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { 
-  Plus, 
-  GripVertical, 
-  Settings2, 
-  Trash2, 
-  Edit, 
-  Shield, 
-  FileText, 
-  Clock, 
+import {
+  Plus,
+  GripVertical,
+  Settings2,
+  Trash2,
+  Edit,
+  Shield,
+  FileText,
+  Clock,
   AlertTriangle,
   CheckCircle,
   XCircle,
@@ -124,8 +124,11 @@ export default function SalesStageConfig() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('stages');
 
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
+  const [importConfigJson, setImportConfigJson] = useState('');
+
   const handleStageToggle = (stageId: string) => {
-    setStages(prev => prev.map(stage => 
+    setStages(prev => prev.map(stage =>
       stage.id === stageId ? { ...stage, isActive: !stage.isActive } : stage
     ));
     toast({
@@ -134,16 +137,83 @@ export default function SalesStageConfig() {
     });
   };
 
+  const handleAddStage = () => {
+    const newStage: SalesStage = {
+      id: '', // Start empty, will assign on save
+      name: 'New Stage',
+      code: 'NEW',
+      order: stages.length + 1,
+      category: 'prospecting',
+      defaultProbability: 20,
+      forecastCategory: 'pipeline',
+      entryCriteria: [],
+      exitCriteria: [],
+      mandatoryFields: [],
+      allowedActions: [],
+      expectedDuration: 14,
+      warningThreshold: 21,
+      criticalThreshold: 30,
+      requiresApproval: false,
+      approvalRoles: [],
+      maxDiscount: 0,
+      priceLocked: false,
+      requiredDocuments: [],
+      onEnterWorkflows: [],
+      onExitWorkflows: [],
+      color: '#64748b',
+      icon: 'circle',
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    setSelectedStage(newStage);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleImportConfig = () => {
+    try {
+      const parsed = JSON.parse(importConfigJson);
+      if (Array.isArray(parsed)) {
+        // Basic validation assumption
+        setStages(parsed);
+        setIsImportDialogOpen(false);
+        toast({
+          title: "Import Successful",
+          description: `Imported ${parsed.length} stages configuration.`,
+        });
+      } else {
+        throw new Error("Config must be an array of stages");
+      }
+    } catch (e) {
+      toast({
+        title: "Import Failed",
+        description: "Invalid JSON configuration.",
+        variant: "destructive"
+      });
+    }
+  };
+
   const handleSaveStage = () => {
     if (selectedStage) {
-      setStages(prev => prev.map(stage => 
-        stage.id === selectedStage.id ? selectedStage : stage
-      ));
+      if (!selectedStage.id) {
+        // Create New
+        const newStage = { ...selectedStage, id: `stage_${Date.now()}` };
+        setStages(prev => [...prev, newStage]);
+        toast({
+          title: "Stage Created",
+          description: `${newStage.name} has been added to the pipeline.`,
+        });
+      } else {
+        // Update Existing
+        setStages(prev => prev.map(stage =>
+          stage.id === selectedStage.id ? selectedStage : stage
+        ));
+        toast({
+          title: "Stage Saved",
+          description: `${selectedStage.name} configuration has been updated.`,
+        });
+      }
       setIsEditDialogOpen(false);
-      toast({
-        title: "Stage saved",
-        description: `${selectedStage.name} configuration has been updated.`,
-      });
     }
   };
 
@@ -167,11 +237,11 @@ export default function SalesStageConfig() {
             </p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline">
+            <Button variant="outline" onClick={() => setIsImportDialogOpen(true)}>
               <Settings2 className="h-4 w-4 mr-2" />
               Import Config
             </Button>
-            <Button>
+            <Button onClick={handleAddStage}>
               <Plus className="h-4 w-4 mr-2" />
               Add Stage
             </Button>
@@ -217,7 +287,7 @@ export default function SalesStageConfig() {
                     const categoryInfo = getCategoryInfo(stage.category);
                     return (
                       <div key={stage.id} className="flex items-center">
-                        <div 
+                        <div
                           className={cn(
                             "flex items-center gap-2 px-4 py-3 rounded-lg border cursor-pointer transition-all hover:shadow-md",
                             "bg-card min-w-[160px]"
@@ -256,9 +326,9 @@ export default function SalesStageConfig() {
               {stages.sort((a, b) => a.order - b.order).map(stage => {
                 const categoryInfo = getCategoryInfo(stage.category);
                 const forecastInfo = getForecastInfo(stage.forecastCategory);
-                
+
                 return (
-                  <Card 
+                  <Card
                     key={stage.id}
                     className={cn(
                       "transition-all cursor-pointer hover:shadow-md",
@@ -511,7 +581,7 @@ export default function SalesStageConfig() {
                   {stakeholderStances.map((stance) => {
                     const Icon = stance.icon;
                     return (
-                      <div 
+                      <div
                         key={stance.value}
                         className={cn(
                           "p-4 rounded-lg border text-center cursor-pointer hover:shadow-md transition-all",
@@ -725,7 +795,7 @@ export default function SalesStageConfig() {
                     { name: 'External', description: 'External funding/grant' },
                     { name: 'Unknown', description: 'Source not identified' },
                   ].map((source) => (
-                    <div 
+                    <div
                       key={source.name}
                       className="p-3 rounded-lg border text-center cursor-pointer hover:bg-muted/50 transition-colors"
                     >
@@ -913,16 +983,16 @@ export default function SalesStageConfig() {
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label>Stage Name</Label>
-                        <Input 
+                        <Input
                           value={selectedStage.name}
-                          onChange={(e) => setSelectedStage({...selectedStage, name: e.target.value})}
+                          onChange={(e) => setSelectedStage({ ...selectedStage, name: e.target.value })}
                         />
                       </div>
                       <div className="space-y-2">
                         <Label>Stage Code</Label>
-                        <Input 
+                        <Input
                           value={selectedStage.code}
-                          onChange={(e) => setSelectedStage({...selectedStage, code: e.target.value})}
+                          onChange={(e) => setSelectedStage({ ...selectedStage, code: e.target.value })}
                         />
                       </div>
                     </div>
@@ -930,9 +1000,9 @@ export default function SalesStageConfig() {
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label>Category</Label>
-                        <Select 
+                        <Select
                           value={selectedStage.category}
-                          onValueChange={(value: any) => setSelectedStage({...selectedStage, category: value})}
+                          onValueChange={(value: any) => setSelectedStage({ ...selectedStage, category: value })}
                         >
                           <SelectTrigger>
                             <SelectValue />
@@ -951,9 +1021,9 @@ export default function SalesStageConfig() {
                       </div>
                       <div className="space-y-2">
                         <Label>Forecast Category</Label>
-                        <Select 
+                        <Select
                           value={selectedStage.forecastCategory}
-                          onValueChange={(value: any) => setSelectedStage({...selectedStage, forecastCategory: value})}
+                          onValueChange={(value: any) => setSelectedStage({ ...selectedStage, forecastCategory: value })}
                         >
                           <SelectTrigger>
                             <SelectValue />
@@ -971,7 +1041,7 @@ export default function SalesStageConfig() {
                       <Label>Default Probability: {selectedStage.defaultProbability}%</Label>
                       <Slider
                         value={[selectedStage.defaultProbability]}
-                        onValueChange={([value]) => setSelectedStage({...selectedStage, defaultProbability: value})}
+                        onValueChange={([value]) => setSelectedStage({ ...selectedStage, defaultProbability: value })}
                         max={100}
                         step={5}
                       />
@@ -980,26 +1050,26 @@ export default function SalesStageConfig() {
                     <div className="grid grid-cols-3 gap-4">
                       <div className="space-y-2">
                         <Label>Expected Duration (days)</Label>
-                        <Input 
+                        <Input
                           type="number"
                           value={selectedStage.expectedDuration}
-                          onChange={(e) => setSelectedStage({...selectedStage, expectedDuration: parseInt(e.target.value)})}
+                          onChange={(e) => setSelectedStage({ ...selectedStage, expectedDuration: parseInt(e.target.value) })}
                         />
                       </div>
                       <div className="space-y-2">
                         <Label>Warning (days)</Label>
-                        <Input 
+                        <Input
                           type="number"
                           value={selectedStage.warningThreshold}
-                          onChange={(e) => setSelectedStage({...selectedStage, warningThreshold: parseInt(e.target.value)})}
+                          onChange={(e) => setSelectedStage({ ...selectedStage, warningThreshold: parseInt(e.target.value) })}
                         />
                       </div>
                       <div className="space-y-2">
                         <Label>Critical (days)</Label>
-                        <Input 
+                        <Input
                           type="number"
                           value={selectedStage.criticalThreshold}
-                          onChange={(e) => setSelectedStage({...selectedStage, criticalThreshold: parseInt(e.target.value)})}
+                          onChange={(e) => setSelectedStage({ ...selectedStage, criticalThreshold: parseInt(e.target.value) })}
                         />
                       </div>
                     </div>
@@ -1059,7 +1129,7 @@ export default function SalesStageConfig() {
                       </div>
                       <Switch
                         checked={selectedStage.requiresApproval}
-                        onCheckedChange={(checked) => setSelectedStage({...selectedStage, requiresApproval: checked})}
+                        onCheckedChange={(checked) => setSelectedStage({ ...selectedStage, requiresApproval: checked })}
                       />
                     </div>
 
@@ -1070,7 +1140,7 @@ export default function SalesStageConfig() {
                       </div>
                       <Switch
                         checked={selectedStage.priceLocked}
-                        onCheckedChange={(checked) => setSelectedStage({...selectedStage, priceLocked: checked})}
+                        onCheckedChange={(checked) => setSelectedStage({ ...selectedStage, priceLocked: checked })}
                       />
                     </div>
 
@@ -1078,7 +1148,7 @@ export default function SalesStageConfig() {
                       <Label>Maximum Discount: {selectedStage.maxDiscount}%</Label>
                       <Slider
                         value={[selectedStage.maxDiscount]}
-                        onValueChange={([value]) => setSelectedStage({...selectedStage, maxDiscount: value})}
+                        onValueChange={([value]) => setSelectedStage({ ...selectedStage, maxDiscount: value })}
                         max={100}
                         step={5}
                       />
@@ -1141,6 +1211,30 @@ export default function SalesStageConfig() {
                 </DialogFooter>
               </>
             )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Import Config Dialog */}
+        <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Import Sales Stage Configuration</DialogTitle>
+              <DialogDescription>
+                Paste your JSON configuration below. This will overwrite existing stages.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 my-4">
+              <Textarea
+                placeholder='[{"id": "stage_1", "name": "Discovery", ...}]'
+                className="min-h-[300px] font-mono text-xs"
+                value={importConfigJson}
+                onChange={(e) => setImportConfigJson(e.target.value)}
+              />
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsImportDialogOpen(false)}>Cancel</Button>
+              <Button onClick={handleImportConfig}>Import Configuration</Button>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>

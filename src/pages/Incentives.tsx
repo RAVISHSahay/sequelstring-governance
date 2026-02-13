@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -35,6 +35,9 @@ import {
   Unlock,
   PlayCircle,
   PauseCircle,
+  Upload,
+  HelpCircle,
+  FileText,
 } from "lucide-react";
 import { mockIncentivePlans, incentiveSummaryStats } from "@/data/mockIncentiveData";
 import { IncentivePlan, CommissionModel } from "@/types/incentives";
@@ -71,6 +74,23 @@ export default function Incentives() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingPlan, setEditingPlan] = useState<IncentivePlan | null>(null);
   const [selectedTab, setSelectedTab] = useState("plans");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    toast({ title: "Importing plans from Excel..." });
+
+    // Simulate processing
+    setTimeout(() => {
+      toast({ title: `Successfully imported 3 plans from ${file.name}` });
+      // In a real app, parse file here
+    }, 1500);
+
+    // Reset input
+    event.target.value = "";
+  };
 
   const filteredPlans = plans.filter((plan) =>
     plan.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -144,9 +164,9 @@ export default function Incentives() {
 
   const handleToggleStatus = (id: string) => {
     setPlans(prev =>
-      prev.map(p => p.id === id ? { 
-        ...p, 
-        status: p.status === 'active' ? 'inactive' : 'active' 
+      prev.map(p => p.id === id ? {
+        ...p,
+        status: p.status === 'active' ? 'inactive' : 'active'
       } : p)
     );
   };
@@ -181,10 +201,23 @@ export default function Incentives() {
               Configure commission models, slabs, and payout triggers
             </p>
           </div>
-          <Button onClick={() => { setEditingPlan(null); setDialogOpen(true); }}>
-            <Plus className="h-4 w-4 mr-2" />
-            New Plan
-          </Button>
+          <div className="flex gap-2">
+            <input
+              type="file"
+              accept=".xlsx,.xls,.csv"
+              className="hidden"
+              ref={fileInputRef}
+              onChange={handleFileUpload}
+            />
+            <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
+              <Upload className="h-4 w-4 mr-2" />
+              Upload Excel
+            </Button>
+            <Button onClick={() => { setEditingPlan(null); setDialogOpen(true); }}>
+              <Plus className="h-4 w-4 mr-2" />
+              New Plan
+            </Button>
+          </div>
         </div>
 
         {/* Summary Cards */}
@@ -252,6 +285,10 @@ export default function Incentives() {
             <TabsTrigger value="plans">Commission Plans</TabsTrigger>
             <TabsTrigger value="calculator">Commission Calculator</TabsTrigger>
             <TabsTrigger value="models">Plan Templates</TabsTrigger>
+            <TabsTrigger value="guide">
+              <HelpCircle className="h-4 w-4 mr-2" />
+              Plan Guide
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="plans" className="space-y-4">
@@ -438,6 +475,188 @@ export default function Incentives() {
               </CardContent>
             </Card>
           </TabsContent>
+
+          <TabsContent value="guide" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Incentive Plan Guide</CardTitle>
+                <CardDescription>Understanding your compensation structure and payout mechanism</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Tabs defaultValue="methodology" className="w-full">
+                  <TabsList className="w-full justify-start rounded-none border-b bg-transparent p-0 mb-6">
+                    <TabsTrigger
+                      value="methodology"
+                      className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 pb-3 pt-2"
+                    >
+                      Calculation & Payouts
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="current-plan"
+                      className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 pb-3 pt-2"
+                    >
+                      My Existing Plan
+                    </TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="methodology" className="animate-fade-in">
+                    <div className="space-y-8">
+                      <section>
+                        <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                          <DollarSign className="h-5 w-5 text-primary" />
+                          How Incentives are Calculated
+                        </h3>
+                        <div className="bg-muted/30 p-6 rounded-lg border space-y-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                              <h4 className="font-medium mb-2 text-primary">1. Base Commission</h4>
+                              <p className="text-sm text-muted-foreground mb-2">
+                                Calculated as a percentage of the Revenue Recognized from closed deals.
+                              </p>
+                              <div className="bg-background p-3 rounded border font-mono text-xs">
+                                Base Payout = (Deal Revenue × Commission Rate)
+                              </div>
+                            </div>
+                            <div>
+                              <h4 className="font-medium mb-2 text-primary">2. Accelerators & Kickers</h4>
+                              <p className="text-sm text-muted-foreground mb-2">
+                                Additional bonuses for exceeding targets or selling strategic products.
+                              </p>
+                              <div className="bg-background p-3 rounded border font-mono text-xs">
+                                Accelerator = Base Payout × 1.5 (if &gt;100% quota)
+                              </div>
+                            </div>
+                            <div>
+                              <h4 className="font-medium mb-2 text-primary">3. Deductions</h4>
+                              <p className="text-sm text-muted-foreground mb-2">
+                                Penalties applied for excessive discounts or delayed payments.
+                              </p>
+                              <div className="bg-background p-3 rounded border font-mono text-xs">
+                                Penalty = (Discount % - 15%) × 0.5 (if Discount &gt; 15%)
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </section>
+
+                      <section>
+                        <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                          <TrendingUp className="h-5 w-5 text-success" />
+                          Payout Schedule
+                        </h3>
+                        <div className="space-y-4">
+                          <div className="flex gap-4 items-start p-4 border rounded-lg bg-green-50/50">
+                            <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center shrink-0 text-green-700 font-bold">1</div>
+                            <div>
+                              <h4 className="font-bold text-green-900">Deal Closure</h4>
+                              <p className="text-sm text-green-800 mt-1">
+                                Incentive accrues immediately upon "Closed Won" status in CRM and contract signature.
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex gap-4 items-start p-4 border rounded-lg">
+                            <div className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center shrink-0 font-bold">2</div>
+                            <div>
+                              <h4 className="font-bold">Quarterly Processing</h4>
+                              <p className="text-sm text-muted-foreground mt-1">
+                                Calculations are finalized 15 days after quarter-end (Q1 payouts in July, Q2 in Oct, etc.).
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex gap-4 items-start p-4 border rounded-lg">
+                            <div className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center shrink-0 font-bold">3</div>
+                            <div>
+                              <h4 className="font-bold">Payment Disbursement</h4>
+                              <p className="text-sm text-muted-foreground mt-1">
+                                Approved amounts are processed with the next month's payroll cycle.
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </section>
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="current-plan" className="animate-fade-in">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                      <div className="lg:col-span-2 space-y-6">
+                        <Card className="border-primary/20 bg-primary/5">
+                          <CardHeader>
+                            <CardTitle className="text-lg text-primary">FY 2024-25 Enterprise Sales Plan</CardTitle>
+                            <CardDescription>Active since April 1, 2024</CardDescription>
+                          </CardHeader>
+                          <CardContent className="space-y-4">
+                            <div className="grid grid-cols-2 gap-4 text-sm">
+                              <div>
+                                <span className="text-muted-foreground">Plan Type:</span> <span className="font-semibold">Accelerator Model</span>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground">Quota:</span> <span className="font-semibold">₹2.5 Cr / Quarter</span>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground">Base Rate:</span> <span className="font-semibold">4.5%</span>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground">OTE:</span> <span className="font-semibold">₹45 L / Annum</span>
+                              </div>
+                            </div>
+                            <div className="p-3 bg-white rounded border text-sm">
+                              <strong>Key Highlights:</strong>
+                              <ul className="list-disc pl-5 mt-2 space-y-1 text-muted-foreground">
+                                <li>Standard 4.5% on all software licenses.</li>
+                                <li>1.5x Multiplier kicks in after 100% quota attainment.</li>
+                                <li>No commission on implementation services (capped at 2%).</li>
+                                <li>Clawback applicable if invoice unpaid &gt; 90 days.</li>
+                              </ul>
+                            </div>
+                          </CardContent>
+                        </Card>
+
+                        <div className="border rounded-lg p-6 text-center space-y-3 bg-muted/20 border-dashed">
+                          <div className="mx-auto h-12 w-12 bg-white rounded-full flex items-center justify-center shadow-sm">
+                            <FileText className="h-6 w-6 text-primary" />
+                          </div>
+                          <div>
+                            <h3 className="font-semibold">Upload Signed Plan</h3>
+                            <p className="text-xs text-muted-foreground max-w-sm mx-auto">
+                              Upload your signed sales letter or specific incentive agreement here for HR records.
+                            </p>
+                          </div>
+                          <div className="flex justify-center gap-2">
+                            <Button size="sm" variant="outline" onClick={() => fileInputRef.current?.click()}>
+                              <Upload className="h-4 w-4 mr-2" />
+                              Upload Document
+                            </Button>
+                            <Button size="sm" variant="ghost">View Current</Button>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="space-y-4">
+                        <h4 className="font-semibold text-sm">Plan Documents & Resources</h4>
+                        <div className="space-y-2">
+                          {[
+                            "FY25 Sales Policy.pdf",
+                            "Commission Calculator Tool.xlsx",
+                            "Incentive FAQ.pdf",
+                            "Clawback Policy v2.0.pdf"
+                          ].map((file, i) => (
+                            <div key={i} className="flex items-center gap-3 p-3 rounded border bg-white hover:bg-muted/50 cursor-pointer transition-colors">
+                              <FileText className="h-8 w-8 text-blue-500/20" />
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium truncate">{file}</p>
+                                <p className="text-xs text-muted-foreground">1.2 MB • Updated 2 days ago</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </TabsContent>
+                </Tabs>
+              </CardContent>
+            </Card>
+          </TabsContent>
         </Tabs>
       </div>
 
@@ -447,6 +666,6 @@ export default function Incentives() {
         onSave={handleSavePlan}
         editData={editingPlan}
       />
-    </AppLayout>
+    </AppLayout >
   );
 }

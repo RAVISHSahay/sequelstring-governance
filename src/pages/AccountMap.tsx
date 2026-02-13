@@ -66,17 +66,20 @@ import {
   GitGraph,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { 
-  sampleAccounts, 
-  sampleStakeholders, 
-  sampleOpportunities, 
+import {
+  sampleAccounts,
+  sampleStakeholders,
+  sampleOpportunities,
   sampleActivities,
-  defaultSalesStages 
+  defaultSalesStages,
+  sampleRelationships
 } from '@/data/mockAccountData';
 import { AddOpportunityDialog, OpportunityData } from '@/components/dialogs/AddOpportunityDialog';
 import { AddContactDialog } from '@/components/dialogs/AddContactDialog';
 import { LogActivityDialog } from '@/components/dialogs/LogActivityDialog';
+import { AccountHistoryDialog } from '@/components/dialogs/AccountHistoryDialog';
 import { StakeholderInfluenceGraph } from '@/components/account/StakeholderInfluenceGraph';
+import { OrgChart } from '@/components/account/OrgChart';
 import { StakeholderCommunicationLog, mockCommunications } from '@/components/account/StakeholderCommunicationLog';
 import { FollowUpReminders } from '@/components/account/FollowUpReminders';
 import { toast } from 'sonner';
@@ -134,20 +137,23 @@ const formatCurrency = (value: number) => {
 export default function AccountMap() {
   const [searchParams] = useSearchParams();
   const accountParam = searchParams.get('account');
-  
+
   // Find account by name from URL param, or use first account
-  const initialAccount = accountParam 
+  const initialAccount = accountParam
     ? sampleAccounts.find(a => a.name.toLowerCase() === accountParam.toLowerCase()) || sampleAccounts[0]
     : sampleAccounts[0];
-  
+
   const [selectedAccountId, setSelectedAccountId] = useState(initialAccount?.id || '');
-  
+
   // Dialog states
   const [opportunityDialogOpen, setOpportunityDialogOpen] = useState(false);
   const [contactDialogOpen, setContactDialogOpen] = useState(false);
   const [activityDialogOpen, setActivityDialogOpen] = useState(false);
   const [shortcutsHelpOpen, setShortcutsHelpOpen] = useState(false);
-  
+  const [historyDialogOpen, setHistoryDialogOpen] = useState(false);
+  const [stakeholderViewMode, setStakeholderViewMode] = useState<'influence' | 'org'>('org');
+  const [activeTab, setActiveTab] = useState('overview');
+
   // Update selection when URL param changes
   useEffect(() => {
     if (accountParam) {
@@ -157,7 +163,7 @@ export default function AccountMap() {
       }
     }
   }, [accountParam]);
-  
+
   const selectedAccount = sampleAccounts.find(a => a.id === selectedAccountId) || sampleAccounts[0];
   const accountStakeholders = sampleStakeholders.filter(s => s.accountId === selectedAccountId);
   const accountOpportunities = sampleOpportunities.filter(o => o.accountId === selectedAccountId);
@@ -295,7 +301,7 @@ export default function AccountMap() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={() => setHistoryDialogOpen(true)}>
             <FileText className="h-4 w-4 mr-2" />
             View History
           </Button>
@@ -376,7 +382,7 @@ export default function AccountMap() {
       </div>
 
       {/* Main Content Tabs */}
-      <Tabs defaultValue="overview" className="space-y-4">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList className="grid w-full grid-cols-6 lg:w-auto lg:inline-grid">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="stakeholders">Stakeholders</TabsTrigger>
@@ -491,7 +497,7 @@ export default function AccountMap() {
                 <Users className="h-5 w-5 text-primary" />
                 Key Stakeholders
               </CardTitle>
-              <Button variant="ghost" size="sm">
+              <Button variant="ghost" size="sm" onClick={() => setActiveTab('stakeholders')}>
                 View All <ChevronRight className="h-4 w-4 ml-1" />
               </Button>
             </CardHeader>
@@ -541,7 +547,7 @@ export default function AccountMap() {
                 <Target className="h-5 w-5 text-primary" />
                 Active Opportunities
               </CardTitle>
-              <Button variant="ghost" size="sm">
+              <Button variant="ghost" size="sm" onClick={() => setActiveTab('opportunities')}>
                 View All <ChevronRight className="h-4 w-4 ml-1" />
               </Button>
             </CardHeader>
@@ -570,8 +576,8 @@ export default function AccountMap() {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <Badge 
-                            variant="outline" 
+                          <Badge
+                            variant="outline"
                             style={{ borderColor: stage?.color, color: stage?.color }}
                           >
                             {opp.stageName}
@@ -616,14 +622,46 @@ export default function AccountMap() {
             }}
           />
 
-          {/* Interactive Influence Graph */}
-          <StakeholderInfluenceGraph 
-            stakeholders={accountStakeholders}
-            accountName={selectedAccount.name}
-          />
+          {/* View Toggle */}
+          <div className="flex justify-end mb-4">
+            <div className="flex items-center bg-muted rounded-lg p-1">
+              <Button
+                variant={stakeholderViewMode === 'influence' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setStakeholderViewMode('influence')}
+                className="gap-2"
+              >
+                <Network className="h-4 w-4" />
+                Influence Map
+              </Button>
+              <Button
+                variant={stakeholderViewMode === 'org' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setStakeholderViewMode('org')}
+                className="gap-2"
+              >
+                <GitGraph className="h-4 w-4" />
+                Org Chart
+              </Button>
+            </div>
+          </div>
+
+          {/* Interactive Graph */}
+          {stakeholderViewMode === 'influence' ? (
+            <StakeholderInfluenceGraph
+              stakeholders={accountStakeholders}
+              relationships={sampleRelationships}
+              accountName={selectedAccount.name}
+            />
+          ) : (
+            <OrgChart
+              stakeholders={accountStakeholders}
+              relationships={sampleRelationships}
+            />
+          )}
 
           {/* Communication Log */}
-          <StakeholderCommunicationLog 
+          <StakeholderCommunicationLog
             stakeholders={accountStakeholders}
             opportunities={accountOpportunities}
             accountName={selectedAccount.name}
@@ -649,8 +687,8 @@ export default function AccountMap() {
                   const RoleIcon = getRoleIcon(stakeholder.primaryRole);
                   return (
                     <Card key={stakeholder.id} className="relative overflow-hidden hover:shadow-md transition-shadow">
-                      <div 
-                        className="absolute top-0 left-0 w-1 h-full" 
+                      <div
+                        className="absolute top-0 left-0 w-1 h-full"
                         style={{ backgroundColor: stakeholder.decisionAuthority === 'final' ? '#8B5CF6' : stakeholder.decisionAuthority === 'strong_influence' ? '#3B82F6' : '#9CA3AF' }}
                       />
                       <CardContent className="p-4">
@@ -742,13 +780,13 @@ export default function AccountMap() {
                     const stageValue = stageOpps.reduce((sum, o) => sum + o.dealSize, 0);
                     return (
                       <div key={stage.id} className="flex-1 min-w-[100px]">
-                        <div 
-                          className="h-2 rounded-full" 
+                        <div
+                          className="h-2 rounded-full"
                           style={{ backgroundColor: stage.color + '40' }}
                         >
-                          <div 
+                          <div
                             className="h-full rounded-full transition-all"
-                            style={{ 
+                            style={{
                               backgroundColor: stage.color,
                               width: stageOpps.length > 0 ? '100%' : '0%'
                             }}
@@ -827,8 +865,8 @@ export default function AccountMap() {
                           <p className="text-xs text-muted-foreground mb-2">Competition</p>
                           <div className="flex gap-2">
                             {opp.competitors.map((comp) => (
-                              <Badge 
-                                key={comp.name} 
+                              <Badge
+                                key={comp.name}
                                 variant="outline"
                                 className={cn(
                                   comp.threat === 'high' && 'border-red-200 bg-red-50 text-red-600',
@@ -893,7 +931,7 @@ export default function AccountMap() {
                         </div>
                         {activity.outcome && (
                           <div className="mt-2">
-                            <Badge 
+                            <Badge
                               variant="outline"
                               className={cn(
                                 activity.outcome === 'positive' && 'bg-green-50 text-green-600 border-green-200',
@@ -1011,16 +1049,16 @@ export default function AccountMap() {
         open={opportunityDialogOpen}
         onOpenChange={setOpportunityDialogOpen}
         onSave={handleSaveOpportunity}
-        editData={{ 
-          name: '', 
-          account: selectedAccount.name, 
-          value: '', 
-          stage: 'Prospecting', 
-          probability: '20%', 
-          owner: selectedAccount.ownerName 
+        editData={{
+          name: '',
+          account: selectedAccount.name,
+          value: '',
+          stage: 'Prospecting',
+          probability: '20%',
+          owner: selectedAccount.ownerName
         }}
       />
-      
+
       <AddContactDialog
         open={contactDialogOpen}
         onOpenChange={setContactDialogOpen}
@@ -1028,7 +1066,7 @@ export default function AccountMap() {
         mode="create"
         defaultAccount={selectedAccount.name}
       />
-      
+
       <LogActivityDialog
         open={activityDialogOpen}
         onOpenChange={setActivityDialogOpen}
@@ -1112,6 +1150,16 @@ export default function AccountMap() {
           </p>
         </DialogContent>
       </Dialog>
+
+      {/* Account History Dialog */}
+      <AccountHistoryDialog
+        open={historyDialogOpen}
+        onOpenChange={setHistoryDialogOpen}
+        accountName={selectedAccount.name}
+        activities={accountActivities}
+        opportunities={accountOpportunities}
+        stakeholders={accountStakeholders}
+      />
     </AppLayout>
   );
 }

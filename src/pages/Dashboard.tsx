@@ -4,16 +4,19 @@ import { PipelineChart } from "@/components/dashboard/PipelineChart";
 import { RevenueChart } from "@/components/dashboard/RevenueChart";
 import { RecentDeals } from "@/components/dashboard/RecentDeals";
 import { ActivityFeed } from "@/components/dashboard/ActivityFeed";
-import { 
-  TrendingUp, 
-  Target, 
-  Briefcase, 
+import {
+  TrendingUp,
+  Target,
+  Briefcase,
   IndianRupee,
   FileText,
   Users
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export default function Dashboard() {
+  const navigate = useNavigate();
+
   return (
     <AppLayout title="Dashboard">
       {/* Stats Grid */}
@@ -25,6 +28,7 @@ export default function Dashboard() {
           changeLabel="vs last month"
           icon={<IndianRupee className="h-5 w-5" />}
           variant="primary"
+          onClick={() => navigate('/opportunities')}
         />
         <StatCard
           title="Active Opportunities"
@@ -33,6 +37,7 @@ export default function Dashboard() {
           changeLabel="vs last month"
           icon={<Briefcase className="h-5 w-5" />}
           variant="accent"
+          onClick={() => navigate('/opportunities')}
         />
         <StatCard
           title="Deals Won (MTD)"
@@ -41,6 +46,7 @@ export default function Dashboard() {
           changeLabel="vs target"
           icon={<TrendingUp className="h-5 w-5" />}
           variant="success"
+          onClick={() => navigate('/opportunities')}
         />
         <StatCard
           title="Win Rate"
@@ -48,6 +54,7 @@ export default function Dashboard() {
           change={-2}
           changeLabel="vs last month"
           icon={<Target className="h-5 w-5" />}
+          onClick={() => navigate('/win-loss')}
         />
       </div>
 
@@ -58,6 +65,7 @@ export default function Dashboard() {
           value="23"
           changeLabel="₹1.2 Cr total"
           icon={<FileText className="h-5 w-5" />}
+          onClick={() => navigate('/quotes')}
         />
         <StatCard
           title="Active Accounts"
@@ -65,6 +73,7 @@ export default function Dashboard() {
           change={5}
           changeLabel="new this month"
           icon={<Users className="h-5 w-5" />}
+          onClick={() => navigate('/accounts')}
         />
         <StatCard
           title="Avg Deal Size"
@@ -72,6 +81,7 @@ export default function Dashboard() {
           change={15}
           changeLabel="vs last quarter"
           icon={<IndianRupee className="h-5 w-5" />}
+          onClick={() => navigate('/performance')}
         />
       </div>
 

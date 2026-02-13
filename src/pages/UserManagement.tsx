@@ -30,6 +30,8 @@ import {
   Calendar,
   Building2,
   MapPin,
+  Presentation,
+  Lightbulb,
 } from 'lucide-react';
 import { User, UserRole, roleInfo } from '@/types/rbac';
 import { mockUsers as initialUsers, teams } from '@/data/mockUsers';
@@ -142,9 +144,11 @@ export default function UserManagement() {
     active: users.filter((u) => u.isActive).length,
     admins: users.filter((u) => u.role === 'admin').length,
     sales: users.filter((u) => ['sales', 'sales_head'].includes(u.role)).length,
+    presales: users.filter((u) => u.role === 'presales').length,
+    valueEngineering: users.filter((u) => u.role === 'value_engineering').length,
   };
 
-  const roles: UserRole[] = ['admin', 'sales_head', 'finance', 'hr', 'sales', 'viewer'];
+  const roles: UserRole[] = ['admin', 'sales_head', 'finance', 'hr', 'sales', 'presales', 'value_engineering', 'viewer'];
 
   return (
     <AppLayout title="User Management">
@@ -214,6 +218,34 @@ export default function UserManagement() {
                 </div>
                 <div className="h-12 w-12 rounded-lg bg-blue-500/10 flex items-center justify-center">
                   <Building2 className="h-6 w-6 text-blue-500" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="card-elevated">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Presales Team</p>
+                  <p className="text-2xl font-bold text-cyan-500">{stats.presales}</p>
+                </div>
+                <div className="h-12 w-12 rounded-lg bg-cyan-500/10 flex items-center justify-center">
+                  <Presentation className="h-6 w-6 text-cyan-500" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="card-elevated">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Value Eng.</p>
+                  <p className="text-2xl font-bold text-indigo-500">{stats.valueEngineering}</p>
+                </div>
+                <div className="h-12 w-12 rounded-lg bg-indigo-500/10 flex items-center justify-center">
+                  <Lightbulb className="h-6 w-6 text-indigo-500" />
                 </div>
               </div>
             </CardContent>
@@ -313,6 +345,8 @@ export default function UserManagement() {
                           user.role === 'finance' && 'bg-amber-500/10 text-amber-500',
                           user.role === 'hr' && 'bg-pink-500/10 text-pink-500',
                           user.role === 'sales' && 'bg-emerald-500/10 text-emerald-500',
+                          user.role === 'presales' && 'bg-cyan-500/10 text-cyan-500',
+                          user.role === 'value_engineering' && 'bg-indigo-500/10 text-indigo-500',
                           user.role === 'viewer' && 'bg-slate-500/10 text-slate-500'
                         )}
                       >

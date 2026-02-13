@@ -94,6 +94,32 @@ export const mockUsers: User[] = [
     createdAt: '2024-02-15',
     lastLogin: '2024-03-15T07:45:00Z',
   },
+  {
+    id: 'USR-009',
+    email: 'karthik.iyer@sequelstring.com',
+    firstName: 'Karthik',
+    lastName: 'Iyer',
+    role: 'presales',
+    teamId: 'TEAM-PRE',
+    teamName: 'Presales Team',
+    region: 'South',
+    isActive: true,
+    createdAt: '2024-03-01',
+    lastLogin: '2024-03-16T09:00:00Z',
+  },
+  {
+    id: 'USR-010',
+    email: 'divya.menon@sequelstring.com',
+    firstName: 'Divya',
+    lastName: 'Menon',
+    role: 'value_engineering',
+    teamId: 'TEAM-VE',
+    teamName: 'Value Engineering',
+    region: 'North',
+    isActive: true,
+    createdAt: '2024-03-05',
+    lastLogin: '2024-03-16T10:15:00Z',
+  },
 ];
 
 export const teams = [
@@ -102,6 +128,8 @@ export const teams = [
   { id: 'TEAM-GOVT', name: 'Government Sales' },
   { id: 'TEAM-CHANNEL', name: 'Channel Partners' },
   { id: 'TEAM-INSIDE', name: 'Inside Sales' },
+  { id: 'TEAM-PRE', name: 'Presales Team' },
+  { id: 'TEAM-VE', name: 'Value Engineering' },
 ];
 
 export const regions = ['North', 'South', 'East', 'West', 'Pan India'];

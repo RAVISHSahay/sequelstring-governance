@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,6 +18,7 @@ import { DeleteConfirmDialog } from "@/components/dialogs/DeleteConfirmDialog";
 import { OpportunityDetailDialog } from "@/components/dialogs/OpportunityDetailDialog";
 import { ContextualHelp } from "@/components/help/ContextualHelp";
 import { toast } from "sonner";
+import { useSearchParams } from "react-router-dom";
 
 interface Deal {
   id: number;
@@ -281,7 +282,7 @@ function DealCard({ deal, stageName, onEdit, onDelete, onViewDetails }: DealCard
             <DropdownMenuItem onClick={(e) => e.stopPropagation()}>Create Quote</DropdownMenuItem>
             <DropdownMenuItem onClick={(e) => e.stopPropagation()}>Log Activity</DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem 
+            <DropdownMenuItem
               onClick={(e) => { e.stopPropagation(); onDelete(deal); }}
               className="text-destructive focus:text-destructive"
             >
@@ -331,6 +332,7 @@ const stageToId: Record<string, string> = {
 };
 
 export default function Opportunities() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [addToStage, setAddToStage] = useState("Lead");
@@ -341,10 +343,28 @@ export default function Opportunities() {
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [selectedDeal, setSelectedDeal] = useState<(Deal & { stage?: string }) | null>(null);
 
+  useEffect(() => {
+    const dealId = searchParams.get("dealId");
+    if (dealId) {
+      // flatten stages to find deal
+      const allDeals = stages.flatMap(s => s.deals);
+      const deal = allDeals.find(d => d.id === parseInt(dealId));
+      if (deal) {
+        // Find stage name
+        const stage = stages.find(s => s.deals.some(d => d.id === deal.id));
+        if (stage) {
+          handleViewDetails(deal, stage.name);
+        }
+      }
+    }
+  }, [searchParams, stages]);
+
   const handleViewDetails = (deal: Deal, stageName: string) => {
     setSelectedDeal({ ...deal, stage: stageName });
     setDetailDialogOpen(true);
   };
+
+  // ... rest of component
 
   const handleAddDeal = (stage: string) => {
     setAddToStage(stage);
@@ -394,17 +414,17 @@ export default function Opportunities() {
       // Update existing
       setStages(stages.map(stage => ({
         ...stage,
-        deals: stage.deals.map(deal => 
-          deal.id === data.id 
-            ? { 
-                ...deal, 
-                name: data.name,
-                account: data.account,
-                value: data.value,
-                probability: parseInt(data.probability) || 20,
-                owner: data.owner || deal.owner,
-                initials: getInitials(data.owner || deal.owner),
-              }
+        deals: stage.deals.map(deal =>
+          deal.id === data.id
+            ? {
+              ...deal,
+              name: data.name,
+              account: data.account,
+              value: data.value,
+              probability: parseInt(data.probability) || 20,
+              owner: data.owner || deal.owner,
+              initials: getInitials(data.owner || deal.owner),
+            }
             : deal
         )
       })));
@@ -423,8 +443,8 @@ export default function Opportunities() {
       };
 
       const stageId = stageToId[data.stage] || "lead";
-      setStages(stages.map(stage => 
-        stage.id === stageId 
+      setStages(stages.map(stage =>
+        stage.id === stageId
           ? { ...stage, deals: [...stage.deals, newDeal] }
           : stage
       ));
@@ -453,9 +473,9 @@ export default function Opportunities() {
             <Plus className="h-4 w-4" />
             Add Opportunity
           </Button>
-          <ContextualHelp 
-            articleId="opportunity-management" 
-            tooltip="Learn about opportunities" 
+          <ContextualHelp
+            articleId="opportunity-management"
+            tooltip="Learn about opportunities"
           />
         </div>
       </div>
@@ -482,9 +502,9 @@ export default function Opportunities() {
               {/* Deals */}
               <div className="space-y-3">
                 {stage.deals.map((deal) => (
-                  <DealCard 
-                    key={deal.id} 
-                    deal={deal} 
+                  <DealCard
+                    key={deal.id}
+                    deal={deal}
                     stageName={stage.name}
                     onEdit={handleEditDeal}
                     onDelete={handleDeleteDeal}
@@ -531,9 +551,9 @@ export default function Opportunities() {
         </div>
       </div>
 
-      <AddOpportunityDialog 
-        open={isDialogOpen} 
-        onOpenChange={setIsDialogOpen} 
+      <AddOpportunityDialog
+        open={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
         initialStage={addToStage}
         editData={editingOpportunity}
         onSave={handleSave}

@@ -11,12 +11,12 @@ import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  Phone, 
-  Mail, 
-  Video, 
-  Users, 
-  MessageSquare, 
+import {
+  Phone,
+  Mail,
+  Video,
+  Users,
+  MessageSquare,
   Calendar,
   Plus,
   Search,
@@ -46,6 +46,7 @@ import {
 import { Stakeholder, Opportunity } from "@/types/account";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
+import { sanitize } from "@/lib/sanitize";
 import { format, formatDistanceToNow, isToday, isYesterday, isThisWeek } from "date-fns";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
@@ -194,8 +195,8 @@ export const mockCommunications: CommunicationEntry[] = [
   },
 ];
 
-export function StakeholderCommunicationLog({ 
-  stakeholders, 
+export function StakeholderCommunicationLog({
+  stakeholders,
   opportunities = [],
   accountName = "Account",
   onSelectStakeholder,
@@ -288,7 +289,7 @@ export function StakeholderCommunicationLog({
 
     const stakeholder = stakeholders.find(s => s.id === newEntry.stakeholderId);
     const opportunity = opportunities.find(o => o.id === newEntry.linkedOpportunityId);
-    
+
     const entry: CommunicationEntry = {
       id: `comm_${Date.now()}`,
       stakeholderId: newEntry.stakeholderId,
@@ -310,11 +311,11 @@ export function StakeholderCommunicationLog({
     setCommunications(prev => [entry, ...prev]);
     setAddDialogOpen(false);
     setNewEntry({ type: 'call', outcome: 'pending', date: new Date() });
-    toast({ 
-      title: "Communication Logged", 
-      description: opportunity 
-        ? `Interaction linked to "${opportunity.name}"` 
-        : "The interaction has been recorded" 
+    toast({
+      title: "Communication Logged",
+      description: opportunity
+        ? `Interaction linked to "${opportunity.name}"`
+        : "The interaction has been recorded"
     });
   };
 
@@ -471,7 +472,7 @@ export function StakeholderCommunicationLog({
                     const outcomeInfo = outcomeConfig[entry.outcome];
                     const TypeIcon = config.icon;
                     const OutcomeIcon = outcomeInfo.icon;
-                    const showDateHeader = idx === 0 || 
+                    const showDateHeader = idx === 0 ||
                       getDateLabel(new Date(entry.date)) !== getDateLabel(new Date(filteredCommunications[idx - 1].date));
 
                     return (
@@ -485,7 +486,7 @@ export function StakeholderCommunicationLog({
                             <div className="h-px flex-1 bg-border" />
                           </div>
                         )}
-                        <div 
+                        <div
                           className={cn(
                             "group relative flex gap-3 p-3 rounded-lg border cursor-pointer transition-all hover:shadow-md",
                             entry.isKeyMoment && "border-amber-300 bg-amber-50/50 dark:bg-amber-900/10",
@@ -545,8 +546,8 @@ export function StakeholderCommunicationLog({
                                       <Pencil className="h-4 w-4" />
                                       Edit
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem 
-                                      className="gap-2 text-destructive" 
+                                    <DropdownMenuItem
+                                      className="gap-2 text-destructive"
                                       onClick={(e) => { e.stopPropagation(); handleDeleteEntry(entry.id); }}
                                     >
                                       <Trash2 className="h-4 w-4" />
@@ -556,7 +557,10 @@ export function StakeholderCommunicationLog({
                                 </DropdownMenu>
                               </div>
                             </div>
-                            <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{entry.summary}</p>
+                            <div
+                              className="text-sm text-muted-foreground mt-1 line-clamp-2"
+                              dangerouslySetInnerHTML={{ __html: sanitize(entry.summary) }}
+                            />
                             {entry.nextSteps && (
                               <div className="flex items-center gap-1 mt-2 text-xs text-primary">
                                 <ChevronRight className="h-3 w-3" />
@@ -581,7 +585,7 @@ export function StakeholderCommunicationLog({
                 {Object.entries(groupedByStakeholder).map(([stakeholderId, entries]) => {
                   const stakeholder = stakeholders.find(s => s.id === stakeholderId);
                   const lastEntry = entries[0];
-                  
+
                   return (
                     <div key={stakeholderId} className="border rounded-lg p-4">
                       <div className="flex items-center gap-3 mb-3">
@@ -609,8 +613,8 @@ export function StakeholderCommunicationLog({
                           const config = communicationTypeConfig[entry.type];
                           const TypeIcon = config.icon;
                           return (
-                            <div 
-                              key={entry.id} 
+                            <div
+                              key={entry.id}
                               className="flex items-center gap-2 p-2 rounded hover:bg-muted cursor-pointer"
                               onClick={() => setSelectedEntry(entry)}
                             >
@@ -638,11 +642,11 @@ export function StakeholderCommunicationLog({
               <div className="space-y-6">
                 {Object.entries(groupedByOpportunity).map(([opportunityId, entries]) => {
                   if (entries.length === 0) return null;
-                  
+
                   const opportunity = opportunities.find(o => o.id === opportunityId);
                   const isUnlinked = opportunityId === 'unlinked';
                   const lastEntry = entries[0];
-                  
+
                   return (
                     <div key={opportunityId} className={cn(
                       "border rounded-lg p-4",
@@ -686,8 +690,8 @@ export function StakeholderCommunicationLog({
                           const outcomeInfo = outcomeConfig[entry.outcome];
                           const TypeIcon = config.icon;
                           return (
-                            <div 
-                              key={entry.id} 
+                            <div
+                              key={entry.id}
                               className="flex items-center gap-2 p-2 rounded hover:bg-muted cursor-pointer"
                               onClick={() => setSelectedEntry(entry)}
                             >
@@ -729,13 +733,13 @@ export function StakeholderCommunicationLog({
             <DialogTitle>Log Stakeholder Interaction</DialogTitle>
             <DialogDescription>Record a communication with a key stakeholder</DialogDescription>
           </DialogHeader>
-          
+
           <div className="space-y-4 py-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Stakeholder *</Label>
-                <Select 
-                  value={newEntry.stakeholderId} 
+                <Select
+                  value={newEntry.stakeholderId}
                   onValueChange={(v) => setNewEntry(prev => ({ ...prev, stakeholderId: v }))}
                 >
                   <SelectTrigger>
@@ -758,8 +762,8 @@ export function StakeholderCommunicationLog({
 
               <div className="space-y-2">
                 <Label>Type *</Label>
-                <Select 
-                  value={newEntry.type} 
+                <Select
+                  value={newEntry.type}
                   onValueChange={(v) => setNewEntry(prev => ({ ...prev, type: v as CommunicationType }))}
                 >
                   <SelectTrigger>
@@ -781,7 +785,7 @@ export function StakeholderCommunicationLog({
 
             <div className="space-y-2">
               <Label>Subject *</Label>
-              <Input 
+              <Input
                 placeholder="Brief subject line"
                 value={newEntry.subject || ''}
                 onChange={(e) => setNewEntry(prev => ({ ...prev, subject: e.target.value }))}
@@ -790,7 +794,7 @@ export function StakeholderCommunicationLog({
 
             <div className="space-y-2">
               <Label>Summary *</Label>
-              <Textarea 
+              <Textarea
                 placeholder="Key points discussed, insights gathered..."
                 rows={3}
                 value={newEntry.summary || ''}
@@ -801,8 +805,8 @@ export function StakeholderCommunicationLog({
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Outcome</Label>
-                <Select 
-                  value={newEntry.outcome} 
+                <Select
+                  value={newEntry.outcome}
                   onValueChange={(v) => setNewEntry(prev => ({ ...prev, outcome: v as CommunicationOutcome }))}
                 >
                   <SelectTrigger>
@@ -823,7 +827,7 @@ export function StakeholderCommunicationLog({
 
               <div className="space-y-2">
                 <Label>Duration (min)</Label>
-                <Input 
+                <Input
                   type="number"
                   placeholder="Optional"
                   value={newEntry.duration || ''}
@@ -839,11 +843,11 @@ export function StakeholderCommunicationLog({
                   <Link2 className="h-4 w-4" />
                   Link to Opportunity
                 </Label>
-                <Select 
-                  value={newEntry.linkedOpportunityId || 'none'} 
-                  onValueChange={(v) => setNewEntry(prev => ({ 
-                    ...prev, 
-                    linkedOpportunityId: v === 'none' ? undefined : v 
+                <Select
+                  value={newEntry.linkedOpportunityId || 'none'}
+                  onValueChange={(v) => setNewEntry(prev => ({
+                    ...prev,
+                    linkedOpportunityId: v === 'none' ? undefined : v
                   }))}
                 >
                   <SelectTrigger>
@@ -874,7 +878,7 @@ export function StakeholderCommunicationLog({
 
             <div className="space-y-2">
               <Label>Next Steps</Label>
-              <Input 
+              <Input
                 placeholder="Follow-up actions..."
                 value={newEntry.nextSteps || ''}
                 onChange={(e) => setNewEntry(prev => ({ ...prev, nextSteps: e.target.value }))}

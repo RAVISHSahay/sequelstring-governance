@@ -32,7 +32,7 @@ interface UserDialogProps {
   mode: 'create' | 'edit';
 }
 
-const roles: UserRole[] = ['admin', 'sales_head', 'finance', 'hr', 'sales', 'viewer'];
+const roles: UserRole[] = ['admin', 'sales_head', 'finance', 'hr', 'sales', 'presales', 'value_engineering', 'viewer'];
 
 export function UserDialog({ open, onOpenChange, user, onSave, mode }: UserDialogProps) {
   const [formData, setFormData] = useState({
@@ -98,7 +98,7 @@ export function UserDialog({ open, onOpenChange, user, onSave, mode }: UserDialo
     formData.email.trim() !== '' &&
     formData.email.includes('@');
 
-  const showTeamFields = ['sales', 'sales_head'].includes(formData.role);
+  const showTeamFields = ['sales', 'sales_head', 'presales', 'value_engineering'].includes(formData.role);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

@@ -27,6 +27,7 @@ import { QuoteSummary } from "@/components/quotes/QuoteSummary";
 import { PaymentTermsConfig, type PaymentTerms } from "@/components/quotes/PaymentTermsConfig";
 import { QuoteHeader, type QuoteInfo } from "@/components/quotes/QuoteHeader";
 import { DiscountControls } from "@/components/quotes/DiscountControls";
+import { CustomerPortalDialog } from "@/components/quotes/CustomerPortalDialog";
 
 const generateQuoteId = () => {
   const year = new Date().getFullYear();
@@ -107,13 +108,13 @@ export default function QuoteBuilder() {
       pricingModel: product.pricingUnit.includes("year")
         ? "per-year"
         : product.pricingUnit.includes("month")
-        ? "per-month"
-        : "one-time",
+          ? "per-month"
+          : "one-time",
       billingFrequency: product.pricingUnit.includes("year")
         ? "yearly"
         : product.pricingUnit.includes("month")
-        ? "monthly"
-        : "one-time",
+          ? "monthly"
+          : "one-time",
     };
 
     setLineItems([...lineItems, newLineItem]);
@@ -162,6 +163,17 @@ export default function QuoteBuilder() {
     });
   };
 
+  // Preview State
+  const [previewOpen, setPreviewOpen] = useState(false);
+
+  // Preview handler
+  const handlePreview = () => {
+    setPreviewOpen(true);
+    toast.info("Opening Preview", {
+      description: "Showing customer-facing proposal view",
+    });
+  };
+
   const selectedProductIds = lineItems.map((item) => item.productId);
 
   return (
@@ -181,7 +193,7 @@ export default function QuoteBuilder() {
             <FileDown className="h-4 w-4" />
             Export PDF
           </Button>
-          <Button variant="outline" className="gap-2">
+          <Button variant="outline" className="gap-2" onClick={handlePreview}>
             <Eye className="h-4 w-4" />
             Preview
           </Button>
@@ -319,6 +331,23 @@ export default function QuoteBuilder() {
           </div>
         </div>
       </div>
+
+      {/* Customer Portal Preview Dialog */}
+      <CustomerPortalDialog
+        open={previewOpen}
+        onOpenChange={setPreviewOpen}
+        quote={{
+          id: quoteInfo.quoteId,
+          name: quoteInfo.quoteName,
+          account: quoteInfo.accountName,
+          value: new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(subtotal), // Using subtotal as proxy for value since full calculation logic is complex to duplicate inline
+          discount: quoteDiscount + "%",
+          validUntil: quoteInfo.validUntil.toLocaleDateString(),
+          createdAt: new Date().toLocaleDateString(),
+          opportunity: quoteInfo.opportunityName,
+          status: quoteInfo.status
+        }}
+      />
     </AppLayout>
   );
 }

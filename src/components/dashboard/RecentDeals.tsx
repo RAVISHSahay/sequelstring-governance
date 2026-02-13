@@ -1,10 +1,11 @@
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
+import { useNavigate } from "react-router-dom";
 
 const deals = [
   {
-    id: 1,
+    id: 6,
     name: "Enterprise Platform License",
     account: "Tata Steel Ltd",
     value: "₹45,00,000",
@@ -14,7 +15,7 @@ const deals = [
     probability: 80,
   },
   {
-    id: 2,
+    id: 7,
     name: "Cloud Migration Services",
     account: "Reliance Industries",
     value: "₹28,50,000",
@@ -24,7 +25,7 @@ const deals = [
     probability: 60,
   },
   {
-    id: 3,
+    id: 10,
     name: "Annual Support Contract",
     account: "Infosys Ltd",
     value: "₹12,00,000",
@@ -34,7 +35,7 @@ const deals = [
     probability: 40,
   },
   {
-    id: 4,
+    id: 12,
     name: "API Integration Package",
     account: "HDFC Bank",
     value: "₹18,75,000",
@@ -44,7 +45,7 @@ const deals = [
     probability: 100,
   },
   {
-    id: 5,
+    id: 8,
     name: "Data Analytics Suite",
     account: "Mahindra Group",
     value: "₹32,00,000",
@@ -71,6 +72,8 @@ const getStageColor = (stage: string) => {
 };
 
 export function RecentDeals() {
+  const navigate = useNavigate();
+
   return (
     <div className="stat-card animate-slide-up" style={{ animationDelay: "0.2s" }}>
       <div className="mb-6 flex items-center justify-between">
@@ -93,7 +96,8 @@ export function RecentDeals() {
         {deals.map((deal) => (
           <div
             key={deal.id}
-            className="flex items-center justify-between py-3 border-b border-border/50 last:border-0 last:pb-0"
+            onClick={() => navigate(`/opportunities?dealId=${deal.id}`)}
+            className="flex items-center justify-between py-3 border-b border-border/50 last:border-0 last:pb-0 cursor-pointer hover:bg-muted/50 p-2 rounded-lg transition-colors"
           >
             <div className="flex items-center gap-3 min-w-0">
               <Avatar className="h-9 w-9 flex-shrink-0">

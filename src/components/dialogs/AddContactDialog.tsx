@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { UserPlus } from 'lucide-react';
+import { UserPlus, Linkedin } from 'lucide-react';
 import { useActivityLogger } from '@/hooks/useActivityLogger';
 
 interface Contact {
@@ -30,6 +30,8 @@ interface Contact {
   role: string;
   influence: string;
   lastContact: string;
+  linkedin?: string;
+  accountId: string;
 }
 
 interface AddContactDialogProps {
@@ -64,6 +66,7 @@ export function AddContactDialog({ open, onOpenChange, onSave, contact, mode = '
     phone: '',
     role: '',
     influence: '',
+    linkedin: '',
   });
   const { log } = useActivityLogger();
 
@@ -79,6 +82,7 @@ export function AddContactDialog({ open, onOpenChange, onSave, contact, mode = '
         phone: contact.phone,
         role: contact.role,
         influence: contact.influence,
+        linkedin: contact.linkedin || '',
       });
     } else {
       setFormData({
@@ -90,6 +94,7 @@ export function AddContactDialog({ open, onOpenChange, onSave, contact, mode = '
         phone: '',
         role: '',
         influence: '',
+        linkedin: '',
       });
     }
   }, [contact, mode, open, defaultAccount]);
@@ -106,6 +111,12 @@ export function AddContactDialog({ open, onOpenChange, onSave, contact, mode = '
       role: formData.role,
       influence: formData.influence,
       lastContact: 'Just now',
+      linkedin: formData.linkedin || undefined,
+      accountId: (formData.account === 'Tata Steel Ltd' ? '1' :
+        formData.account === 'Infosys Ltd' ? '2' :
+          formData.account === 'Reliance Industries' ? '3' :
+            formData.account === 'HDFC Bank' ? '4' :
+              formData.account === 'Mahindra Group' ? '5' : 'ACC-UNKNOWN'),
     };
 
     // Log activity
@@ -250,6 +261,19 @@ export function AddContactDialog({ open, onOpenChange, onSave, contact, mode = '
                 </SelectContent>
               </Select>
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="linkedin" className="flex items-center gap-2">
+              <Linkedin className="h-4 w-4 text-[#0A66C2]" />
+              LinkedIn Profile
+            </Label>
+            <Input
+              id="linkedin"
+              value={formData.linkedin}
+              onChange={(e) => setFormData((prev) => ({ ...prev, linkedin: e.target.value }))}
+              placeholder="https://linkedin.com/in/username"
+            />
           </div>
         </div>
 

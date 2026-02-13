@@ -30,6 +30,8 @@ interface Account {
   contacts: number;
   status: string;
   owner: string;
+  gstin?: string;
+  pan?: string;
 }
 
 interface AddAccountDialogProps {
@@ -64,6 +66,8 @@ export function AddAccountDialog({ open, onOpenChange, onSave, account, mode = '
     revenue: '',
     status: 'Prospect',
     owner: '',
+    gstin: '',
+    pan: '',
   });
   const { log } = useActivityLogger();
 
@@ -76,6 +80,8 @@ export function AddAccountDialog({ open, onOpenChange, onSave, account, mode = '
         revenue: account.revenue.replace('₹', '').trim(),
         status: account.status,
         owner: account.owner,
+        gstin: account.gstin || '',
+        pan: account.pan || '',
       });
     } else {
       setFormData({
@@ -85,6 +91,8 @@ export function AddAccountDialog({ open, onOpenChange, onSave, account, mode = '
         revenue: '',
         status: 'Prospect',
         owner: '',
+        gstin: '',
+        pan: '',
       });
     }
   }, [account, mode, open]);
@@ -100,6 +108,8 @@ export function AddAccountDialog({ open, onOpenChange, onSave, account, mode = '
       contacts: account?.contacts || 0,
       status: formData.status,
       owner: formData.owner,
+      gstin: formData.gstin,
+      pan: formData.pan,
     };
 
     // Log activity
@@ -211,6 +221,29 @@ export function AddAccountDialog({ open, onOpenChange, onSave, account, mode = '
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="gstin">GSTIN</Label>
+              <Input
+                id="gstin"
+                value={formData.gstin}
+                onChange={(e) => setFormData((prev) => ({ ...prev, gstin: e.target.value.toUpperCase() }))}
+                placeholder="22AAAAA0000A1Z5"
+                maxLength={15}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="pan">PAN</Label>
+              <Input
+                id="pan"
+                value={formData.pan}
+                onChange={(e) => setFormData((prev) => ({ ...prev, pan: e.target.value.toUpperCase() }))}
+                placeholder="ABCDE1234F"
+                maxLength={10}
+              />
             </div>
           </div>
 

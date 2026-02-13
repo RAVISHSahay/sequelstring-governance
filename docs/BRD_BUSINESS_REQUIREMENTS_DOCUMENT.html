@@ -1,0 +1,1407 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SequelString CRM - Business Requirements Document</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --secondary: #7c3aed;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+            --gray-900: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.6;
+            color: var(--gray-800);
+            background: var(--gray-50);
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        }
+
+        /* Print Styles */
+        @media print {
+            body {
+                background: white;
+            }
+
+            .container {
+                box-shadow: none;
+                max-width: 100%;
+            }
+
+            .no-print {
+                display: none !important;
+            }
+
+            .page-break {
+                page-break-before: always;
+            }
+
+            a {
+                text-decoration: none;
+                color: var(--gray-800);
+            }
+        }
+
+        /* Cover Page */
+        .cover-page {
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 60px 50px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .cover-logo {
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .cover-logo span {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .cover-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .cover-title {
+            font-size: 48px;
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 20px;
+        }
+
+        .cover-subtitle {
+            font-size: 24px;
+            font-weight: 400;
+            opacity: 0.9;
+            margin-bottom: 40px;
+        }
+
+        .cover-meta {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            max-width: 500px;
+        }
+
+        .cover-meta-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px 20px;
+            border-radius: 8px;
+        }
+
+        .cover-meta-label {
+            font-size: 12px;
+            opacity: 0.7;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .cover-meta-value {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .cover-footer {
+            opacity: 0.7;
+            font-size: 14px;
+        }
+
+        /* Content Pages */
+        .content {
+            padding: 50px;
+        }
+
+        h1 {
+            font-size: 32px;
+            color: var(--primary);
+            border-bottom: 3px solid var(--primary);
+            padding-bottom: 15px;
+            margin-bottom: 30px;
+        }
+
+        h2 {
+            font-size: 24px;
+            color: var(--gray-800);
+            margin-top: 40px;
+            margin-bottom: 20px;
+            padding-left: 15px;
+            border-left: 4px solid var(--primary);
+        }
+
+        h3 {
+            font-size: 18px;
+            color: var(--gray-700);
+            margin-top: 25px;
+            margin-bottom: 15px;
+        }
+
+        h4 {
+            font-size: 16px;
+            color: var(--gray-600);
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+
+        p {
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+
+        ul,
+        ol {
+            margin-left: 25px;
+            margin-bottom: 15px;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+
+        th {
+            background: var(--gray-100);
+            color: var(--gray-700);
+            font-weight: 600;
+            text-align: left;
+            padding: 12px 15px;
+            border: 1px solid var(--gray-200);
+        }
+
+        td {
+            padding: 10px 15px;
+            border: 1px solid var(--gray-200);
+            vertical-align: top;
+        }
+
+        tr:hover {
+            background: var(--gray-50);
+        }
+
+        .table-critical {
+            background: #fef2f2;
+        }
+
+        .table-high {
+            background: #fffbeb;
+        }
+
+        .table-medium {
+            background: #f0fdf4;
+        }
+
+        .table-low {
+            background: #f0f9ff;
+        }
+
+        /* Badges */
+        .badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge-critical {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .badge-high {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .badge-medium {
+            background: #d1fae5;
+            color: #059669;
+        }
+
+        .badge-low {
+            background: #dbeafe;
+            color: #2563eb;
+        }
+
+        .badge-complete {
+            background: #d1fae5;
+            color: #059669;
+        }
+
+        /* Code blocks */
+        pre {
+            background: var(--gray-800);
+            color: #e5e7eb;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-family: 'Consolas', monospace;
+            font-size: 13px;
+            margin: 20px 0;
+        }
+
+        code {
+            background: var(--gray-100);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Consolas', monospace;
+            font-size: 14px;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--gray-50);
+            border: 1px solid var(--gray-200);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+        }
+
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        /* TOC */
+        .toc {
+            background: var(--gray-50);
+            padding: 30px;
+            border-radius: 8px;
+            margin-bottom: 40px;
+        }
+
+        .toc h2 {
+            margin-top: 0;
+            border-left: none;
+            padding-left: 0;
+        }
+
+        .toc ol {
+            list-style: decimal;
+        }
+
+        .toc a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .toc a:hover {
+            text-decoration: underline;
+        }
+
+        /* Checkmarks */
+        .check {
+            color: var(--success);
+        }
+
+        .cross {
+            color: var(--danger);
+        }
+
+        /* Section numbering */
+        .section-number {
+            color: var(--primary);
+            font-weight: bold;
+        }
+
+        /* Download button */
+        .download-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 10px 25px rgba(37, 99, 235, 0.3);
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 1000;
+        }
+
+        .download-btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 15px 30px rgba(37, 99, 235, 0.4);
+        }
+
+        /* Divider */
+        hr {
+            border: none;
+            height: 1px;
+            background: var(--gray-200);
+            margin: 40px 0;
+        }
+
+        /* Approval section */
+        .approval-table td {
+            padding: 20px 15px;
+        }
+
+        .signature-line {
+            border-bottom: 1px solid var(--gray-400);
+            width: 150px;
+            height: 30px;
+            display: inline-block;
+        }
+
+        /* Footer */
+        .doc-footer {
+            background: var(--gray-100);
+            padding: 30px 50px;
+            text-align: center;
+            font-size: 13px;
+            color: var(--gray-600);
+            border-top: 1px solid var(--gray-200);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Cover Page -->
+        <div class="cover-page">
+            <div class="cover-logo">SequelString<span>CRM</span></div>
+            <div class="cover-content">
+                <h1 class="cover-title">Business Requirements Document</h1>
+                <p class="cover-subtitle">Enterprise Sales Governance Platform</p>
+                <div class="cover-meta">
+                    <div class="cover-meta-item">
+                        <div class="cover-meta-label">Version</div>
+                        <div class="cover-meta-value">1.0</div>
+                    </div>
+                    <div class="cover-meta-item">
+                        <div class="cover-meta-label">Status</div>
+                        <div class="cover-meta-value">APPROVED</div>
+                    </div>
+                    <div class="cover-meta-item">
+                        <div class="cover-meta-label">Date</div>
+                        <div class="cover-meta-value">February 01, 2026</div>
+                    </div>
+                    <div class="cover-meta-item">
+                        <div class="cover-meta-label">Classification</div>
+                        <div class="cover-meta-value">Internal + Client</div>
+                    </div>
+                </div>
+            </div>
+            <div class="cover-footer">
+                © 2026 SequelString CRM. All Rights Reserved | Confidential
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <!-- Document Control -->
+            <h1>Document Control</h1>
+            <table>
+                <tr>
+                    <th width="30%">Document Title</th>
+                    <td>Business Requirements Document</td>
+                </tr>
+                <tr>
+                    <th>Project Name</th>
+                    <td>SequelString CRM - Enterprise Sales Governance Platform</td>
+                </tr>
+                <tr>
+                    <th>Version</th>
+                    <td>1.0</td>
+                </tr>
+                <tr>
+                    <th>Status</th>
+                    <td><span class="badge badge-complete">APPROVED</span></td>
+                </tr>
+                <tr>
+                    <th>Date</th>
+                    <td>February 01, 2026</td>
+                </tr>
+                <tr>
+                    <th>Author</th>
+                    <td>SequelString Product Team</td>
+                </tr>
+                <tr>
+                    <th>Classification</th>
+                    <td>Internal + Client Facing</td>
+                </tr>
+            </table>
+
+            <hr class="page-break">
+
+            <!-- Table of Contents -->
+            <div class="toc">
+                <h2>📋 Table of Contents</h2>
+                <ol>
+                    <li><a href="#section1">Executive Summary</a></li>
+                    <li><a href="#section2">Project Overview</a></li>
+                    <li><a href="#section3">Business Objectives</a></li>
+                    <li><a href="#section4">Stakeholders</a></li>
+                    <li><a href="#section5">Scope</a></li>
+                    <li><a href="#section6">Functional Requirements</a></li>
+                    <li><a href="#section7">Non-Functional Requirements</a></li>
+                    <li><a href="#section8">User Roles & Permissions</a></li>
+                    <li><a href="#section9">Module Specifications</a></li>
+                    <li><a href="#section10">Data Models</a></li>
+                    <li><a href="#section11">Integration Requirements</a></li>
+                    <li><a href="#section12">User Interface Requirements</a></li>
+                    <li><a href="#section13">Security Requirements</a></li>
+                    <li><a href="#section14">Assumptions & Constraints</a></li>
+                    <li><a href="#section15">Dependencies</a></li>
+                    <li><a href="#section16">Acceptance Criteria</a></li>
+                    <li><a href="#section17">Appendix</a></li>
+                </ol>
+            </div>
+
+            <hr class="page-break">
+
+            <!-- Section 1: Executive Summary -->
+            <h1 id="section1"><span class="section-number">1.</span> Executive Summary</h1>
+
+            <h2>1.1 Purpose</h2>
+            <p>This Business Requirements Document (BRD) defines the complete functional and non-functional requirements
+                for the <strong>SequelString CRM - Enterprise Sales Governance Platform</strong>. The platform is
+                designed to provide comprehensive sales process management, account intelligence, incentive management,
+                and enterprise-grade CRM capabilities for B2B organizations in the Indian market.</p>
+
+            <h2>1.2 Business Need</h2>
+            <p>Organizations require a unified platform that can:</p>
+            <ul>
+                <li>Manage complex enterprise sales cycles with multi-stakeholder engagement</li>
+                <li>Track and govern sales stages with configurable workflows</li>
+                <li>Automate incentive calculations and payout processing</li>
+                <li>Provide intelligent insights through forecasting and analytics</li>
+                <li>Enable POC (Proof of Concept) governance for technical sales</li>
+                <li>Support role-based access control across sales, finance, and HR teams</li>
+            </ul>
+
+            <h2>1.3 Solution Overview</h2>
+            <p>SequelString CRM is a modern web-based application built with:</p>
+            <div class="card-grid">
+                <div class="card">
+                    <h4>Frontend</h4>
+                    <p>React 18 + TypeScript + Vite</p>
+                </div>
+                <div class="card">
+                    <h4>UI Framework</h4>
+                    <p>Shadcn/ui + Radix UI + Tailwind CSS</p>
+                </div>
+                <div class="card">
+                    <h4>State Management</h4>
+                    <p>React Query + Context API</p>
+                </div>
+                <div class="card">
+                    <h4>Theming</h4>
+                    <p>Light/Dark/System modes</p>
+                </div>
+            </div>
+
+            <hr class="page-break">
+
+            <!-- Section 2: Project Overview -->
+            <h1 id="section2"><span class="section-number">2.</span> Project Overview</h1>
+
+            <h2>2.1 Project Scope Statement</h2>
+            <p>Develop an enterprise-grade CRM platform that manages the complete sales lifecycle from lead generation
+                to order fulfillment, including:</p>
+            <ul>
+                <li>Account & Contact Management</li>
+                <li>Lead & Opportunity Pipeline</li>
+                <li>Quote & Contract Management</li>
+                <li>Sales Stage Governance</li>
+                <li>Incentive & Payout Engine</li>
+                <li>Performance Analytics & Forecasting</li>
+                <li>Enterprise Features (Social, Intelligence, Call Integration)</li>
+            </ul>
+
+            <h2>2.2 Target Market</h2>
+            <ul>
+                <li><strong>Primary:</strong> Indian B2B Enterprise Organizations</li>
+                <li><strong>Industries:</strong> Manufacturing, Banking, IT Services, PSUs, Government</li>
+                <li><strong>Company Size:</strong> 500+ employees with dedicated sales teams</li>
+            </ul>
+
+            <h2>2.3 Key Value Propositions</h2>
+            <table>
+                <tr>
+                    <th>#</th>
+                    <th>Value Proposition</th>
+                    <th>Description</th>
+                </tr>
+                <tr>
+                    <td>1</td>
+                    <td>Complete Sales Lifecycle Management</td>
+                    <td>End-to-end pipeline visibility</td>
+                </tr>
+                <tr>
+                    <td>2</td>
+                    <td>India-Localized</td>
+                    <td>GSTIN, PAN, INR currency, Indian fiscal year support</td>
+                </tr>
+                <tr>
+                    <td>3</td>
+                    <td>Governance-First Approach</td>
+                    <td>Configurable stage gates and approval workflows</td>
+                </tr>
+                <tr>
+                    <td>4</td>
+                    <td>Transparent Incentive Management</td>
+                    <td>Real-time commission calculations</td>
+                </tr>
+                <tr>
+                    <td>5</td>
+                    <td>Enterprise Intelligence</td>
+                    <td>News alerts, competitive intel, social tracking</td>
+                </tr>
+            </table>
+
+            <hr class="page-break">
+
+            <!-- Section 3: Business Objectives -->
+            <h1 id="section3"><span class="section-number">3.</span> Business Objectives</h1>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Objective</th>
+                        <th>Success Metric</th>
+                        <th>Priority</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="table-critical">
+                        <td>BO-01</td>
+                        <td>Centralize sales data management</td>
+                        <td>Single source of truth for all sales data</td>
+                        <td><span class="badge badge-critical">Critical</span></td>
+                    </tr>
+                    <tr class="table-high">
+                        <td>BO-02</td>
+                        <td>Improve pipeline visibility</td>
+                        <td>100% forecast accuracy improvement</td>
+                        <td><span class="badge badge-high">High</span></td>
+                    </tr>
+                    <tr class="table-high">
+                        <td>BO-03</td>
+                        <td>Reduce sales cycle time</td>
+                        <td>20% reduction in average sales cycle</td>
+                        <td><span class="badge badge-high">High</span></td>
+                    </tr>
+                    <tr class="table-critical">
+                        <td>BO-04</td>
+                        <td>Automate incentive calculations</td>
+                        <td>Zero manual calculation errors</td>
+                        <td><span class="badge badge-critical">Critical</span></td>
+                    </tr>
+                    <tr class="table-high">
+                        <td>BO-05</td>
+                        <td>Enable data-driven decisions</td>
+                        <td>Real-time dashboards and analytics</td>
+                        <td><span class="badge badge-high">High</span></td>
+                    </tr>
+                    <tr class="table-critical">
+                        <td>BO-06</td>
+                        <td>Ensure compliance & governance</td>
+                        <td>100% stage gate compliance</td>
+                        <td><span class="badge badge-critical">Critical</span></td>
+                    </tr>
+                    <tr class="table-medium">
+                        <td>BO-07</td>
+                        <td>Improve stakeholder relationship tracking</td>
+                        <td>Complete influence mapping</td>
+                        <td><span class="badge badge-medium">Medium</span></td>
+                    </tr>
+                    <tr class="table-medium">
+                        <td>BO-08</td>
+                        <td>Integrate external intelligence</td>
+                        <td>Automated news and competitive alerts</td>
+                        <td><span class="badge badge-medium">Medium</span></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <hr class="page-break">
+
+            <!-- Section 4: Stakeholders -->
+            <h1 id="section4"><span class="section-number">4.</span> Stakeholders</h1>
+
+            <h2>4.1 Internal Stakeholders</h2>
+            <table>
+                <tr>
+                    <th>Role</th>
+                    <th>Responsibilities</th>
+                    <th>Access Level</th>
+                </tr>
+                <tr>
+                    <td>Administrator</td>
+                    <td>System configuration, user management</td>
+                    <td>Full Access</td>
+                </tr>
+                <tr>
+                    <td>Sales Head</td>
+                    <td>Team management, approvals, targets</td>
+                    <td>Management Access</td>
+                </tr>
+                <tr>
+                    <td>Sales Representative</td>
+                    <td>Account, lead, opportunity management</td>
+                    <td>Standard Access</td>
+                </tr>
+                <tr>
+                    <td>Finance</td>
+                    <td>Payouts, contracts, financial reports</td>
+                    <td>Financial Access</td>
+                </tr>
+                <tr>
+                    <td>HR</td>
+                    <td>User management, performance review</td>
+                    <td>HR Access</td>
+                </tr>
+                <tr>
+                    <td>Viewer</td>
+                    <td>Read-only dashboard access</td>
+                    <td>View Only</td>
+                </tr>
+            </table>
+
+            <h2>4.2 External Stakeholders</h2>
+            <ul>
+                <li>Customers (Account Contacts)</li>
+                <li>Channel Partners</li>
+                <li>Integration Partners (CTI, Email, Social APIs)</li>
+            </ul>
+
+            <hr class="page-break">
+
+            <!-- Section 5: Scope -->
+            <h1 id="section5"><span class="section-number">5.</span> Scope</h1>
+
+            <h2>5.1 In-Scope Features</h2>
+
+            <h3>Core CRM Modules</h3>
+            <ul>
+                <li><span class="check">✓</span> Dashboard with KPIs and widgets</li>
+                <li><span class="check">✓</span> Account Management with hierarchies</li>
+                <li><span class="check">✓</span> Account Map (360° view with stakeholder mapping)</li>
+                <li><span class="check">✓</span> Contact Management with LinkedIn integration</li>
+                <li><span class="check">✓</span> Lead Management with scoring</li>
+                <li><span class="check">✓</span> Opportunity Pipeline Management</li>
+                <li><span class="check">✓</span> Quote Builder and Management</li>
+                <li><span class="check">✓</span> Contract Management</li>
+                <li><span class="check">✓</span> Order Management</li>
+                <li><span class="check">✓</span> Activity Logging and Tracking</li>
+            </ul>
+
+            <h3>Sales Operations</h3>
+            <ul>
+                <li><span class="check">✓</span> Sales Stage Configuration (Configurable workflows)</li>
+                <li><span class="check">✓</span> POC Tracking & Governance</li>
+                <li><span class="check">✓</span> Forecasting Module</li>
+                <li><span class="check">✓</span> Win/Loss Analysis</li>
+                <li><span class="check">✓</span> Reports & Analytics</li>
+            </ul>
+
+            <h3>Incentive Engine</h3>
+            <ul>
+                <li><span class="check">✓</span> Target Management (Individual, Team, Region)</li>
+                <li><span class="check">✓</span> Incentive Plan Configuration</li>
+                <li><span class="check">✓</span> Payout Calculation & Processing</li>
+                <li><span class="check">✓</span> Performance Dashboards</li>
+                <li><span class="check">✓</span> Approval Workflows</li>
+            </ul>
+
+            <h3>Enterprise Features</h3>
+            <ul>
+                <li><span class="check">✓</span> Occasion-Based Auto Email</li>
+                <li><span class="check">✓</span> Social Profile Integration</li>
+                <li><span class="check">✓</span> Public Domain Intelligence (News, Competitive Intel)</li>
+                <li><span class="check">✓</span> Outbound Call Integration (CTI)</li>
+            </ul>
+
+            <h3>Platform Features</h3>
+            <ul>
+                <li><span class="check">✓</span> Role-Based Access Control (RBAC)</li>
+                <li><span class="check">✓</span> User Management</li>
+                <li><span class="check">✓</span> Admin Controls</li>
+                <li><span class="check">✓</span> Activity Audit Logging</li>
+                <li><span class="check">✓</span> CSV Import/Export</li>
+                <li><span class="check">✓</span> Dark/Light Theme</li>
+                <li><span class="check">✓</span> Command Palette (⌘K)</li>
+                <li><span class="check">✓</span> Keyboard Shortcuts</li>
+                <li><span class="check">✓</span> Onboarding Tour</li>
+                <li><span class="check">✓</span> User Guide/Help Center</li>
+            </ul>
+
+            <h2>5.2 Out of Scope (Phase 2+)</h2>
+            <ul>
+                <li><span class="cross">✗</span> Mobile native applications</li>
+                <li><span class="cross">✗</span> Backend API implementation</li>
+                <li><span class="cross">✗</span> Third-party marketing automation</li>
+                <li><span class="cross">✗</span> Customer portal</li>
+                <li><span class="cross">✗</span> Multi-currency support (beyond INR)</li>
+                <li><span class="cross">✗</span> Multi-language support</li>
+            </ul>
+
+            <hr class="page-break">
+
+            <!-- Section 6: Functional Requirements (Summary) -->
+            <h1 id="section6"><span class="section-number">6.</span> Functional Requirements</h1>
+
+            <p>The following table summarizes all functional requirement categories with their IDs and counts:</p>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Module</th>
+                        <th>ID Prefix</th>
+                        <th>Requirements</th>
+                        <th>Priority Distribution</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Dashboard</td>
+                        <td>FR-DASH</td>
+                        <td>5</td>
+                        <td>2 Critical, 2 High, 1 Medium</td>
+                    </tr>
+                    <tr>
+                        <td>Account Management</td>
+                        <td>FR-ACC</td>
+                        <td>11</td>
+                        <td>2 Critical, 7 High, 2 Medium</td>
+                    </tr>
+                    <tr>
+                        <td>Account Map</td>
+                        <td>FR-AMAP</td>
+                        <td>10</td>
+                        <td>1 Critical, 6 High, 3 Medium</td>
+                    </tr>
+                    <tr>
+                        <td>Contact Management</td>
+                        <td>FR-CON</td>
+                        <td>9</td>
+                        <td>2 Critical, 5 High, 2 Medium</td>
+                    </tr>
+                    <tr>
+                        <td>Lead Management</td>
+                        <td>FR-LEAD</td>
+                        <td>8</td>
+                        <td>2 Critical, 2 High, 4 Medium</td>
+                    </tr>
+                    <tr>
+                        <td>Opportunity Management</td>
+                        <td>FR-OPP</td>
+                        <td>12</td>
+                        <td>2 Critical, 7 High, 3 Medium</td>
+                    </tr>
+                    <tr>
+                        <td>Quote Management</td>
+                        <td>FR-QUO</td>
+                        <td>9</td>
+                        <td>2 Critical, 4 High, 3 Medium</td>
+                    </tr>
+                    <tr>
+                        <td>Contract Management</td>
+                        <td>FR-CTR</td>
+                        <td>7</td>
+                        <td>2 Critical, 4 High, 1 Medium</td>
+                    </tr>
+                    <tr>
+                        <td>Order Management</td>
+                        <td>FR-ORD</td>
+                        <td>5</td>
+                        <td>1 Critical, 4 High</td>
+                    </tr>
+                    <tr>
+                        <td>Activity Management</td>
+                        <td>FR-ACT</td>
+                        <td>8</td>
+                        <td>1 Critical, 5 High, 2 Medium</td>
+                    </tr>
+                    <tr>
+                        <td>Sales Stage Configuration</td>
+                        <td>FR-SSC</td>
+                        <td>10</td>
+                        <td>1 Critical, 5 High, 4 Medium</td>
+                    </tr>
+                    <tr>
+                        <td>POC Tracking</td>
+                        <td>FR-POC</td>
+                        <td>10</td>
+                        <td>0 Critical, 6 High, 4 Medium</td>
+                    </tr>
+                    <tr>
+                        <td>Forecasting</td>
+                        <td>FR-FOR</td>
+                        <td>6</td>
+                        <td>0 Critical, 4 High, 2 Medium</td>
+                    </tr>
+                    <tr>
+                        <td>Win/Loss Analysis</td>
+                        <td>FR-WL</td>
+                        <td>5</td>
+                        <td>0 Critical, 3 High, 2 Medium</td>
+                    </tr>
+                    <tr>
+                        <td>Target Management</td>
+                        <td>FR-TGT</td>
+                        <td>7</td>
+                        <td>1 Critical, 5 High, 1 Medium</td>
+                    </tr>
+                    <tr>
+                        <td>Incentive Management</td>
+                        <td>FR-INC</td>
+                        <td>9</td>
+                        <td>1 Critical, 6 High, 2 Medium</td>
+                    </tr>
+                    <tr>
+                        <td>Payout Management</td>
+                        <td>FR-PAY</td>
+                        <td>8</td>
+                        <td>2 Critical, 4 High, 2 Medium</td>
+                    </tr>
+                    <tr>
+                        <td>Performance Dashboard</td>
+                        <td>FR-PERF</td>
+                        <td>6</td>
+                        <td>0 Critical, 4 High, 2 Medium</td>
+                    </tr>
+                    <tr>
+                        <td>Enterprise Features</td>
+                        <td>FR-OCC/SOC/INT/CALL</td>
+                        <td>20</td>
+                        <td>1 High, 16 Medium, 3 Low</td>
+                    </tr>
+                    <tr>
+                        <td>Admin Controls</td>
+                        <td>FR-ADM</td>
+                        <td>4</td>
+                        <td>0 Critical, 2 High, 2 Medium</td>
+                    </tr>
+                    <tr>
+                        <td>User Management</td>
+                        <td>FR-USR</td>
+                        <td>5</td>
+                        <td>2 Critical, 3 High</td>
+                    </tr>
+                    <tr>
+                        <td>Reports</td>
+                        <td>FR-RPT</td>
+                        <td>4</td>
+                        <td>0 Critical, 2 High, 1 Medium, 1 Low</td>
+                    </tr>
+                </tbody>
+                <tfoot>
+                    <tr style="background: var(--gray-100); font-weight: bold;">
+                        <td colspan="2">TOTAL</td>
+                        <td>168+</td>
+                        <td></td>
+                    </tr>
+                </tfoot>
+            </table>
+
+            <hr class="page-break">
+
+            <!-- Section 7: Non-Functional Requirements -->
+            <h1 id="section7"><span class="section-number">7.</span> Non-Functional Requirements</h1>
+
+            <h2>7.1 Performance</h2>
+            <table>
+                <tr>
+                    <th>ID</th>
+                    <th>Requirement</th>
+                    <th>Target</th>
+                </tr>
+                <tr>
+                    <td>NFR-PERF-01</td>
+                    <td>Page load time</td>
+                    <td>&lt; 3 seconds</td>
+                </tr>
+                <tr>
+                    <td>NFR-PERF-02</td>
+                    <td>Search response time</td>
+                    <td>&lt; 1 second</td>
+                </tr>
+                <tr>
+                    <td>NFR-PERF-03</td>
+                    <td>Form submission response</td>
+                    <td>&lt; 2 seconds</td>
+                </tr>
+                <tr>
+                    <td>NFR-PERF-04</td>
+                    <td>Dashboard refresh</td>
+                    <td>&lt; 5 seconds</td>
+                </tr>
+            </table>
+
+            <h2>7.2 Usability</h2>
+            <table>
+                <tr>
+                    <th>ID</th>
+                    <th>Requirement</th>
+                    <th>Target</th>
+                </tr>
+                <tr>
+                    <td>NFR-USE-01</td>
+                    <td>Responsive design support</td>
+                    <td>Desktop, Tablet, Mobile</td>
+                </tr>
+                <tr>
+                    <td>NFR-USE-02</td>
+                    <td>Theme support</td>
+                    <td>Light, Dark, System</td>
+                </tr>
+                <tr>
+                    <td>NFR-USE-03</td>
+                    <td>Keyboard navigation</td>
+                    <td>Full support</td>
+                </tr>
+                <tr>
+                    <td>NFR-USE-04</td>
+                    <td>Accessibility compliance</td>
+                    <td>WCAG 2.1 AA</td>
+                </tr>
+                <tr>
+                    <td>NFR-USE-05</td>
+                    <td>Command palette</td>
+                    <td>⌘K / Ctrl+K</td>
+                </tr>
+            </table>
+
+            <h2>7.3 Scalability</h2>
+            <table>
+                <tr>
+                    <th>ID</th>
+                    <th>Requirement</th>
+                    <th>Target</th>
+                </tr>
+                <tr>
+                    <td>NFR-SCL-01</td>
+                    <td>Concurrent users</td>
+                    <td>1000+</td>
+                </tr>
+                <tr>
+                    <td>NFR-SCL-02</td>
+                    <td>Accounts supported</td>
+                    <td>100,000+</td>
+                </tr>
+                <tr>
+                    <td>NFR-SCL-03</td>
+                    <td>Opportunities supported</td>
+                    <td>500,000+</td>
+                </tr>
+            </table>
+
+            <hr class="page-break">
+
+            <!-- Section 8: User Roles & Permissions -->
+            <h1 id="section8"><span class="section-number">8.</span> User Roles & Permissions</h1>
+
+            <h2>8.1 Role Definitions</h2>
+            <table>
+                <tr>
+                    <th>Role</th>
+                    <th>Description</th>
+                </tr>
+                <tr>
+                    <td><strong>Administrator</strong></td>
+                    <td>Full system access including user management and admin controls</td>
+                </tr>
+                <tr>
+                    <td><strong>Sales Head</strong></td>
+                    <td>Manage sales team, approve payouts, set targets</td>
+                </tr>
+                <tr>
+                    <td><strong>Finance</strong></td>
+                    <td>Approve payouts, view audit logs, financial reporting</td>
+                </tr>
+                <tr>
+                    <td><strong>HR</strong></td>
+                    <td>Manage users, approve payouts, view performance</td>
+                </tr>
+                <tr>
+                    <td><strong>Sales</strong></td>
+                    <td>Manage accounts, leads, opportunities, and quotes</td>
+                </tr>
+                <tr>
+                    <td><strong>Viewer</strong></td>
+                    <td>Read-only access to most areas</td>
+                </tr>
+            </table>
+
+            <h2>8.2 Permission Matrix (Summary)</h2>
+            <p>The system implements 28 granular permissions across 6 roles, with full RBAC enforcement at both route
+                and component levels.</p>
+
+            <hr class="page-break">
+
+            <!-- Section 9: Module Specifications -->
+            <h1 id="section9"><span class="section-number">9.</span> Module Specifications</h1>
+
+            <h2>9.1 Navigation Structure</h2>
+            <pre>
+SequelString CRM
+├── Dashboard
+├── [CRM Section]
+│   ├── Accounts
+│   ├── Account Map
+│   ├── Contacts
+│   ├── Leads
+│   ├── Opportunities
+│   ├── Quotes
+│   ├── Contracts
+│   └── Orders
+├── [Activities]
+├── [Intelligence Section]
+│   ├── Forecasting
+│   ├── Win/Loss Analysis
+│   └── POC Tracking
+├── [Incentive Engine]
+│   ├── Targets
+│   ├── Incentives
+│   ├── Payouts
+│   └── Performance
+├── [Administration]
+│   ├── Admin Controls
+│   ├── User Management
+│   └── Sales Stage Config
+├── [Enterprise Features]
+├── Reports
+├── Settings
+└── User Guide
+            </pre>
+
+            <hr class="page-break">
+
+            <!-- Section 10-17 summaries -->
+            <h1 id="section10"><span class="section-number">10.</span> Data Models</h1>
+            <p>The application defines comprehensive data models including:</p>
+            <ul>
+                <li><strong>Account</strong> - 35+ fields including hierarchy, health scores, financials</li>
+                <li><strong>Stakeholder</strong> - 25+ fields including influence mapping</li>
+                <li><strong>Opportunity</strong> - 40+ fields including stage history, competitors</li>
+                <li><strong>Sales Stage</strong> - 25+ fields including governance rules</li>
+                <li><strong>Incentive Plan</strong> - 20+ fields including slabs, accelerators</li>
+                <li><strong>Payout</strong> - 20+ fields including approval workflow</li>
+                <li><strong>Activity</strong> - 15+ fields including outcomes</li>
+            </ul>
+
+            <hr>
+
+            <h1 id="section11"><span class="section-number">11.</span> Integration Requirements</h1>
+            <table>
+                <tr>
+                    <th>Integration</th>
+                    <th>Purpose</th>
+                    <th>Status</th>
+                </tr>
+                <tr>
+                    <td>Email Service</td>
+                    <td>Occasion emails, notifications</td>
+                    <td>Planned</td>
+                </tr>
+                <tr>
+                    <td>CTI Provider</td>
+                    <td>Call integration</td>
+                    <td>Simulated</td>
+                </tr>
+                <tr>
+                    <td>LinkedIn API</td>
+                    <td>Social profile sync</td>
+                    <td>Simulated</td>
+                </tr>
+                <tr>
+                    <td>News API</td>
+                    <td>Public domain intelligence</td>
+                    <td>Simulated</td>
+                </tr>
+                <tr>
+                    <td>Calendar</td>
+                    <td>Activity scheduling</td>
+                    <td>Planned</td>
+                </tr>
+                <tr>
+                    <td>Document Storage</td>
+                    <td>Contract/Quote documents</td>
+                    <td>Planned</td>
+                </tr>
+            </table>
+
+            <hr>
+
+            <h1 id="section12"><span class="section-number">12.</span> User Interface Requirements</h1>
+            <p>The application uses a modern design system based on Shadcn/ui with:</p>
+            <ul>
+                <li>Radix UI accessible primitives</li>
+                <li>Tailwind CSS for styling</li>
+                <li>Lucide icons</li>
+                <li>Full dark/light theme support</li>
+                <li>Responsive breakpoints (Mobile, Tablet, Desktop)</li>
+                <li>Command palette (⌘K)</li>
+                <li>Comprehensive keyboard shortcuts</li>
+            </ul>
+
+            <hr>
+
+            <h1 id="section13"><span class="section-number">13.</span> Security Requirements</h1>
+            <ul>
+                <li><strong>Authentication:</strong> Role-based login with protected routes</li>
+                <li><strong>Authorization:</strong> 28 granular permissions with RBAC</li>
+                <li><strong>Data Security:</strong> HTTPS, XSS prevention (DOMPurify), input validation</li>
+                <li><strong>Audit Trail:</strong> Comprehensive activity logging</li>
+            </ul>
+
+            <hr>
+
+            <h1 id="section14"><span class="section-number">14.</span> Assumptions & Constraints</h1>
+            <h3>Assumptions</h3>
+            <ul>
+                <li>Modern web browsers (last 2 versions)</li>
+                <li>Reliable internet connectivity</li>
+                <li>INR as primary currency</li>
+                <li>Indian fiscal year (April - March)</li>
+            </ul>
+
+            <h3>Constraints</h3>
+            <ul>
+                <li>Frontend-only in Phase 1 (mock data)</li>
+                <li>No native mobile app in Phase 1</li>
+                <li>English-only interface</li>
+            </ul>
+
+            <hr>
+
+            <h1 id="section15"><span class="section-number">15.</span> Dependencies</h1>
+            <table>
+                <tr>
+                    <th>Package</th>
+                    <th>Purpose</th>
+                </tr>
+                <tr>
+                    <td>React 18</td>
+                    <td>Core UI framework</td>
+                </tr>
+                <tr>
+                    <td>TypeScript</td>
+                    <td>Type safety</td>
+                </tr>
+                <tr>
+                    <td>Vite</td>
+                    <td>Build tool</td>
+                </tr>
+                <tr>
+                    <td>Tailwind CSS</td>
+                    <td>Styling</td>
+                </tr>
+                <tr>
+                    <td>React Router DOM v6</td>
+                    <td>Routing</td>
+                </tr>
+                <tr>
+                    <td>React Query</td>
+                    <td>Server state</td>
+                </tr>
+                <tr>
+                    <td>Radix UI</td>
+                    <td>Accessible primitives</td>
+                </tr>
+                <tr>
+                    <td>Lucide React</td>
+                    <td>Icons</td>
+                </tr>
+                <tr>
+                    <td>DOMPurify</td>
+                    <td>Security (XSS prevention)</td>
+                </tr>
+            </table>
+
+            <hr>
+
+            <h1 id="section16"><span class="section-number">16.</span> Acceptance Criteria</h1>
+            <p>All modules must meet the following quality criteria:</p>
+            <ul>
+                <li>✅ No TypeScript errors in build</li>
+                <li>✅ All pages load without console errors</li>
+                <li>✅ Responsive design works on all breakpoints</li>
+                <li>✅ Dark/Light theme switches correctly</li>
+                <li>✅ All forms validate input properly</li>
+                <li>✅ Navigation works correctly between all pages</li>
+                <li>✅ Command palette functions correctly</li>
+                <li>✅ Keyboard shortcuts work as documented</li>
+            </ul>
+
+            <hr class="page-break">
+
+            <h1 id="section17"><span class="section-number">17.</span> Appendix</h1>
+
+            <h2>17.1 Glossary</h2>
+            <table>
+                <tr>
+                    <th>Term</th>
+                    <th>Definition</th>
+                </tr>
+                <tr>
+                    <td>Account Map</td>
+                    <td>360-degree view of an account with all related information</td>
+                </tr>
+                <tr>
+                    <td>Champion</td>
+                    <td>A contact who actively supports your solution internally</td>
+                </tr>
+                <tr>
+                    <td>CTI</td>
+                    <td>Computer Telephony Integration</td>
+                </tr>
+                <tr>
+                    <td>DNC</td>
+                    <td>Do Not Call list</td>
+                </tr>
+                <tr>
+                    <td>GSTIN</td>
+                    <td>Goods and Services Tax Identification Number (India)</td>
+                </tr>
+                <tr>
+                    <td>KPI</td>
+                    <td>Key Performance Indicator</td>
+                </tr>
+                <tr>
+                    <td>POC</td>
+                    <td>Proof of Concept</td>
+                </tr>
+                <tr>
+                    <td>PSU</td>
+                    <td>Public Sector Undertaking</td>
+                </tr>
+                <tr>
+                    <td>RBAC</td>
+                    <td>Role-Based Access Control</td>
+                </tr>
+            </table>
+
+            <h2>17.2 Version History</h2>
+            <table>
+                <tr>
+                    <th>Version</th>
+                    <th>Date</th>
+                    <th>Author</th>
+                    <th>Changes</th>
+                </tr>
+                <tr>
+                    <td>1.0</td>
+                    <td>Feb 01, 2026</td>
+                    <td>SequelString Product Team</td>
+                    <td>Initial BRD release</td>
+                </tr>
+            </table>
+
+            <hr class="page-break">
+
+            <!-- Approval Section -->
+            <h1>Document Approval</h1>
+            <table class="approval-table">
+                <tr>
+                    <th>Role</th>
+                    <th>Name</th>
+                    <th>Signature</th>
+                    <th>Date</th>
+                </tr>
+                <tr>
+                    <td>Product Owner</td>
+                    <td></td>
+                    <td><span class="signature-line"></span></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>Business Analyst</td>
+                    <td></td>
+                    <td><span class="signature-line"></span></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>Technical Lead</td>
+                    <td></td>
+                    <td><span class="signature-line"></span></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>QA Lead</td>
+                    <td></td>
+                    <td><span class="signature-line"></span></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>Project Manager</td>
+                    <td></td>
+                    <td><span class="signature-line"></span></td>
+                    <td></td>
+                </tr>
+            </table>
+
+        </div>
+
+        <!-- Footer -->
+        <div class="doc-footer">
+            <p>This document is confidential and intended for internal use and authorized stakeholders only.</p>
+            <p><strong>© 2026 SequelString CRM. All Rights Reserved.</strong></p>
+        </div>
+    </div>
+
+    <!-- Download Button -->
+    <button class="download-btn no-print" onclick="window.print()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>
+        Download PDF
+    </button>
+</body>
+
+</html>

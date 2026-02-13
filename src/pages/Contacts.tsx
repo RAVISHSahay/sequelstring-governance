@@ -37,6 +37,8 @@ interface Contact {
   role: string;
   influence: string;
   lastContact: string;
+  linkedin?: string;
+  accountId: string; // Added for linking to Account News
 }
 
 const initialContacts: Contact[] = [
@@ -50,6 +52,7 @@ const initialContacts: Contact[] = [
     role: "Decision Maker",
     influence: "High",
     lastContact: "2 days ago",
+    accountId: "1", // Tata Steel
   },
   {
     id: 2,
@@ -61,6 +64,7 @@ const initialContacts: Contact[] = [
     role: "Technical Buyer",
     influence: "High",
     lastContact: "1 week ago",
+    accountId: "3", // Reliance
   },
   {
     id: 3,
@@ -72,6 +76,7 @@ const initialContacts: Contact[] = [
     role: "Economic Buyer",
     influence: "Medium",
     lastContact: "3 days ago",
+    accountId: "4",
   },
   {
     id: 4,
@@ -83,6 +88,7 @@ const initialContacts: Contact[] = [
     role: "Champion",
     influence: "High",
     lastContact: "Today",
+    accountId: "2", // Infosys
   },
   {
     id: 5,
@@ -94,6 +100,7 @@ const initialContacts: Contact[] = [
     role: "Executive Sponsor",
     influence: "Critical",
     lastContact: "1 month ago",
+    accountId: "5",
   },
 ];
 
@@ -240,6 +247,7 @@ export default function Contacts() {
       role: row.role || 'Influencer',
       influence: row.influence || 'Medium',
       lastContact: 'Just imported',
+      accountId: 'ACC-UNKNOWN',
     }));
     setContacts((prev) => [...prev, ...newContacts]);
     toast.success(`${newContacts.length} contacts imported successfully`);
@@ -297,14 +305,19 @@ export default function Contacts() {
             {filteredContacts.map((contact) => (
               <TableRow key={contact.id} className="group cursor-pointer hover:bg-muted/30">
                 <TableCell>
-                  <div className="flex items-center gap-3">
-                    <Avatar className="h-10 w-10">
+                  <div
+                    className="flex items-center gap-3 cursor-pointer group/contact"
+                    onClick={() => handleViewDetails(contact)}
+                  >
+                    <Avatar className="h-10 w-10 ring-2 ring-transparent group-hover/contact:ring-primary/20 transition-all">
                       <AvatarFallback className="bg-primary/10 text-primary text-sm font-medium">
                         {contact.name.split(" ").map((n) => n[0]).join("")}
                       </AvatarFallback>
                     </Avatar>
                     <div>
-                      <p className="font-medium text-foreground">{contact.name}</p>
+                      <p className="font-medium text-foreground group-hover/contact:text-primary transition-colors">
+                        {contact.name}
+                      </p>
                       <p className="text-sm text-muted-foreground">{contact.title}</p>
                     </div>
                   </div>

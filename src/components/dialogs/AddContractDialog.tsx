@@ -33,8 +33,10 @@ export interface ContractData {
   id?: string;
   name: string;
   account: string;
+  opportunityId?: string;
   type: string;
   value: string;
+  status: string;
   startDate?: Date;
   endDate?: Date;
 }
@@ -65,11 +67,29 @@ const contractTypes = [
   { value: "SLA", label: "Service Level Agreement" },
 ];
 
+const statusOptions = [
+  { value: "Draft", label: "Draft" },
+  { value: "Pending Signature", label: "Pending Signature" },
+  { value: "Active", label: "Active" },
+  { value: "Expired", label: "Expired" },
+  { value: "Terminated", label: "Terminated" },
+];
+
+// Mock opportunities for linking
+const opportunityOptions = [
+  { id: "OPP-001", name: "Enterprise License Deal - Tata Steel" },
+  { id: "OPP-002", name: "Cloud Migration Project - HDFC" },
+  { id: "OPP-003", name: "Support Renewal - Infosys" },
+  { id: "OPP-004", name: "Data Analytics Suite - Reliance" },
+];
+
 const emptyFormData: ContractData = {
   name: "",
   account: "",
+  opportunityId: "",
   type: "",
   value: "",
+  status: "Draft",
   startDate: undefined,
   endDate: undefined,
 };
@@ -89,7 +109,7 @@ export function AddContractDialog({ open, onOpenChange, editData, onSave }: AddC
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.name || !formData.account || !formData.type) {
       toast.error("Please fill in required fields");
       return;
@@ -100,7 +120,7 @@ export function AddContractDialog({ open, onOpenChange, editData, onSave }: AddC
     }
 
     const year = new Date().getFullYear();
-    const contractId = formData.id || (formData.type === "NDA" 
+    const contractId = formData.id || (formData.type === "NDA"
       ? `NDA-${year}-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`
       : `CNT-${year}-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`);
 
@@ -112,11 +132,11 @@ export function AddContractDialog({ open, onOpenChange, editData, onSave }: AddC
     }
 
     toast.success(isEditing ? "Contract updated successfully" : "Contract created successfully", {
-      description: isEditing 
+      description: isEditing
         ? `${formData.name} has been updated`
         : `${contractId} has been created for ${formData.account}`,
     });
-    
+
     setFormData(emptyFormData);
     onOpenChange(false);
   };
@@ -127,8 +147,8 @@ export function AddContractDialog({ open, onOpenChange, editData, onSave }: AddC
         <DialogHeader>
           <DialogTitle>{isEditing ? "Edit Contract" : "New Contract"}</DialogTitle>
           <DialogDescription>
-            {isEditing 
-              ? "Update the contract details below." 
+            {isEditing
+              ? "Update the contract details below."
               : "Create a new contract or agreement. Required fields are marked with *."}
           </DialogDescription>
         </DialogHeader>
@@ -175,6 +195,44 @@ export function AddContractDialog({ open, onOpenChange, editData, onSave }: AddC
                     {contractTypes.map((type) => (
                       <SelectItem key={type.value} value={type.value}>
                         {type.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="status">Status *</Label>
+                <Select
+                  value={formData.status}
+                  onValueChange={(value) => setFormData({ ...formData, status: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {statusOptions.map((status) => (
+                      <SelectItem key={status.value} value={status.value}>
+                        {status.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="opportunity">Linked Opportunity</Label>
+                <Select
+                  value={formData.opportunityId}
+                  onValueChange={(value) => setFormData({ ...formData, opportunityId: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select opportunity" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {opportunityOptions.map((opp) => (
+                      <SelectItem key={opp.id} value={opp.id}>
+                        {opp.name}
                       </SelectItem>
                     ))}
                   </SelectContent>

@@ -9,6 +9,8 @@ interface StatCardProps {
   changeLabel?: string;
   icon: ReactNode;
   variant?: "default" | "primary" | "accent" | "success";
+  onClick?: () => void;
+  className?: string;
 }
 
 export function StatCard({
@@ -18,6 +20,8 @@ export function StatCard({
   changeLabel,
   icon,
   variant = "default",
+  onClick,
+  className,
 }: StatCardProps) {
   const getTrendIcon = () => {
     if (!change) return <Minus className="h-3 w-3" />;
@@ -47,7 +51,14 @@ export function StatCard({
   };
 
   return (
-    <div className="stat-card animate-slide-up">
+    <div
+      className={cn(
+        "stat-card animate-slide-up",
+        onClick && "cursor-pointer hover:shadow-md transition-all active:scale-[0.99]",
+        className
+      )}
+      onClick={onClick}
+    >
       <div className="flex items-start justify-between">
         <div className="space-y-3">
           <p className="metric-label">{title}</p>

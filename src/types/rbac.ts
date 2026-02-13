@@ -1,6 +1,6 @@
 // Role-Based Access Control (RBAC) Types
 
-export type UserRole = 'admin' | 'sales_head' | 'finance' | 'hr' | 'sales' | 'viewer';
+export type UserRole = 'admin' | 'sales_head' | 'finance' | 'hr' | 'sales' | 'presales' | 'value_engineering' | 'viewer';
 
 export interface User {
   id: string;
@@ -121,6 +121,21 @@ export const rolePermissions: Record<UserRole, Permission[]> = {
     'view_payouts',
     'view_performance',
   ],
+  presales: [
+    'view_dashboard',
+    'view_accounts',
+    'view_opportunities',
+    'view_quotes', 'manage_quotes',
+    'view_contracts',
+  ],
+  value_engineering: [
+    'view_dashboard',
+    'view_accounts',
+    'view_opportunities',
+    'view_quotes', 'manage_quotes',
+    'view_contracts',
+    'view_reports',
+  ],
   viewer: [
     'view_dashboard',
     'view_accounts',
@@ -164,6 +179,16 @@ export const roleInfo: Record<UserRole, { label: string; description: string; co
     label: 'Sales Representative',
     description: 'Manage accounts, leads, opportunities, and quotes',
     color: 'bg-emerald-500',
+  },
+  presales: {
+    label: 'Presales',
+    description: 'Support sales with technical expertise and demos',
+    color: 'bg-cyan-500',
+  },
+  value_engineering: {
+    label: 'Value Engineering',
+    description: 'Analyze and demonstrate business value to clients',
+    color: 'bg-indigo-500',
   },
   viewer: {
     label: 'Viewer',
