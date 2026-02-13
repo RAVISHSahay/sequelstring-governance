@@ -1,14 +1,14 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Gift, Heart, Plus, Trash2, Edit, Mail, Send } from "lucide-react";
 import { ContactImportantDate } from "@/types/occasionEmail";
-import { getImportantDatesByContactId, deleteImportantDate } from "@/data/importantDates";
 import { getTemplateById } from "@/data/importantDates";
 import { toast } from "sonner";
 import { AddImportantDateDialog } from "./AddImportantDateDialog";
 import { sendImportantDateEmail } from "@/services/emailScheduler";
+import { useImportantDates } from "@/hooks/useImportantDates";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -26,25 +26,13 @@ interface ImportantDatesSectionProps {
 }
 
 export function ImportantDatesSection({ contactId, contactName }: ImportantDatesSectionProps) {
-    const [dates, setDates] = useState<ContactImportantDate[]>(() =>
-        getImportantDatesByContactId(contactId)
-    );
+    const { dates, isLoading, createDate, updateDate, deleteDate } = useImportantDates(contactId);
+
     const [addDialogOpen, setAddDialogOpen] = useState(false);
     const [editingDate, setEditingDate] = useState<ContactImportantDate | null>(null);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [dateToDelete, setDateToDelete] = useState<string | null>(null);
     const [sending, setSending] = useState<string | null>(null);
-    const [refreshTrigger, setRefreshTrigger] = useState(0);
-
-    // Auto-refresh dates when trigger changes
-    useEffect(() => {
-        const loadedDates = getImportantDatesByContactId(contactId);
-        setDates(loadedDates);
-    }, [contactId, refreshTrigger]);
-
-    const refreshDates = () => {
-        setRefreshTrigger(prev => prev + 1);
-    };
 
     const handleDelete = (id: string) => {
         setDateToDelete(id);
@@ -53,21 +41,43 @@ export function ImportantDatesSection({ contactId, contactName }: ImportantDates
 
     const confirmDelete = () => {
         if (dateToDelete) {
-            const success = deleteImportantDate(dateToDelete);
-            if (success) {
-                toast.success("Important date deleted");
-                refreshDates();
-            } else {
-                toast.error("Failed to delete date");
-            }
+            deleteDate(dateToDelete, {
+                onSuccess: () => {
+                    toast.success("Important date deleted");
+                    setDeleteDialogOpen(false);
+                    setDateToDelete(null);
+                },
+                onError: () => {
+                    toast.error("Failed to delete date");
+                }
+            });
         }
-        setDeleteDialogOpen(false);
-        setDateToDelete(null);
     };
 
     const handleEdit = (date: ContactImportantDate) => {
         setEditingDate(date);
         setAddDialogOpen(true);
+    };
+
+    const handleSave = async (data: any) => {
+        if (editingDate) {
+            updateDate({ dateId: editingDate.id, data }, {
+                onSuccess: () => {
+                    toast.success("Important date updated");
+                    setAddDialogOpen(false);
+                    setEditingDate(null);
+                },
+                onError: () => toast.error("Failed to update date")
+            });
+        } else {
+            createDate(data, {
+                onSuccess: () => {
+                    toast.success("Important date added");
+                    setAddDialogOpen(false);
+                },
+                onError: () => toast.error("Failed to add date")
+            });
+        }
     };
 
     const handleSendNow = async (dateId: string) => {
@@ -113,6 +123,16 @@ export function ImportantDatesSection({ contactId, contactName }: ImportantDates
         return dateStr;
     };
 
+    if (isLoading) {
+        return (
+            <Card>
+                <CardContent className="py-8 text-center text-muted-foreground">
+                    Loading dates...
+                </CardContent>
+            </Card>
+        );
+    }
+
     return (
         <>
             <Card>
@@ -141,7 +161,7 @@ export function ImportantDatesSection({ contactId, contactName }: ImportantDates
                         </div>
                     ) : (
                         <div className="space-y-3">
-                            {dates.map((date) => {
+                            {dates.map((date: ContactImportantDate) => {
                                 const template = getTemplateById(date.emailTemplateId);
                                 return (
                                     <div
@@ -219,11 +239,7 @@ export function ImportantDatesSection({ contactId, contactName }: ImportantDates
                 contactId={contactId}
                 contactName={contactName}
                 editData={editingDate}
-                onSave={() => {
-                    refreshDates();
-                    setAddDialogOpen(false);
-                    setEditingDate(null);
-                }}
+                onSave={handleSave}
             />
 
             <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

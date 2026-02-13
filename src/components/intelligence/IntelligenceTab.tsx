@@ -4,7 +4,6 @@ import { NewsAlertsSection } from "./NewsAlertsSection";
 import { CompetitiveIntelSection } from "./CompetitiveIntelSection";
 import { SubscriptionPanel } from "./SubscriptionPanel";
 import { Newspaper, Brain, Bell, Server } from "lucide-react";
-import { getNewsByAccountId } from "@/data/intelligence";
 import { Badge } from "@/components/ui/badge";
 
 interface IntelligenceTabProps {
@@ -12,13 +11,11 @@ interface IntelligenceTabProps {
     accountName: string;
 }
 
-export function IntelligenceTab({ accountId, accountName }: IntelligenceTabProps) {
-    const [newsCount, setNewsCount] = useState(0);
+import { useIntelligence } from "@/hooks/useIntelligence";
 
-    useEffect(() => {
-        const news = getNewsByAccountId(accountId);
-        setNewsCount(news.length);
-    }, [accountId]);
+export function IntelligenceTab({ accountId, accountName }: IntelligenceTabProps) {
+    const { accountNews, isLoading } = useIntelligence(accountId);
+    const newsCount = accountNews.length;
 
     return (
         <div className="space-y-4">
@@ -55,7 +52,12 @@ export function IntelligenceTab({ accountId, accountName }: IntelligenceTabProps
                 </TabsList>
 
                 <TabsContent value="news" className="mt-4">
-                    <NewsAlertsSection accountId={accountId} accountName={accountName} />
+                    <NewsAlertsSection
+                        accountId={accountId}
+                        accountName={accountName}
+                        newsItems={accountNews}
+                        isLoading={isLoading}
+                    />
                 </TabsContent>
 
                 <TabsContent value="intel" className="mt-4">

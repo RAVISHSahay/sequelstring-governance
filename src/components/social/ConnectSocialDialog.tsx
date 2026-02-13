@@ -29,7 +29,8 @@ import {
     AlertCircle,
 } from "lucide-react";
 import { SocialPlatform } from "@/types/socialProfile";
-import { connectSocialAccount, simulateOAuthConnect, getPlatformInfo } from "@/data/socialProfiles";
+import { simulateOAuthConnect, getPlatformInfo } from "@/data/socialProfiles";
+import { useSocialProfiles } from "@/hooks/useSocialProfiles";
 import { toast } from "sonner";
 
 interface ConnectSocialDialogProps {
@@ -62,6 +63,8 @@ export function ConnectSocialDialog({
     const [connectionStatus, setConnectionStatus] = useState<'idle' | 'connecting' | 'success' | 'error'>('idle');
     const [errorMessage, setErrorMessage] = useState('');
 
+    const { createProfile } = useSocialProfiles(contactId);
+
     const handleConnect = async () => {
         if (!profileUrl.trim()) {
             toast.error("Please enter a profile URL");
@@ -71,43 +74,54 @@ export function ConnectSocialDialog({
         setIsConnecting(true);
         setConnectionStatus('connecting');
 
-        const result = await simulateOAuthConnect(platform, profileUrl);
+        try {
+            const result = await simulateOAuthConnect(platform, profileUrl);
 
-        if (result.success && result.account) {
-            // Save the account
-            connectSocialAccount({
-                contactId,
-                platform,
-                platformUserId: result.account.platformUserId || '',
-                handle: result.account.handle || '',
-                profileUrl,
-                displayName: result.account.displayName,
-                bio: result.account.bio,
-                isConnected: true,
-                status: 'active',
-                lastSyncedAt: new Date().toISOString(),
-                syncFrequency: 'daily',
-            });
+            if (result.success && result.account) {
+                // Map to backend schema (snake_case)
+                const payload = {
+                    platform: platform,
+                    profile_id: result.account.platformUserId || `manual-${Date.now()}`,
+                    handle: result.account.handle || '',
+                    profile_url: profileUrl,
+                    display_name: result.account.displayName || result.account.handle || 'Unknown',
+                    bio: result.account.bio,
+                    avatar_url: result.account.profilePhotoUrl,
+                    followers: 0 // Default
+                };
 
-            setConnectionStatus('success');
-            toast.success("Profile connected successfully", {
-                description: `${getPlatformInfo(platform).name} profile linked to ${contactName}`,
-            });
+                createProfile(payload, {
+                    onSuccess: () => {
+                        setConnectionStatus('success');
+                        toast.success("Profile connected successfully", {
+                            description: `${getPlatformInfo(platform).name} profile linked to ${contactName}`,
+                        });
 
-            setTimeout(() => {
-                onOpenChange(false);
-                onConnect?.();
-                resetForm();
-            }, 1500);
-        } else {
+                        setTimeout(() => {
+                            onOpenChange(false);
+                            onConnect?.(); // Optional if parent relies on it, though hook invalidation handles data
+                            resetForm();
+                        }, 1500);
+                    },
+                    onError: (err) => {
+                        setConnectionStatus('error');
+                        setErrorMessage(err.message || 'Failed to save profile');
+                        toast.error("Save failed");
+                    }
+                });
+            } else {
+                setConnectionStatus('error');
+                setErrorMessage(result.error || 'Connection failed');
+                toast.error("Connection failed", {
+                    description: result.error,
+                });
+            }
+        } catch (error) {
             setConnectionStatus('error');
-            setErrorMessage(result.error || 'Connection failed');
-            toast.error("Connection failed", {
-                description: result.error,
-            });
+            setErrorMessage('An unexpected error occurred');
+        } finally {
+            if (connectionStatus !== 'success') setIsConnecting(false);
         }
-
-        setIsConnecting(false);
     };
 
     const resetForm = () => {
@@ -177,8 +191,8 @@ export function ConnectSocialDialog({
                     {/* Connection Status */}
                     {connectionStatus !== 'idle' && (
                         <div className={`p-4 rounded-lg flex items-center gap-3 ${connectionStatus === 'connecting' ? 'bg-blue-500/10 text-blue-600' :
-                                connectionStatus === 'success' ? 'bg-green-500/10 text-green-600' :
-                                    'bg-red-500/10 text-red-600'
+                            connectionStatus === 'success' ? 'bg-green-500/10 text-green-600' :
+                                'bg-red-500/10 text-red-600'
                             }`}>
                             {connectionStatus === 'connecting' && (
                                 <>

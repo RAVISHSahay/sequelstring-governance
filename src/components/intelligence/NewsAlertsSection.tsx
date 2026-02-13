@@ -25,12 +25,14 @@ import {
     UserMinus,
 } from "lucide-react";
 import { AccountNewsItem, NewsTag, NewsRelevance } from "@/types/intelligence";
-import { getNewsByAccountId, updateNewsStatus, addNewsItem } from "@/data/intelligence";
+import { updateNewsStatus, addNewsItem } from "@/data/intelligence";
 import { toast } from "sonner";
 
 interface NewsAlertsSectionProps {
     accountId: string;
     accountName: string;
+    newsItems?: AccountNewsItem[];
+    isLoading?: boolean;
 }
 
 const getTagIcon = (tag: NewsTag) => {
@@ -88,13 +90,13 @@ const formatDate = (dateString: string) => {
     return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
 };
 
-export function NewsAlertsSection({ accountId, accountName }: NewsAlertsSectionProps) {
+export function NewsAlertsSection({ accountId, accountName, newsItems = [], isLoading = false }: NewsAlertsSectionProps) {
     const [news, setNews] = useState<AccountNewsItem[]>([]);
     const [filter, setFilter] = useState<NewsTag | 'all'>('all');
 
     useEffect(() => {
-        setNews(getNewsByAccountId(accountId));
-    }, [accountId]);
+        setNews(newsItems);
+    }, [newsItems]);
 
     const handleDismiss = (id: string) => {
         updateNewsStatus(id, 'dismissed');

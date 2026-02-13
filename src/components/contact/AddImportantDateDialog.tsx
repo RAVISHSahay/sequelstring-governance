@@ -28,7 +28,7 @@ interface AddImportantDateDialogProps {
     contactId: string;
     contactName: string;
     editData?: ContactImportantDate | null;
-    onSave?: () => void;
+    onSave?: (data?: any) => void;
 }
 
 export function AddImportantDateDialog({
@@ -115,23 +115,23 @@ export function AddImportantDateDialog({
         }
 
         try {
-            if (isEditing && editData) {
-                updateImportantDate(editData.id, formData);
-                toast.success("Important date updated", {
-                    description: `${formData.type === 'Custom' ? formData.customLabel : formData.type} for ${contactName}`,
-                });
+            if (onSave) {
+                // Pass data to parent instead of saving locally
+                onSave(formData);
             } else {
-                addImportantDate({
-                    contactId,
-                    ...formData,
-                });
-                toast.success("Important date added", {
-                    description: `${formData.type === 'Custom' ? formData.customLabel : formData.type} for ${contactName}`,
-                });
+                // Fallback for standalone usage (if any) or existing mocks
+                if (isEditing && editData) {
+                    updateImportantDate(editData.id, formData);
+                    toast.success("Important date updated (Local)");
+                } else {
+                    addImportantDate({
+                        contactId,
+                        ...formData,
+                    });
+                    toast.success("Important date added (Local)");
+                }
             }
-
-            if (onSave) onSave();
-            onOpenChange(false);
+            // onOpenChange(false); // Let parent handle closing on success
         } catch (error) {
             toast.error("Failed to save important date");
         }

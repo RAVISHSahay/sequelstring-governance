@@ -19,8 +19,8 @@ import {
     Building2,
 } from "lucide-react";
 import { SocialAccount, SocialPlatform } from "@/types/socialProfile";
-import { getSocialAccountsByContactId, disconnectSocialAccount, deleteSocialAccount, getPlatformInfo } from "@/data/socialProfiles";
-import { toast } from "sonner";
+import { getPlatformInfo } from "@/data/socialProfiles";
+import { useSocialProfiles } from "@/hooks/useSocialProfiles";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -58,22 +58,14 @@ const getStatusColor = (status: string) => {
 };
 
 export function SocialProfilesList({ contactId, onRefresh }: SocialProfilesListProps) {
-    const [accounts, setAccounts] = useState<SocialAccount[]>([]);
+    const { accounts, isLoading, disconnectAccount, deleteAccount } = useSocialProfiles(contactId);
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
     const [accountToDelete, setAccountToDelete] = useState<string | null>(null);
     const [syncing, setSyncing] = useState<string | null>(null);
 
-    useEffect(() => {
-        loadAccounts();
-    }, [contactId]);
-
-    const loadAccounts = () => {
-        setAccounts(getSocialAccountsByContactId(contactId));
-    };
-
     const handleSync = async (accountId: string) => {
         setSyncing(accountId);
-        // Simulate sync delay
+        // Simulate sync delay for now as real sync might take time
         await new Promise(resolve => setTimeout(resolve, 1500));
         setSyncing(null);
         toast.success("Profile synced successfully");
@@ -81,10 +73,13 @@ export function SocialProfilesList({ contactId, onRefresh }: SocialProfilesListP
     };
 
     const handleDisconnect = (accountId: string) => {
-        disconnectSocialAccount(accountId);
-        loadAccounts();
-        toast.success("Account disconnected");
-        onRefresh?.();
+        disconnectAccount(accountId, {
+            onSuccess: () => {
+                toast.success("Account disconnected");
+                onRefresh?.();
+            },
+            onError: () => toast.error("Failed to disconnect account")
+        });
     };
 
     const handleDelete = (accountId: string) => {
@@ -94,10 +89,13 @@ export function SocialProfilesList({ contactId, onRefresh }: SocialProfilesListP
 
     const confirmDelete = () => {
         if (accountToDelete) {
-            deleteSocialAccount(accountToDelete);
-            loadAccounts();
-            toast.success("Account removed");
-            onRefresh?.();
+            deleteAccount(accountToDelete, {
+                onSuccess: () => {
+                    toast.success("Account removed");
+                    onRefresh?.();
+                },
+                onError: () => toast.error("Failed to delete account")
+            });
         }
         setDeleteConfirmOpen(false);
         setAccountToDelete(null);
@@ -113,6 +111,14 @@ export function SocialProfilesList({ contactId, onRefresh }: SocialProfilesListP
         if (diffHours < 24) return `${diffHours}h ago`;
         return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
     };
+
+    if (isLoading) {
+        return (
+            <div className="text-center py-12 text-muted-foreground">
+                Loading profiles...
+            </div>
+        );
+    }
 
     if (accounts.length === 0) {
         return (

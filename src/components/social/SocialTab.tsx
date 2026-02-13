@@ -6,7 +6,7 @@ import { ConnectSocialDialog } from "./ConnectSocialDialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Users, Activity, Plus } from "lucide-react";
-import { getSocialAccountsByContactId, getEventsByContactId, getUnreadEventsCount } from "@/data/socialProfiles";
+import { useSocialEvents } from "@/hooks/useSocialEvents";
 
 interface SocialTabProps {
     contactId: string;
@@ -15,12 +15,15 @@ interface SocialTabProps {
 
 export function SocialTab({ contactId, contactName }: SocialTabProps) {
     const [connectDialogOpen, setConnectDialogOpen] = useState(false);
-    const [unreadCount, setUnreadCount] = useState(0);
-    const [refreshKey, setRefreshKey] = useState(0);
+    // Use hook for real data
+    const { events } = useSocialEvents(contactId);
+    const unreadCount = events.filter(e => !e.isRead).length;
 
-    useEffect(() => {
-        setUnreadCount(getUnreadEventsCount(contactId));
-    }, [contactId, refreshKey]);
+    // Refresh key isn't strictly needed for profiles list anymore as it uses query invalidation
+    // But ActivityFeed might still need it if it's not hooked up yet, or we can remove it if we rely on its own state
+    const [refreshKey, setRefreshKey] = useState(0); // Keeping for now for ActivityFeed
+
+    // useEffect for unread count removed as it's derived from hook data
 
     const handleRefresh = () => {
         setRefreshKey(prev => prev + 1);
@@ -59,7 +62,7 @@ export function SocialTab({ contactId, contactName }: SocialTabProps) {
                 <TabsContent value="profiles" className="mt-4">
                     <SocialProfilesList
                         contactId={contactId}
-                        onRefresh={handleRefresh}
+                        onRefresh={handleRefresh} // Keeping for now to trigger activity feed refresh if needed
                     />
                 </TabsContent>
 

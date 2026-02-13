@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -13,7 +12,7 @@ import {
     PhoneMissed,
 } from "lucide-react";
 import { CallActivity, CallDisposition, CallStatus } from "@/types/callIntegration";
-import { getCallsByEntityId } from "@/data/callActivities";
+import { useCalls } from "@/hooks/useCalls";
 
 interface CallHistoryListProps {
     entityId: string;
@@ -85,13 +84,19 @@ const formatDate = (dateString: string) => {
 };
 
 export function CallHistoryList({ entityId, entityType, limit = 10 }: CallHistoryListProps) {
-    const [calls, setCalls] = useState<CallActivity[]>([]);
-    const [refreshKey, setRefreshKey] = useState(0);
+    // Determine filters based on entityType
+    const filters = entityType === 'contact' ? { contactId: entityId } : undefined; // Extend for user/account if needed
+    const { calls, isLoading } = useCalls(filters);
 
-    useEffect(() => {
-        const loadedCalls = getCallsByEntityId(entityId, entityType);
-        setCalls(loadedCalls.slice(0, limit));
-    }, [entityId, entityType, limit, refreshKey]);
+    if (isLoading) {
+        return (
+            <Card>
+                <CardContent className="py-8 text-center text-muted-foreground">
+                    Loading calls...
+                </CardContent>
+            </Card>
+        );
+    }
 
     if (calls.length === 0) {
         return (
